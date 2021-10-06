@@ -139,7 +139,7 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents
                 $event->sheet->SetCellValue("C33", "$  " . (int)$billing->avolution_commission);
                 $event->sheet->SetCellValue("B34", "Sales Tax Handling");
                 $event->sheet->SetCellValue("C34", "$  0");
-                $event->sheet->SetCellValue("B35", "Extraodinary item");
+                $event->sheet->SetCellValue("B35", "Extraordinary item");
                 $event->sheet->SetCellValue("C35", "$  " . (int)$billing->extraordinary_item);
 
                 //Summary

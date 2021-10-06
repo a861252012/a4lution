@@ -98,11 +98,16 @@ class OpexInvoiceExport implements WithTitle, WithEvents
                 $event->sheet->SetCellValue("F16", 'Amount');
 
                 //item.A
+                $logisticFee = (float)$billing->a4_account_logistics_fee +
+                    (float)$billing->client_account_logistics_fee;
+                if ($billing->client_code === 'G73A') {
+                    $logisticFee = (float)$billing->a4_account_logistics_fee;
+                }
                 $event->sheet->SetCellValue("B17", 'A');
                 $event->sheet->SetCellValue("C17", 'Logistic fee');
-                $event->sheet->SetCellValue("D17", "HKD  " . $billing->a4_account_logistics_fee ?? 0);
+                $event->sheet->SetCellValue("D17", "HKD  " . $logisticFee);
                 $event->sheet->SetCellValue("E17", 1);
-                $event->sheet->SetCellValue("F17", "HKD  " . $billing->a4_account_logistics_fee ?? 0);
+                $event->sheet->SetCellValue("F17", "HKD  " . $logisticFee);
 
 
                 //item.B
@@ -155,7 +160,7 @@ class OpexInvoiceExport implements WithTitle, WithEvents
 
                 //item.H
                 $event->sheet->SetCellValue("B31", 'H');
-                $event->sheet->SetCellValue("C31", 'Extraodinary item fee');
+                $event->sheet->SetCellValue("C31", 'Extraordinary item');
                 $event->sheet->SetCellValue("D31", "HKD  " . $billing->extraordinary_item ?? 0);
                 $event->sheet->SetCellValue("E31", 1);
                 $event->sheet->SetCellValue("F31", "HKD  " . $billing->extraordinary_item ?? 0);

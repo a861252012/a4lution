@@ -389,19 +389,6 @@ class UploadFileToAWS implements ShouldQueue
         $billingItems['created_by'] = $this->userID;
         $billingItems['active'] = 1;
 
-        //count opexInvoice value
-        $opexInvoiceKeys = [
-            'a4ShippingFeeHKD',
-            'a4FBAFeesHKD',
-            'a4AccountFbaStorageFee',
-            'a4PlatformFeeHKD',
-            'a4_account_refund_and_resend',
-            'clientShippingFeeHKD',
-            'extraordinary_item'
-        ];
-
-        $billingItems['opex_invoice'] = $this->getSumValue($fees, $opexInvoiceKeys);
-
         $firstMileShipmentFeesRepository = new FirstMileShipmentFeesRepository();
 
         $getFbaStorageFeeInvoices = $firstMileShipmentFeesRepository->getFbaStorageFeeInvoice(
@@ -435,6 +422,27 @@ class UploadFileToAWS implements ShouldQueue
         $billingItems['client_account_advertisement'] = round($fees['clientAccountAds'], 2);
         $billingItems['client_account_marketing_and_promotion'] = round($fees['clientAccountMarketingAndPromotion'], 2);
         $billingItems['a4_account_marketing_and_promotion'] = round($fees['a4AccountMarketingAndPromotion'], 2);
+
+        //count opexInvoice value
+//        SUM(a4lution_account所有費用) + ClientAccount.logistics_fee + avolution_commission + sales_tax_handling
+//    + extraordinary_item - a4lution_account.return_and_refund
+
+        $opexInvoiceKeys = [
+            'a4_account_logistics_fee',
+            'a4_account_fba_fee',
+            'a4_account_fba_storage_fee',
+            'a4_account_platform_fee',
+            'a4_account_miscellaneous',
+            'a4_account_advertisement',
+            'a4_account_marketing_and_promotion',
+            'client_account_logistics_fee',
+            'extraordinary_item',
+            'avolution_commission',
+            'sales_tax_handling',
+        ];
+
+        $billingItems['opex_invoice'] = $this->getSumValue($billingItems, $opexInvoiceKeys)
+            - $billingItems['a4_account_refund_and_resend'];
 
         $billingStatements = new BillingStatements();
         $billingInsertID = $billingStatements->insertGetId($billingItems);
