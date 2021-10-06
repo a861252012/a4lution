@@ -401,11 +401,6 @@ class UploadFileToAWS implements ShouldQueue
             2
         );
 
-        $billingItems['final_credit'] = round(
-            $billingItems['sales_credit'] - $billingItems['opex_invoice'] - $billingItems['fba_storage_fee_invoice'],
-            2
-        );
-
         $billingItems['a4_account_logistics_fee'] = round($fees['a4ShippingFeeHKD'], 2);
         $billingItems['client_account_logistics_fee'] = round($fees['clientShippingFeeHKD'], 2);
         $billingItems['a4_account_fba_fee'] = round($fees['a4FBAFeesHKD'], 2);
@@ -443,6 +438,11 @@ class UploadFileToAWS implements ShouldQueue
 
         $billingItems['opex_invoice'] = $this->getSumValue($billingItems, $opexInvoiceKeys)
             - $billingItems['a4_account_refund_and_resend'];
+
+        $billingItems['final_credit'] = round(
+            $billingItems['sales_credit'] - $billingItems['opex_invoice'] - $billingItems['fba_storage_fee_invoice'],
+            2
+        );
 
         $billingStatements = new BillingStatements();
         $billingInsertID = $billingStatements->insertGetId($billingItems);
