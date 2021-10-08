@@ -30,34 +30,35 @@ class OrderProductsRepository
 
     public function countReportColumns(string $referenceNo, string $product_Barcode): array
     {
-        $sql = "SELECT
-    SUM(IF(t.amount_description = 'FBAPerUnitFulfillmentFee',
-        t.amount,
-        0)) AS fba_fee,
-    SUM(IF(t.amount_description = 'MarketplaceFacilitatorTax-Principal',
-        t.amount,
-        0) + IF(t.amount_description = 'MarketplaceFacilitatorTax-Shipping',
-        t.amount,
-        0)) AS marketplace_tax,
-    SUM(IF(t.amount_description = 'PointsGranted',
-        t.amount,
-        0)) AS cost_of_point,
-    SUM(IF(t.amount_description = 'AmazonExclusivesFee',
-        t.amount,
-        0)) AS exclusives_referral_fee
-FROM
-    amazon_report_list t
-        INNER JOIN
-    order_sku_cost_details d ON d.op_platform_sales_sku = t.sku
-        AND d.platform_reference_no = t.order_id
-        AND d.seller_id = t.user_account
-WHERE
-    t.amount_description IN ('FBAPerUnitFulfillmentFee' , 'MarketplaceFacilitatorTax-Principal',
-        'MarketplaceFacilitatorTax-Shipping',
-        'PointsGranted',
-        'AmazonExclusivesFee')
-        AND d.reference_no = '{$referenceNo}'
-        AND d.product_barcode = '{$product_Barcode}'";
+        $sql = "SELECT SUM(IF(t.amount_description = 'FBAPerUnitFulfillmentFee',
+              t.amount,
+              0) + IF(t.amount_description = 'ShippingChargeback',
+                      t.amount,
+                      0)) AS fba_fee,
+       SUM(IF(t.amount_description = 'MarketplaceFacilitatorTax-Principal',
+              t.amount,
+              0) + IF(t.amount_description = 'MarketplaceFacilitatorTax-Shipping',
+                      t.amount,
+                      0)) AS marketplace_tax,
+       SUM(IF(t.amount_description = 'PointsGranted',
+              t.amount,
+              0))         AS cost_of_point,
+       SUM(IF(t.amount_description = 'AmazonExclusivesFee',
+              t.amount,
+              0))         AS exclusives_referral_fee
+FROM amazon_report_list t
+         INNER JOIN
+     order_sku_cost_details d ON d.op_platform_sales_sku = t.sku
+         AND d.platform_reference_no = t.order_id
+         AND d.seller_id = t.user_account
+WHERE t.amount_description IN (
+                               'FBAPerUnitFulfillmentFee', 'ShippingChargeback',
+                               'MarketplaceFacilitatorTax-Principal',
+                               'MarketplaceFacilitatorTax-Shipping',
+                               'PointsGranted',
+                               'AmazonExclusivesFee')
+  AND d.reference_no = '{$referenceNo}'
+  AND d.product_barcode = '{$product_Barcode}'";
 
         return DB::select($sql);
     }
@@ -86,7 +87,7 @@ WHERE
 
         return DB::select($sql);
     }
-    
+
 //    public function getTableColumns()
 //    {
 //        return Schema::getColumnListing($this->orders->getTable());
