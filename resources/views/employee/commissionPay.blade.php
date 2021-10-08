@@ -37,7 +37,7 @@
                                             <label class="form-control-label" for="user_name">USER NAME</label>
                                             <input class="form-control" name="user_name" id="user_name"
                                                    type="text" placeholder="USER NAME"
-                                                   value="{{$data['user_name'] ?? ''}}">
+                                                   value="{{$user_name ?? ''}}">
                                         </div>
                                     </div>
 
@@ -47,7 +47,7 @@
                                             <label class="form-control-label" for="client_code">CLIENT CODE</label>
                                             <input class="form-control" name="client_code" id="client_code"
                                                    type="text" placeholder="CLIENT CODE"
-                                                   value="{{$data['client_code'] ?? ''}}">
+                                                   value="{{$client_code ?? ''}}">
                                         </div>
                                     </div>
 
@@ -57,7 +57,7 @@
                                             <label class="form-control-label" for="report_date">REPORT DATE</label>
                                             <input class="form-control" name="report_date" id="report_date"
                                                    type="text" placeholder="REPORT DATE"
-                                                   value="{{$data['report_date'] ?? ''}}">
+                                                   value="{{$report_date ?? ''}}">
                                         </div>
                                     </div>
 
@@ -81,6 +81,7 @@
                         <table class="table table-flush" id="commission_detail">
                             <thead class="thead-light">
                             <tr>
+                                <th></th>
                                 <th>USER NAMES</th>
                                 <th>ROLE</th>
                                 <th>COMPANY</th>
@@ -99,69 +100,34 @@
                             <tbody>
                             @forelse ($lists as $item)
                                 <tr>
+                                    <td></td>
                                     <td data-attr="user_name">{{ $item->user_name }}</td>
                                     <td data-attr="role_name">{{ $item->role_name }}</td>
                                     <td data-attr="company_type">{{ $item->company_type }}</td>
                                     <td data-attr="region">{{ $item->region }}</td>
                                     <td data-attr="currency">{{ $item->currency }}</td>
                                     <td data-attr="customer_qty">{{ $item->customer_qty }}</td>
-                                    <td data-attr="billed_qty">{{ '-' }}</td>
+                                    <td data-attr="billed_qty">{{ $item->billed_qty }}</td>
                                     <td data-attr="report_date">{{ $item->report_date }}</td>
-                                    <td data-attr="total_billed_commissions_amount">{{ $item->total_billed_commissions_amount }}</td>
-                                    <td data-attr="extra_monthly_fee_amount">{{ $item->extra_monthly_fee_amount }}</td>
-                                    <td data-attr="extra_ops_commission_amount">{{ $item->extra_ops_commission_amount }}</td>
-                                    <td data-attr="total_compensation">{{ $item->total_compensation }}</td>
+                                    <td data-attr="total_billed_commissions_amount">
+                                        {{ $item->total_billed_commissions_amount }}
+                                    </td>
+                                    <td data-attr="extra_monthly_fee_amount">{{ $item->extra_monthly_fee }}</td>
+                                    <td data-attr="extra_ops_commission_amount">{{ $item->extra_ops_commission }}</td>
+                                    <td data-attr="total_compensation">{{ $item->total_employee_sharing }}</td>
                                     <input type="hidden" name="user_id" value="{{ $item->id }}">
                                 </tr>
-
-                                {{--                                <tr>--}}
-                                {{--                                    <td>{{ $item->user_name }}</td>--}}
-                                {{--                                    <td>{{ $item->role_name }}</td>--}}
-                                {{--                                    <td>{{ $item->company_type }}</td>--}}
-                                {{--                                    <td>{{ $item->region }}</td>--}}
-                                {{--                                    <td>{{ $item->currency }}</td>--}}
-                                {{--                                    <td>{{ $item->customer_qty }}</td>--}}
-                                {{--                                    <td>{{ '-' }}</td>--}}
-                                {{--                                    <td>{{ $item->report_date }}</td>--}}
-                                {{--                                    <td>{{ $item->total_billed_commissions_amount }}</td>--}}
-                                {{--                                    <td>{{ $item->extra_monthly_fee_amount }}</td>--}}
-                                {{--                                    <td>{{ $item->extra_ops_commission_amount }}</td>--}}
-                                {{--                                    <td>{{ $item->total_compensation }}</td>--}}
-                                {{--                                </tr>--}}
                             @empty
                             @endforelse
                             </tbody>
-                            {{--                            <tbody>--}}
-                            {{--                            @foreach ($data['lists'] as $item)--}}
-                            {{--                                <tr>--}}
-                            {{--                                    --}}{{-- edit --}}
-                            {{--                                    <td>--}}
-                            {{--                                        <a class="ajax_btn form-control btn">--}}
-                            {{--                                            <div>--}}
-                            {{--                                                <i class="ni ni-settings"></i>--}}
-                            {{--                                            </div>--}}
-                            {{--                                        </a>--}}
-                            {{--                                    </td>--}}
-                            {{--                                    <td class="platform">{{ $item->platform }}</td>--}}
-                            {{--                                    <td class="acc_nick_name">{{ $item->acc_nick_name }}</td>--}}
-                            {{--                                    <td class="acc_name">{{ $item->acc_name }}</td>--}}
-                            {{--                                    <td class="site_id">{{ $item->site_id }}</td>--}}
-                            {{--                                    <td class="shipped_date">{{ $item->shipped_date }}</td>--}}
-                            {{--                                    <td class="package_id">{{ $item->package_id }}</td>--}}
-                            {{--                                    <td class="erp_order_id">{{ $item->erp_order_id }}</td>--}}
-                            {{--                                    <td class="sku">{{ $item->sku }}</td>--}}
-                            {{--                                    <td class="order_price">{{ $item->order_price }}</td>--}}
-                            {{--                                    <td class="supplier">{{ $item->supplier }}</td>--}}
-                            {{--                                    <td class="warehouse">{{ $item->warehouse }}</td>--}}
-                            {{--                                    <input class="hidden" type="hidden" value="{{$item->currency_code_org}}">--}}
-                            {{--                                </tr>--}}
-                            {{--                            @endforeach--}}
-                            {{--                            </tbody>--}}
+
                         </table>
 
                         {{-- Pagination --}}
-                        <div class="d-flex justify-content-center" style='margin-top: 20px;'>
-                            {!! $lists->links() !!}
+                        <div class="d-flex justify-content-center">
+                            @if($lists)
+                                {!! $lists->links() !!}
+                            @endif
                         </div>
 
                     </div>
@@ -199,7 +165,7 @@
                     '<td>' + item.client_code + '</td>' +
                     '<td>' + item.contract_length + '</td>' +
                     '<td>' + item.created_at + '</td>' +
-                    '<td> billed commission </td>' +
+                    '<td>' + item.avolution_commission + '</td>' +
                     '<td>' + item.monthly_fee + '</td>' +
                     '<td>' + item.cross_sales + '</td>' +
                     '<td>' + item.ops_commission + '</td>' +
@@ -214,18 +180,46 @@
 
         $(function () {
             $(document).ready(function () {
+                $('#report_date').datepicker({
+                    format: 'yyyy-mm',//日期時間格式
+                    viewMode: "months",
+                    minViewMode: "months",
+                    ignoreReadonly: false,  //禁止使用者輸入 啟用唯讀
+                    autoclose: true
+                });
+
                 let dt = $('#commission_detail').DataTable({
                     // 參數設定[註1]
                     "bPaginate": false, // 顯示換頁
                     "searching": false, // 顯示搜尋
                     "info": false, // 顯示資訊
                     "fixedHeader": false, // 標題置頂
+                    "columns": [
+                        {
+                            "class": "details-control",
+                            "orderable": false,
+                            "data": null,
+                            "defaultContent": ""
+                        },
+                        {"data": "USER NAMES"},
+                        {"data": "ROLE"},
+                        {"data": "COMPANY"},
+                        {"data": "REGIONS"},
+                        {"data": "CURRENCY"},
+                        {"data": "CUSTOMER QTY"},
+                        {"data": "BILLED QTY"},
+                        {"data": "REPORT DATE"},
+                        {"data": "TOTAL BILLED COMMISSION"},
+                        {"data": "EXTRA MONTHLY FEE"},
+                        {"data": "EXTRA OPS COMM"},
+                        {"data": "TOTAL COMPENSATION"}
+                    ]
                 });
 
                 // Array to track the ids of the details displayed rows
                 let detailRows = [];
 
-                $('#commission_detail tbody').on('click', 'tr td:first-child', function () {
+                $('#commission_detail tbody').on('click', 'tr td.details-control', function () {
                     let tr = $(this).parents('tr');
 
                     let row = dt.row(tr);
@@ -270,36 +264,24 @@
                 // On each draw, loop over the `detailRows` array and show any child rows
                 dt.on('draw', function () {
                     $.each(detailRows, function (i, id) {
-                        $('#' + id + ' td:first-child').trigger('click');
+                        $('#' + id + ' td:details-control').trigger('click');
                     });
                 });
 
             });
         });
-
-        // function validateForm() {
-        //     let accNickName = $('#acc_nick_name').val();
-        //     let erpOrderId = $('#erp_order_id').val();
-        //     let shippedDate = $('#shipped_date').val();
-        //     let packageID = $('#package_id').val();
-        //     let sku = $('#sku').val();
-        //     if (!accNickName && !erpOrderId && !shippedDate && !packageID && !sku) {
-        //         swal({
-        //             icon: "warning",
-        //             text: "must have at least one search condition"
-        //         });
-        //         return false;
-        //     }
-        // }
     </script>
 @endpush
 
 @push('css')
     <style>
-        /*input[type=text] {*/
-        /*    background: transparent;*/
-        /*    border: none;*/
-        /*    border-bottom: 1px solid #000000;*/
-        /*}*/
+        td.details-control {
+            background: url("{{ asset('pictures') }}/details_open.png") no-repeat center center;
+            cursor: pointer;
+        }
+
+        tr.details td.details-control {
+            background: url("{{ asset('pictures') }}/details_close.png") no-repeat center center;
+        }
     </style>
 @endpush
