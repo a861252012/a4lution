@@ -3,13 +3,9 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
-use DateTime;
 use Illuminate\Http\Request;
 use App\Models\EmployeeCommission;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redirect;
 
 class EmployeeController extends Controller
 {
@@ -24,7 +20,10 @@ class EmployeeController extends Controller
                 ->leftJoin('users as u', function ($join) {
                     $join->on('a.employee_user_id', '=', 'u.id');
                 })
-                ->join('employee_commission_entries as r', 'a.id', '=', 'r.employee_commissions_id')
+                ->join('employee_commission_entries as r', function ($join) {
+                    $join->on('a.id', '=', 'r.employee_commissions_id');
+                    $join->where('r.active', 1);
+                })
                 ->select(
                     'u.id',
                     'u.user_name',
