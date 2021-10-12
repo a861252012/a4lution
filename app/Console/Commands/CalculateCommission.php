@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Log;
 
 class CalculateCommission extends Command
 {
-    protected $signature = 'calculate_commission';
+    protected $signature = 'calculate_commission {--date}';
     protected $description = 'calculate a4lution employee commission';
 
     public function __construct()
@@ -29,9 +29,9 @@ class CalculateCommission extends Command
 
     public function handle()
     {
-        $date = Carbon::now()->copy()->subMonth()->firstOfMonth()->toDateString();
+        $date = $this->option('date') ?? Carbon::now()->copy()->subMonth()->firstOfMonth()->toDateString();
         $currentDate = Carbon::now()->copy()->format('Y-m-d');
-        $userID = Auth::id() ?? 999999999;//TODO
+        $userID = Auth::id() ?? 999999999;
 
         DB::beginTransaction();
         try {

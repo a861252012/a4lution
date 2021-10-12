@@ -114,7 +114,7 @@ Route::group(['middleware' => 'auth'], function () {
             'uses' => 'FeeController@deleteExtraordinaryItem'
         ]
     );
-    
+
     Route::put(
         'fee/extraordinaryitem/detail/{id}',
         [
@@ -134,4 +134,8 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('fee/clientCodeList', ['as' => 'fee.clientCodeList', 'uses' => 'FeeController@getClientCodeList']);
 
     Route::get('fee/allCurrency', ['as' => 'fee.allCurrency', 'uses' => 'FeeController@getAllCurrency']);
+
+    Route::get('admin/approvaladmin', ['as' => 'admin.adminView', 'uses' => 'AdminController@approvalAdminView']);
+
+    Route::put('admin/approvaladmin/{date}', ['as' => 'admin.batchApprove', 'uses' => 'AdminController@batchApprove']);
 });
