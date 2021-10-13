@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\Employee\DetailResource;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\EmployeeCommission;
@@ -59,7 +60,7 @@ class EmployeeController extends Controller
         return view('employee.commissionPay', $data);
     }
 
-    public function commissionDetail(Request $request): \Illuminate\Http\JsonResponse
+    public function commissionDetail(Request $request): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
         $userID = $request->route('userID');
         $date = $request->route('date');
@@ -95,23 +96,6 @@ class EmployeeController extends Controller
 
         $data = $query->get();
 
-        //加上當下時間以便後續寫入DB
-//        $test = collect($detail)->map(function ($item) {
-////            $item['created_at'] = Carbon::parse($item['created_at'])->toDateTimeString();
-//            $item['created_at'] = Carbon::parse($item['created_at'])->format('Y-m-d');
-//
-//            return $item;
-//        });
-//
-//        $multiplied = collect($detail)->map(function ($item, $key) {
-//            return Carbon::parse($item['created_at'])->format('Y-m-d');
-//        });
-
-        $filtered = collect($data)->map(function ($item, $key) {
-            $item['created_at'] = Carbon::parse($item['created_at'])->toDateTimeString();
-            return $item;
-        });
-
-        return response()->json(['data' => $filtered]);
+        return DetailResource::collection($data);
     }
 }
