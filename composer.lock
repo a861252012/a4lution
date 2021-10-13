@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0e592bf9646fedcf6069b7b65d9325f0",
+    "content-hash": "49180d03408efe5d2e1d572183402c5b",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -6347,6 +6347,72 @@
     ],
     "packages-dev": [
         {
+            "name": "bennett-treptow/laravel-migration-generator",
+            "version": "4.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bennett-treptow/laravel-migration-generator.git",
+                "reference": "cf582059602cd6cab2da048a8bbd55e66ffb767c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bennett-treptow/laravel-migration-generator/zipball/cf582059602cd6cab2da048a8bbd55e66ffb767c",
+                "reference": "cf582059602cd6cab2da048a8bbd55e66ffb767c",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/config": "^6.0|^7.0|^8.0",
+                "illuminate/console": "^6.0|^7.0|^8.0",
+                "illuminate/database": "^6.0|^7.0|^8.0",
+                "illuminate/support": "^6.0|^7.0|^8.0",
+                "marcj/topsort": "^2.0",
+                "php": "^7.4|^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^2.16",
+                "orchestra/testbench": "^6.17"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "LaravelMigrationGenerator\\LaravelMigrationGeneratorProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "LaravelMigrationGenerator\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Bennett Treptow",
+                    "email": "me@btreptow.com"
+                }
+            ],
+            "description": "Generate migrations from existing database structures",
+            "support": {
+                "issues": "https://github.com/bennett-treptow/laravel-migration-generator/issues",
+                "source": "https://github.com/bennett-treptow/laravel-migration-generator/tree/4.0.1"
+            },
+            "funding": [
+                {
+                    "url": "https://buymeacoffee.com/btreptow",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/bennett-treptow",
+                    "type": "github"
+                }
+            ],
+            "time": "2021-09-27T18:33:19+00:00"
+        },
+        {
             "name": "beyondcode/laravel-dump-server",
             "version": "1.7.0",
             "source": {
@@ -6795,6 +6861,68 @@
                 "source": "https://github.com/hamcrest/hamcrest-php/tree/v2.0.1"
             },
             "time": "2020-07-09T08:09:16+00:00"
+        },
+        {
+            "name": "marcj/topsort",
+            "version": "2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/marcj/topsort.php.git",
+                "reference": "972f58e42b5f110a0a1d8433247f65248abcfd5c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/marcj/topsort.php/zipball/972f58e42b5f110a0a1d8433247f65248abcfd5c",
+                "reference": "972f58e42b5f110a0a1d8433247f65248abcfd5c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.3"
+            },
+            "require-dev": {
+                "codeclimate/php-test-reporter": "dev-master",
+                "phpunit/phpunit": "^9",
+                "symfony/console": "~2.5 || ~3.0 || ~4.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "MJS\\TopSort\\": "src/",
+                    "MJS\\TopSort\\Tests\\": "tests/Tests/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Marc J. Schmidt",
+                    "email": "marc@marcjschmidt.de"
+                }
+            ],
+            "description": "High-Performance TopSort/Dependency resolving algorithm",
+            "keywords": [
+                "dependency resolving",
+                "topological sort",
+                "topsort"
+            ],
+            "support": {
+                "issues": "https://github.com/marcj/topsort.php/issues",
+                "source": "https://github.com/marcj/topsort.php/tree/2.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/marcj",
+                    "type": "github"
+                }
+            ],
+            "time": "2020-09-24T12:39:55+00:00"
         },
         {
             "name": "mockery/mockery",
@@ -8799,5 +8927,5 @@
         "ext-pcntl": "7.4",
         "ext-posix": "7.4"
     },
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.1.0"
 }

@@ -22,6 +22,7 @@
         "techlab/smartwizard": "^5.1"
     },
     "require-dev": {
+        "bennett-treptow/laravel-migration-generator": "^4.0",
         "beyondcode/laravel-dump-server": "^1.7",
         "facade/ignition": "^2.3.6",
         "filp/whoops": "^2.0",
