@@ -26,8 +26,6 @@
                 <div class="card">
                     <!-- Card header -->
                     <div class="card-header">
-                        {{--                        <h3 class="mb-0">Datatable</h3>--}}
-                        {{--                        <div class="row input-daterange datepicker align-items-center">--}}
                         <div>
                             <form method="GET" action="/employee/commissionpay" role="form" class="form">
                                 <div class="row">
@@ -135,8 +133,6 @@
                 </div>
             </div>
         </div>
-        <!-- Footer -->
-        {{--        @include('layouts.footers.auth')--}}
     </div>
 @endsection
 
@@ -233,10 +229,7 @@
 
                         // Remove from the 'open' array
                         detailRows.splice(idx, 1);
-                        console.log('no ajax');
                     } else {
-                        console.log('ajax');
-
                         $.ajaxSetup({
                             headers: {
                                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -248,7 +241,6 @@
                             type: 'get',
                             async: false,
                             success: function (res) {
-                                console.log(res)
                                 tr.addClass('details');
                                 row.child(format(res)).show();
                             }
