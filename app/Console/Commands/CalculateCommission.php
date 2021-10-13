@@ -29,7 +29,12 @@ class CalculateCommission extends Command
 
     public function handle()
     {
-        $date = $this->option('date') ?? Carbon::now()->copy()->subMonth()->firstOfMonth()->toDateString();
+        $date = $this->option('date') ? $this->option('date') : Carbon::now()
+            ->copy()
+            ->subMonth()
+            ->firstOfMonth()
+            ->toDateString();
+
         $currentDate = Carbon::now()->copy()->format('Y-m-d');
         $userID = Auth::id() ?? 999999999;
 
@@ -103,7 +108,7 @@ class CalculateCommission extends Command
                     ->value('exchange_rate');
 
                 //3.判斷是否有達標獎金
-                $twdCommissionSum = $hKDCommissionSum / $RateOfTWD;
+                $twdCommissionSum = $RateOfTWD ? $hKDCommissionSum / $RateOfTWD : 0;
 
                 $employeeCommission = [];
 
