@@ -42,7 +42,7 @@ Route::group(['middleware' => 'auth'], function () {
         'as' => 'fee.firstmileshipment',
         'uses' => 'FeeController@firstMileShipmentView'
     ]);
-    Route::get('fee/export/{export_type}', ['as' => 'fee.upload', 'uses' => 'FeeController@exportSampleFile']);
+    Route::get('fee/export/{export_type}', ['as' => 'fee.export', 'uses' => 'FeeController@exportSampleFile']);
     Route::get('fee/checkIfReportExist/{report_date}', [
         'as' => 'fee.checkMonthlyReportExist',
         'uses' => 'FeeController@checkIfMonthlyReportExist'
