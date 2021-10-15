@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Imports\AfterImportNotification;
-use App\Imports\AmazonDateRangeImport;
-use App\Imports\MonthlyStorageFeesImport;
 use App\Imports\QueueAmazonDateRangeImport;
 use App\Imports\QueueFirstMileShipmentFees;
 use App\Imports\QueueLongTermStorageFees;
@@ -16,8 +13,6 @@ use App\Exports\LongTermStorageFeesExport;
 use App\Exports\MonthlyStorageFeesExport;
 use App\Exports\FirstMileShipmentFeesExport;
 use App\Models\AmazonDateRangeReport;
-use App\Models\Customers;
-use App\Models\ExchangeRates;
 use App\Models\FirstMileShipmentFees;
 use App\Models\LongTermStorageFees;
 use App\Models\PlatformAdFees;
@@ -25,7 +20,6 @@ use App\Models\BatchJobs;
 use App\Models\MonthlyStorageFees;
 use App\Models\BillingStatements;
 use App\Models\ExtraordinaryItems;
-use App\Models\Users;
 use App\Repositories\CustomersRepository;
 use App\Repositories\ExchangeRatesRepository;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -34,7 +28,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
-use Maatwebsite\Excel\Reader;
 use Carbon\Carbon;
 
 class FeeController extends Controller
@@ -61,8 +54,7 @@ class FeeController extends Controller
         BillingStatements       $billingStatements,
         CustomersRepository     $customersRepository,
         ExchangeRatesRepository $exchangeRatesRepository
-    )
-    {
+    ) {
         $this->batchJobs = $batchJobs;
         $this->amazonDateRangeReport = $amazonDateRangeReport;
         $this->platformAdFees = $platformAdFees;
@@ -171,8 +163,6 @@ class FeeController extends Controller
             return false;
         }
 
-//        DB::beginTransaction();
-
         switch ($feeType) {
             case "platform_ad_fees":
                 $import = new QueuePlatformAdFees(Auth::id(), $insertBatchID, $inputReportDate);
@@ -198,7 +188,6 @@ class FeeController extends Controller
         }
 
         if ($import) {
-//            Excel::queueImport($import, $fileData);
             Excel::queueImport($import, $fileData)->allOnQueue('queue_excel');
         }
     }
@@ -468,10 +457,6 @@ class FeeController extends Controller
                 $fileName = 'SampleFile_FirstMileShipmentFee.xlsx';
 
                 return (new FirstMileShipmentFeesExport)->download($fileName, \Maatwebsite\Excel\Excel::XLSX);
-//            default:
-//                $fileName = 'SampleFile_AdFee.xlsx';
-//
-//                return (new PlatformAdFeesExport)->download($fileName, \Maatwebsite\Excel\Excel::XLSX);
         }
     }
 
@@ -656,7 +641,6 @@ class FeeController extends Controller
 
     public function extraordinaryCreate(Request $request): \Illuminate\Http\JsonResponse
     {
-        $datetime = date('Y-m-d h:i:s');
         $userID = Auth::id();
         $data = $request->only(
             'report_date',
@@ -670,9 +654,9 @@ class FeeController extends Controller
         );
 
         $data['report_date'] = Carbon::parse($data['report_date'])->format('Y-m-d');
-        $data['created_at'] = $datetime;
+        $data['created_at'] = date('Y-m-d h:i:s');
         $data['created_by'] = $userID;
-        $data['updated_at'] = $datetime;
+        $data['updated_at'] = date('Y-m-d h:i:s');
         $data['updated_by'] = $userID;
         $data['active'] = 1;
 
