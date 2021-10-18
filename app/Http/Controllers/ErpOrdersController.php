@@ -103,11 +103,12 @@ class ErpOrdersController extends Controller
         $formattedShipDate = DB::raw("date_format(o.ship_time,'%Y-%m-%d') as 'shipped_date'");
         $formattedWareHouse = DB::raw("CONCAT(o.warehouse_code,'[',o.warehouse_name,']') AS 'warehouse'");
 
-        $query = $this->orders::from('orders as o')->leftJoin('order_products as p', function ($join) {
-            $join->on('p.order_code', '=', 'o.order_code')
-                ->where('p.active', '=', 1);
-        })
-            ->leftJoin('order_sku_cost_details as d', function ($join) {
+        $query = $this->orders::from('orders as o')
+            ->join('order_products as p', function ($join) {
+                $join->on('p.order_code', '=', 'o.order_code')
+                    ->where('p.active', '=', 1);
+            })
+            ->join('order_sku_cost_details as d', function ($join) {
                 $join->on('p.order_code', '=', 'd.reference_no');
                 $join->on('p.sku', '=', 'd.product_barcode');
             })
