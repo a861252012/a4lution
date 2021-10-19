@@ -360,7 +360,7 @@
 {{--<script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.extension.js"></script>--}}
 
 <!-- jquery colorbox JS -->
-<script src="{{ asset('argon') }}/vendor/colorbox/js/jquery.colorbox.js"></script>。
+<script src="{{ asset('argon') }}/vendor/colorbox/js/jquery.colorbox.js"></script>
 
 {{--<script src="https://code.jquery.com/jquery-3.1.0.js"></script>--}}
 
