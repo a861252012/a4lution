@@ -52,8 +52,8 @@
                                         <div class="form-group">
                                             <label class="form-control-label" for="erp_order_id">REPORT DATE</label>
                                             <input class="form-control" name="report_date" id="report_date"
-                                                   type="text" placeholder="REPORT DATE"
-                                                   value="{{$report_date ?? ''}}">
+                                                    type="text" placeholder="REPORT DATE"
+                                                    value="{{$report_date ?? ''}}">
                                         </div>
                                     </div>
 
@@ -176,7 +176,7 @@
                     // preloading: false,
                     href: origin + '/invoice/edit',
                     width: "80%",
-                    height: "100%",
+                    height: "80%",
                     returnFocus: false,
                     data: {
                         _token: data['_token'],
