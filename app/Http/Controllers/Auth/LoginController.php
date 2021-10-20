@@ -51,4 +51,12 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
     }
+
+    /**
+     * override AuthenticatesUsers trait's username()
+     */
+    public function username()
+    {
+        return 'user_name';
+    }
 }
