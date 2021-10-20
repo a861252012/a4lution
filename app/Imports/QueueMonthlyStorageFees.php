@@ -4,10 +4,8 @@ namespace App\Imports;
 
 use App\Models\BatchJobs;
 use App\Models\MonthlyStorageFees;
-use App\Models\BillingStatements;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Concerns\Importable;
@@ -20,9 +18,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\ImportFailed;
-use Maatwebsite\Excel\Imports\HeadingRowFormatter;
 use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
-use Illuminate\Validation\ValidationException;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading, WithBatchInserts, WithCalculatedFormulas, WithEvents, WithValidation
@@ -119,16 +115,15 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
                     $haveInsert = MonthlyStorageFees::where('report_date', '=', $this->inputReportDate)
                         ->where('active', '=', 1)
                         ->where('upload_id', '<', $this->batchID)
-                        ->sharedLock()
                         ->count();
                     if ($haveInsert) {
-                        MonthlyStorageFees::where('report_date', $this->inputReportDate)
+                        $updateQuery = MonthlyStorageFees::where('report_date', $this->inputReportDate)
                             ->where('active', '=', 1)
-                            ->where('upload_id', '<', $this->batchID)
-                            ->lockForUpdate()
-                            ->chunkById(1000, function ($items) {
-                                $items->each->update(['active' => 0]);
-                            }, 'id');
+                            ->where('upload_id', '<', $this->batchID);
+
+                        collect($updateQuery->cursor())->map(function ($item) {
+                            $item->update(['active' => 0]);
+                        });
                     }
                     BatchJobs::where('id', $this->batchID)->update(
                         [
@@ -141,7 +136,7 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
                 } catch (\Exception $e) {
                     DB::rollback();
                     \Log::channel('daily_queue_import')
-                        ->info("[QueueFirstMileShipmentFees.errors]" . $e);
+                        ->info("[QueueMonthlyStorageFees.errors]" . $e);
                 }
             },
             ImportFailed::class => function (ImportFailed $event) {
@@ -158,16 +153,15 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
                     $haveInsert = MonthlyStorageFees::where('report_date', '=', $this->inputReportDate)
                         ->where('active', '=', 1)
                         ->where('upload_id', '=', $this->batchID)
-                        ->sharedLock()
                         ->count();
                     if ($haveInsert) {
-                        MonthlyStorageFees::where('report_date', $this->inputReportDate)
+                        $deleteQuery = MonthlyStorageFees::where('report_date', $this->inputReportDate)
                             ->where('active', '=', 1)
-                            ->where('upload_id', '=', $this->batchID)
-                            ->lockForUpdate()
-                            ->chunkById(1000, function ($items) {
-                                $items->each->delete();
-                            }, 'id');
+                            ->where('upload_id', '=', $this->batchID);
+
+                        collect($deleteQuery->cursor())->map(function ($item) {
+                            $item->delete();
+                        });
                     }
                     BatchJobs::where('id', $this->batchID)->update(
                         [

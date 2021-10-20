@@ -3,7 +3,6 @@
 namespace App\Repositories;
 
 use App\Models\EmployeeCommissionEntries;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class EmployeeCommissionEntriesRepository
@@ -15,14 +14,12 @@ class EmployeeCommissionEntriesRepository
         $this->employeeCommissionEntries = $employeeCommissionEntries;
     }
 
-    public function insertData(array $data)
+    public function create(array $data)
     {
-        return DB::transaction(function () use ($data) {
-            return $this->employeeCommissionEntries->insert($data);
-        });
+        return $this->employeeCommissionEntries->create($data);
     }
 
-    public function updateDataByDate(string $date, array $data): int
+    public function updateByDate(string $date, array $data): int
     {
         try {
             return $this->employeeCommissionEntries
@@ -30,7 +27,7 @@ class EmployeeCommissionEntriesRepository
                 ->where('report_date', $date)
                 ->update($data);
         } catch (\Exception $e) {
-            Log::error("billingStatements update error: {$e}");
+            Log::error("EmployeeCommissionEntries update error: {$e}");
             return -1;
         }
     }

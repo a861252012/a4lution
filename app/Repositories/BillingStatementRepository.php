@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\BillingStatements;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BillingStatementRepository
 {
@@ -14,20 +15,21 @@ class BillingStatementRepository
         $this->billingStatements = $billingStatements;
     }
 
-    public function insertData(array $data)
+    public function create(array $data)
     {
-        return DB::transaction(function () use ($data) {
-            return $this->billingStatements->insert($data);
-        });
+        return $this->billingStatements->create($data);
     }
 
-    public function updateDataByDate(string $date, array $data)
+    public function updateByDate(string $date, array $data): int
     {
-        return DB::transaction(function () use ($date, $data) {
+        try {
             return $this->billingStatements
                 ->active()
                 ->where('report_date', $date)
                 ->update($data);
-        });
+        } catch (\Exception $e) {
+            Log::error("billingStatements update error: {$e}");
+            return -1;
+        }
     }
 }

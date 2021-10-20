@@ -4,10 +4,8 @@ namespace App\Imports;
 
 use App\Models\BatchJobs;
 use App\Models\FirstMileShipmentFees;
-use App\Models\BillingStatements;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
@@ -21,7 +19,6 @@ use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
-use Maatwebsite\Excel\Reader;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading, WithBatchInserts, WithCalculatedFormulas, WithEvents, withValidation
@@ -109,16 +106,15 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
                     $haveInsert = FirstMileShipmentFees::where('report_date', '=', $this->inputReportDate)
                         ->where('active', '=', 1)
                         ->where('upload_id', '<', $this->batchID)
-                        ->sharedLock()
                         ->count();
                     if ($haveInsert) {
-                        FirstMileShipmentFees::where('report_date', $this->inputReportDate)
+                        $feesUpdateQuery = FirstMileShipmentFees::where('report_date', $this->inputReportDate)
                             ->where('upload_id', '<', $this->batchID)
-                            ->where('active', '=', 1)
-                            ->lockForUpdate()
-                            ->chunkById(1000, function ($items) {
-                                $items->each->update(['active' => 0]);
-                            }, 'id');
+                            ->where('active', '=', 1);
+
+                        collect($feesUpdateQuery->cursor())->map(function ($item) {
+                            $item->update(['active' => 0]);
+                        });
                     }
                     BatchJobs::where('id', $this->batchID)->update(
                         [
@@ -150,17 +146,16 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
                     $haveInsert = FirstMileShipmentFees::where('report_date', '=', $this->inputReportDate)
                         ->where('active', '=', 1)
                         ->where('upload_id', '=', $this->batchID)
-                        ->sharedLock()
                         ->count();
 
                     if ($haveInsert) {
-                        FirstMileShipmentFees::where('report_date', $this->inputReportDate)
+                        $deleteQuery = FirstMileShipmentFees::where('report_date', $this->inputReportDate)
                             ->where('upload_id', '=', $this->batchID)
-                            ->where('active', '=', 1)
-                            ->lockForUpdate()
-                            ->chunkById(1000, function ($items) {
-                                $items->each->delete();
-                            }, 'id');
+                            ->where('active', '=', 1);
+
+                        collect($deleteQuery->cursor())->map(function ($item) {
+                            $item->delete();
+                        });
                     }
 
                     DB::commit();

@@ -3,27 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\BillingStatements;
-use App\Repositories\BillingStatementRepository;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\EmployeeCommission;
 use App\Services\AdminService;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
-    private $billingStatementRepository;
     private $adminService;
 
     public function __construct(
-        BillingStatementRepository $billingStatementRepository,
-        AdminService               $adminService
+        AdminService $adminService
     )
     {
-        $this->billingStatementRepository = $billingStatementRepository;
         $this->adminService = $adminService;
     }
 
@@ -63,29 +57,19 @@ class AdminController extends Controller
         }
     }
 
-    public function revokeApprove(Request $request): \Illuminate\Http\JsonResponse
+    public function revokeApprove(Request $request)
     {
         $date = Carbon::parse($request->route('date'))->format('Y-m-01');
 
         if (!Auth::user()->isManager()) {
-            return response()->json(
-                [
-                    'status' => 400,
-                    'msg' => 'Permission Denied'
-                ]
-            );
+            abort(response()->json('Unauthorized', 401));
         }
 
         try {
             $res = $this->adminService->revokeApprove($date);
 
-            if ($res === 400) {
-                return response()->json(
-                    [
-                        'status' => 500,
-                        'msg' => 'API ERROR'
-                    ]
-                );
+            if ($res === 500) {
+                abort(response()->json('API ERROR', 500));
             }
 
             return response()->json(
@@ -96,15 +80,7 @@ class AdminController extends Controller
             );
         } catch (\Exception $e) {
             Log::error("revokeApprove error: {$e}");
-
-            return response()->json(
-                [
-                    'status' => 500,
-                    'msg' => 'error',
-                ]
-            );
+            abort(response()->json('API ERROR', 500));
         }
     }
-
-
 }

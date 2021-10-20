@@ -3,7 +3,6 @@
 namespace App\Repositories;
 
 use App\Models\Invoices;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class InvoicesRepository
@@ -15,14 +14,12 @@ class InvoicesRepository
         $this->invoices = $invoices;
     }
 
-    public function insertData(array $data)
+    public function create(array $data)
     {
-        return DB::transaction(function () use ($data) {
-            return $this->invoices->insert($data);
-        });
+        return $this->invoices->create($data);
     }
 
-    public function updateDataByDate(string $date, array $data): int
+    public function updateByDate(string $date, array $data): int
     {
         try {
             return $this->invoices

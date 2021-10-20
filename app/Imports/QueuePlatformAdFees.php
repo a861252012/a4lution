@@ -4,11 +4,8 @@ namespace App\Imports;
 
 use App\Models\PlatformAdFees;
 use App\Models\BatchJobs;
-use App\Models\BillingStatements;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\RemembersRowNumber;
@@ -19,10 +16,7 @@ use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
-use Maatwebsite\Excel\Imports\HeadingRowFormatter;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Illuminate\Validation\Rule;
-use \Maatwebsite\Excel\Reader;
 
 class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, WithHeadingRow, WithBatchInserts, WithEvents, WithValidation
 {
@@ -104,16 +98,15 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
                     $haveInsert = PlatformAdFees::where('report_date', '=', $this->inputReportDate)
                         ->where('active', '=', 1)
                         ->where('upload_id', '<', $this->batchID)
-                        ->sharedLock()
                         ->count();
                     if ($haveInsert) {
-                        PlatformAdFees::where('report_date', $this->inputReportDate)
+                        $updateQuery = PlatformAdFees::where('report_date', $this->inputReportDate)
                             ->where('upload_id', '<', $this->batchID)
-                            ->where('active', '=', 1)
-                            ->lockForUpdate()
-                            ->chunkById(1000, function ($items) {
-                                $items->each->update(['active' => 0]);
-                            }, 'id');
+                            ->where('active', '=', 1);
+
+                        collect($updateQuery->cursor())->map(function ($item) {
+                            $item->update(['active' => 0]);
+                        });
                     }
                     BatchJobs::where('id', $this->batchID)->update(
                         [
@@ -127,7 +120,7 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
                     DB::rollback();
 
                     \Log::channel('daily_queue_import')
-                        ->info("[QueueFirstMileShipmentFees.errors]" . $e);
+                        ->info("[QueuePlatformAdFees.errors]" . $e);
                 }
             },
             ImportFailed::class => function (ImportFailed $event) {
@@ -144,16 +137,16 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
                     $haveInsert = PlatformAdFees::where('report_date', '=', $this->inputReportDate)
                         ->where('active', '=', 1)
                         ->where('upload_id', '=', $this->batchID)
-                        ->sharedLock()
                         ->count();
+
                     if ($haveInsert) {
-                        PlatformAdFees::where('report_date', $this->inputReportDate)
+                        $deleteQuery = PlatformAdFees::where('report_date', $this->inputReportDate)
                             ->where('active', '=', 1)
-                            ->where('upload_id', '=', $this->batchID)
-                            ->lockForUpdate()
-                            ->chunkById(1000, function ($items) {
-                                $items->each->delete();
-                            }, 'id');
+                            ->where('upload_id', '=', $this->batchID);
+
+                        collect($deleteQuery->cursor())->map(function ($item) {
+                            $item->delete();
+                        });
                     }
                     BatchJobs::where('id', $this->batchID)->update(
                         [
@@ -221,5 +214,4 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
 //            '*.exchange_rate' => ['bail', 'nullable', 'numeric', 'max:999999999999'],
 //        ];
     }
-
 }
