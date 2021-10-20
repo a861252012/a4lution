@@ -28,7 +28,6 @@ class AdminController extends Controller
 
     public function batchApprove(Request $request): \Illuminate\Http\JsonResponse
     {
-        //test
         $date = Carbon::parse($request->route('date'))->format('Y-m-01');
 
         try {
