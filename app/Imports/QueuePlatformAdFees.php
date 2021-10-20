@@ -88,7 +88,6 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
         return PlatformAdFees::where('upload_id', $this->batchID)
             ->where('active', 1)
             ->count();
-//        return $this->rows;
     }
 
     public function chunkSize(): int
@@ -132,19 +131,45 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
                 }
             },
             ImportFailed::class => function (ImportFailed $event) {
+                DB::beginTransaction();
+                try {
+                    BatchJobs::where('id', $this->batchID)->update(
+                        [
+                            'status' => 'failed',
+                            'total_count' => $this->getRowCount(),
+                            'exit_message' => $event->getException()
+                        ]
+                    );
 
-                BatchJobs::where('id', $this->batchID)->update(
-                    [
-                        'status' => 'failed',
-                        'total_count' => $this->getRowCount(),
-                        'exit_message' => $event->getException()
+                    $haveInsert = PlatformAdFees::where('report_date', '=', $this->inputReportDate)
+                        ->where('active', '=', 1)
+                        ->where('upload_id', '=', $this->batchID)
+                        ->sharedLock()
+                        ->count();
+                    if ($haveInsert) {
+                        PlatformAdFees::where('report_date', $this->inputReportDate)
+                            ->where('active', '=', 1)
+                            ->where('upload_id', '=', $this->batchID)
+                            ->lockForUpdate()
+                            ->chunkById(1000, function ($items) {
+                                $items->each->delete();
+                            }, 'id');
+                    }
+                    BatchJobs::where('id', $this->batchID)->update(
+                        [
+                            'status' => 'completed',
+                            'total_count' => $this->getRowCount()
+                        ]
+                    );
 
-                    ]
-                );
-//                foreach ($event->getException()->failures() as $failure) {
-//                    \Log::channel('daily_queue_import')
-//                        ->info("[QueuePlatformAdFees.errors]" . implode(',', $failure->toArray()));
-//                }
+                    DB::commit();
+                } catch (\Exception $e) {
+                    DB::rollback();
+
+                    \Log::channel('daily_queue_import')
+                        ->info("[QueuePlatformAdFees.errors]" . $e);
+                }
+
                 foreach ($event->getException() as $failure) {
                     \Log::channel('daily_queue_import')
                         ->info("[QueuePlatformAdFees.errors]" . $failure);

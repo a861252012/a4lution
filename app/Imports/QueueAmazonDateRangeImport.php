@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\AmazonDateRangeReport;
 use App\Models\BatchJobs;
 use App\Models\BillingStatements;
+use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,7 @@ use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
 use Maatwebsite\Excel\Facades\Excel;
 use \Maatwebsite\Excel\Reader;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQueue, WithHeadingRow, WithCalculatedFormulas, WithBatchInserts, WithValidation, WithEvents
 {
@@ -98,7 +100,6 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
 
     public function getRowCount(): int
     {
-//        return $this->rows;
         return AmazonDateRangeReport::where('upload_id', $this->batchID)
             ->where('active', 1)
             ->count();
@@ -112,8 +113,6 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
     public function registerEvents(): array
     {
         return [
-//            BeforeImport::class => function (BeforeImport $event) {
-//            },
             AfterImport::class => function (AfterImport $event) {
                 DB::beginTransaction();
                 try {
@@ -148,18 +147,40 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
                 }
             },
             ImportFailed::class => function (ImportFailed $event) {
-                BatchJobs::where('id', $this->batchID)->update(
-                    [
-                        'status' => 'failed',
-                        'total_count' => $this->getRowCount(),
-                        'exit_message' => json_encode($event->getException())
+                DB::beginTransaction();
+                try {
+                    BatchJobs::where('id', $this->batchID)
+                        ->update(
+                            [
+                                'status' => 'failed',
+                                'total_count' => $this->getRowCount(),
+                                'exit_message' => $event->getException()
+                            ]
+                        );
 
-                    ]
-                );
-//                foreach ($event->getException()->failures() as $failure) {
-//                    \Log::channel('daily_queue_import')
-//                        ->info("[QueueAmazonDateRangeImport.errors]" . implode(',', $failure->toArray()));
-//                }
+                    $haveInsert = AmazonDateRangeReport::where('report_date', '=', $this->inputReportDate)
+                        ->where('active', '=', 1)
+                        ->where('upload_id', '=', $this->batchID)
+                        ->sharedLock()
+                        ->count();
+                    if ($haveInsert) {
+                        AmazonDateRangeReport::where('report_date', $this->inputReportDate)
+                            ->where('upload_id', '=', $this->batchID)
+                            ->where('active', '=', 1)
+                            ->lockForUpdate()
+                            ->chunkById(1000, function ($items) {
+                                $items->each->delete();
+                            }, 'id');
+                    }
+
+                    DB::commit();
+                } catch (\Exception $e) {
+                    DB::rollback();
+
+                    \Log::channel('daily_queue_import')
+                        ->info("[QueueAmazonDateRangeImport.errors]" . $e);
+                }
+
                 foreach ($event->getException() as $failure) {
                     \Log::channel('daily_queue_import')
                         ->info("[QueueAmazonDateRangeImport.errors]" . $failure);
@@ -249,12 +270,12 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
         return $row;
     }
 
-    public function transformDate($value, $format = 'Y-m-d')
+    public function transformDate($value): string
     {
         try {
-            return \Carbon\Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value));
+            return Carbon::instance(Date::excelToDateTimeObject($value));
         } catch (\ErrorException $e) {
-            return \Carbon\Carbon::parse($value)->format('Y-m-d H:i:s');
+            return Carbon::parse($value)->format('Y-m-d H:i:s');
         }
     }
 }
