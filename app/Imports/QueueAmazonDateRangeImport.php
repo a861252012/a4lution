@@ -112,20 +112,13 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
             AfterImport::class => function (AfterImport $event) {
                 DB::beginTransaction();
                 try {
-                    $haveInsert = AmazonDateRangeReport::where('report_date', '=', $this->inputReportDate)
-                        ->where('active', '=', 1)
+                    AmazonDateRangeReport::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '<', $this->batchID)
-                        ->count();
-
-                    if ($haveInsert) {
-                        $updateQuery = AmazonDateRangeReport::where('report_date', $this->inputReportDate)
-                            ->where('upload_id', '<', $this->batchID)
-                            ->where('active', '=', 1);
-
-                        collect($updateQuery->cursor())->map(function ($item) {
+                        ->where('active', '=', 1)
+                        ->cursor()
+                        ->each(function ($item) {
                             $item->update(['active' => 0]);
                         });
-                    }
 
                     BatchJobs::where('id', $this->batchID)->update(
                         [
@@ -154,19 +147,13 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
                             ]
                         );
 
-                    $haveInsert = AmazonDateRangeReport::where('report_date', '=', $this->inputReportDate)
-                        ->where('active', '=', 1)
+                    AmazonDateRangeReport::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '=', $this->batchID)
-                        ->count();
-                    if ($haveInsert) {
-                        $query = AmazonDateRangeReport::where('report_date', $this->inputReportDate)
-                            ->where('upload_id', '=', $this->batchID)
-                            ->where('active', '=', 1);
-
-                        collect($query->cursor())->map(function ($item) {
+                        ->where('active', '=', 1)
+                        ->cursor()
+                        ->each(function ($item) {
                             $item->delete();
                         });
-                    }
 
                     DB::commit();
                 } catch (\Exception $e) {

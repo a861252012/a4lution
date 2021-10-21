@@ -95,19 +95,14 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
             AfterImport::class => function (AfterImport $event) {
                 DB::beginTransaction();
                 try {
-                    $haveInsert = PlatformAdFees::where('report_date', '=', $this->inputReportDate)
-                        ->where('active', '=', 1)
+                    PlatformAdFees::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '<', $this->batchID)
-                        ->count();
-                    if ($haveInsert) {
-                        $updateQuery = PlatformAdFees::where('report_date', $this->inputReportDate)
-                            ->where('upload_id', '<', $this->batchID)
-                            ->where('active', '=', 1);
-
-                        collect($updateQuery->cursor())->map(function ($item) {
+                        ->where('active', '=', 1)
+                        ->cursor()
+                        ->each(function ($item) {
                             $item->update(['active' => 0]);
                         });
-                    }
+
                     BatchJobs::where('id', $this->batchID)->update(
                         [
                             'status' => 'completed',
@@ -134,20 +129,14 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
                         ]
                     );
 
-                    $haveInsert = PlatformAdFees::where('report_date', '=', $this->inputReportDate)
+                    PlatformAdFees::where('report_date', $this->inputReportDate)
                         ->where('active', '=', 1)
                         ->where('upload_id', '=', $this->batchID)
-                        ->count();
-
-                    if ($haveInsert) {
-                        $deleteQuery = PlatformAdFees::where('report_date', $this->inputReportDate)
-                            ->where('active', '=', 1)
-                            ->where('upload_id', '=', $this->batchID);
-
-                        collect($deleteQuery->cursor())->map(function ($item) {
+                        ->cursor()
+                        ->each(function ($item) {
                             $item->delete();
                         });
-                    }
+
                     BatchJobs::where('id', $this->batchID)->update(
                         [
                             'status' => 'completed',

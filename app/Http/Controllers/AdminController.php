@@ -59,28 +59,6 @@ class AdminController extends Controller
 
     public function revokeApprove(Request $request)
     {
-        $date = Carbon::parse($request->route('date'))->format('Y-m-01');
-
-        if (!Auth::user()->isManager()) {
-            abort(response()->json('Unauthorized', 401));
-        }
-
-        try {
-            $res = $this->adminService->revokeApprove($date);
-
-            if ($res === 500) {
-                abort(response()->json('API ERROR', 500));
-            }
-
-            return response()->json(
-                [
-                    'status' => 200,
-                    'msg' => 'success'
-                ]
-            );
-        } catch (\Exception $e) {
-            Log::error("revokeApprove error: {$e}");
-            abort(response()->json('API ERROR', 500));
-        }
+        return $this->adminService->revokeApprove($request->route('date'));
     }
 }

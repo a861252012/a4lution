@@ -6,6 +6,7 @@ use App\Repositories\BillingStatementRepository;
 use App\Repositories\InvoicesRepository;
 use App\Repositories\EmployeeCommissionRepository;
 use App\Repositories\EmployeeCommissionEntriesRepository;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,17 @@ class AdminService
 
     public function revokeApprove(string $date)
     {
+        $date = Carbon::parse($date)->format('Y-m-01');
+
+        if (!Auth::user()->isManager()) {
+            return response()->json(
+                [
+                    'status' => 401,
+                    'msg' => 'Unauthorized'
+                ]
+            );
+        }
+
         $softDeleteParams = [
             'active' => 0,
             'deleted_at' => date('Y-m-d h:i:s'),
@@ -46,8 +58,12 @@ class AdminService
                 $softDeleteParams
             );
             if ($updateBilling === -1) {
-                DB::rollback();
-                return 500;
+                return response()->json(
+                    [
+                        'status' => 500,
+                        'msg' => 'Error'
+                    ], 500
+                );
             }
 
             $invoiceData = [
@@ -63,8 +79,12 @@ class AdminService
             );
 
             if ($updateInvoice === -1) {
-                DB::rollback();
-                return 500;
+                return response()->json(
+                    [
+                        'status' => 500,
+                        'msg' => 'Error'
+                    ], 500
+                );
             }
 
             $updateEmployee = $this->employeeCommissionRepository->updateByDate(
@@ -73,8 +93,12 @@ class AdminService
             );
 
             if ($updateEmployee === -1) {
-                DB::rollback();
-                return 500;
+                return response()->json(
+                    [
+                        'status' => 500,
+                        'msg' => 'Error'
+                    ], 500
+                );
             }
 
             $updateEmployeeEntries = $this->employeeCommissionEntriesRepository->updateDataByDate(
@@ -92,6 +116,13 @@ class AdminService
         } catch (\Exception $e) {
             DB::rollback();
             Log::error("revokeApprove update error: {$e}");
+
+            return response()->json(
+                [
+                    'status' => 500,
+                    'msg' => 'Error'
+                ], 500
+            );
         }
     }
 }

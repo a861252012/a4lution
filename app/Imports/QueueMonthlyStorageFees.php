@@ -112,19 +112,14 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
             AfterImport::class => function (AfterImport $event) {
                 DB::beginTransaction();
                 try {
-                    $haveInsert = MonthlyStorageFees::where('report_date', '=', $this->inputReportDate)
+                    MonthlyStorageFees::where('report_date', $this->inputReportDate)
                         ->where('active', '=', 1)
                         ->where('upload_id', '<', $this->batchID)
-                        ->count();
-                    if ($haveInsert) {
-                        $updateQuery = MonthlyStorageFees::where('report_date', $this->inputReportDate)
-                            ->where('active', '=', 1)
-                            ->where('upload_id', '<', $this->batchID);
-
-                        collect($updateQuery->cursor())->map(function ($item) {
+                        ->cursor()
+                        ->each(function ($item) {
                             $item->update(['active' => 0]);
                         });
-                    }
+
                     BatchJobs::where('id', $this->batchID)->update(
                         [
                             'status' => 'completed',
@@ -150,19 +145,15 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
                         ]
                     );
 
-                    $haveInsert = MonthlyStorageFees::where('report_date', '=', $this->inputReportDate)
+                    MonthlyStorageFees::where('report_date', $this->inputReportDate)
                         ->where('active', '=', 1)
                         ->where('upload_id', '=', $this->batchID)
-                        ->count();
-                    if ($haveInsert) {
-                        $deleteQuery = MonthlyStorageFees::where('report_date', $this->inputReportDate)
-                            ->where('active', '=', 1)
-                            ->where('upload_id', '=', $this->batchID);
-
-                        collect($deleteQuery->cursor())->map(function ($item) {
+                        ->cursor()
+                        ->each(function ($item) {
                             $item->delete();
                         });
-                    }
+
+
                     BatchJobs::where('id', $this->batchID)->update(
                         [
                             'status' => 'completed',

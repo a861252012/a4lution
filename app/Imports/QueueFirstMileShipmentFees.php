@@ -103,19 +103,14 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
             AfterImport::class => function (AfterImport $event) {
                 DB::beginTransaction();
                 try {
-                    $haveInsert = FirstMileShipmentFees::where('report_date', '=', $this->inputReportDate)
-                        ->where('active', '=', 1)
+                    FirstMileShipmentFees::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '<', $this->batchID)
-                        ->count();
-                    if ($haveInsert) {
-                        $feesUpdateQuery = FirstMileShipmentFees::where('report_date', $this->inputReportDate)
-                            ->where('upload_id', '<', $this->batchID)
-                            ->where('active', '=', 1);
-
-                        collect($feesUpdateQuery->cursor())->map(function ($item) {
+                        ->where('active', '=', 1)
+                        ->cursor()
+                        ->each(function ($item) {
                             $item->update(['active' => 0]);
                         });
-                    }
+
                     BatchJobs::where('id', $this->batchID)->update(
                         [
                             'status' => 'completed',
@@ -143,20 +138,13 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
                             ]
                         );
 
-                    $haveInsert = FirstMileShipmentFees::where('report_date', '=', $this->inputReportDate)
-                        ->where('active', '=', 1)
+                    FirstMileShipmentFees::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '=', $this->batchID)
-                        ->count();
-
-                    if ($haveInsert) {
-                        $deleteQuery = FirstMileShipmentFees::where('report_date', $this->inputReportDate)
-                            ->where('upload_id', '=', $this->batchID)
-                            ->where('active', '=', 1);
-
-                        collect($deleteQuery->cursor())->map(function ($item) {
+                        ->where('active', '=', 1)
+                        ->cursor()
+                        ->each(function ($item) {
                             $item->delete();
                         });
-                    }
 
                     DB::commit();
                 } catch (\Exception $e) {
