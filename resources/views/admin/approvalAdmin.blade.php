@@ -97,7 +97,7 @@
                 });
 
                 $.ajax({
-                    url: origin + '/admin/approvaladmin/' + reportDate,
+                    url: origin + '/admin/approvaladmin/batch/' + reportDate,
                     type: 'put',
                     success: function (res) {
                         if (res.status !== 200) {
