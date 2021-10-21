@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Users;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class EmployeeCommission extends Model
@@ -11,6 +11,16 @@ class EmployeeCommission extends Model
 
     protected $guarded = ['id'];
 
-//    protected $fillable = ['user_id'];
-//    public $timestamps = false;
+    public $timestamps = false;
+
+    /**
+     * Scope a query to only include active users.
+     *
+     * @param Builder $query
+     * @return Builder
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('active', 1);
+    }
 }
