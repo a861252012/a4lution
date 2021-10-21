@@ -57,14 +57,8 @@ class AdminService
                 $date,
                 $softDeleteParams
             );
-            if ($updateBilling === -1) {
-                return response()->json(
-                    [
-                        'status' => 500,
-                        'msg' => 'Error'
-                    ], 500
-                );
-            }
+
+            abort_if($updateBilling === -1, 500);
 
             $invoiceData = [
                 'active' => 0,
@@ -78,41 +72,23 @@ class AdminService
                 $invoiceData
             );
 
-            if ($updateInvoice === -1) {
-                return response()->json(
-                    [
-                        'status' => 500,
-                        'msg' => 'Error'
-                    ], 500
-                );
-            }
+            abort_if($updateInvoice === -1, 500);
 
             $updateEmployee = $this->employeeCommissionRepository->updateByDate(
                 $date,
                 $softDeleteParams
             );
 
-            if ($updateEmployee === -1) {
-                return response()->json(
-                    [
-                        'status' => 500,
-                        'msg' => 'Error'
-                    ], 500
-                );
-            }
+            abort_if($updateEmployee === -1, 500);
 
             $updateEmployeeEntries = $this->employeeCommissionEntriesRepository->updateDataByDate(
                 $date,
                 $softDeleteParams
             );
 
-            if ($updateEmployeeEntries === -1) {
-                DB::rollback();
-                return 500;
-            }
-            DB::commit();
+            abort_if($updateEmployeeEntries === -1, 500);
 
-            return 200;
+            DB::commit();
         } catch (\Exception $e) {
             DB::rollback();
             Log::error("revokeApprove update error: {$e}");
@@ -124,5 +100,12 @@ class AdminService
                 ], 500
             );
         }
+
+        return response()->json(
+            [
+                'status' => 200,
+                'msg' => 'success'
+            ]
+        );
     }
 }
