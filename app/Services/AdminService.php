@@ -81,7 +81,7 @@ class AdminService
 
             abort_if($updateEmployee === -1, 500);
 
-            $updateEmployeeEntries = $this->employeeCommissionEntriesRepository->updateDataByDate(
+            $updateEmployeeEntries = $this->employeeCommissionEntriesRepository->updateByDate(
                 $date,
                 $softDeleteParams
             );
