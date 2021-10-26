@@ -136,13 +136,13 @@ class OpexInvoiceExport implements WithTitle, WithEvents
                     'a4_account_advertisement',
                     'a4_account_marketing_and_promotion'
                 ];
-                $sumOfUnitPrice = $this->getTotalVal($billing, $UnitPriceKeys) ?? 0;
+                $sumOfUnitPrice = $this->getTotalVal($billing, $UnitPriceKeys);
 
                 $event->sheet->SetCellValue("B25", 'E');
                 $event->sheet->SetCellValue("C25", 'Marketing Fee');
-                $event->sheet->SetCellValue("D25", "HKD  " . (float)$sumOfUnitPrice);
+                $event->sheet->SetCellValue("D25", "HKD  " . $sumOfUnitPrice);
                 $event->sheet->SetCellValue("E25", 1);
-                $event->sheet->SetCellValue("F25", "HKD  " . (float)$sumOfUnitPrice);
+                $event->sheet->SetCellValue("F25", "HKD  " . $sumOfUnitPrice);
 
                 //item.F
                 $event->sheet->SetCellValue("B27", 'F');
@@ -161,7 +161,7 @@ class OpexInvoiceExport implements WithTitle, WithEvents
                 //item.H
                 $event->sheet->SetCellValue("B31", 'H');
                 $event->sheet->SetCellValue("C31", 'Extraordinary item');
-                $event->sheet->SetCellValue("D31", "HKD  " . (float)$billing->extraordinary_item );
+                $event->sheet->SetCellValue("D31", "HKD  " . (float)$billing->extraordinary_item);
                 $event->sheet->SetCellValue("E31", 1);
                 $event->sheet->SetCellValue("F31", "HKD  " . (float)$billing->extraordinary_item);
 
@@ -175,19 +175,24 @@ class OpexInvoiceExport implements WithTitle, WithEvents
                 //item Total
                 $totalKeys = [
                     'a4_account_logistics_fee',
+                    'client_account_logistics_fee',
                     'a4_account_platform_fee',
                     'a4_account_fba_fee',
                     'a4_account_fba_storage_fee',
                     'a4_account_advertisement',
                     'a4_account_marketing_and_promotion',
-                    'a4_account_sales_tax_handling',
+                    'sales_tax_handling',
                     'a4_account_miscellaneous',
-                    'a4_account_avolution_commission',
+                    'avolution_commission',
                     'extraordinary_item'
                 ];
 
+                if ($billing->client_code === 'G73A') {
+                    $totalKeys = collect($totalKeys)->forget('client_account_logistics_fee')->all();
+                }
+
                 $event->sheet->SetCellValue("B35", 'Total');
-                $event->sheet->SetCellValue("F35", "HKD  " . $this->getTotalVal($billing, $totalKeys) ?? 0);
+                $event->sheet->SetCellValue("F35", "HKD  " . $this->getTotalVal($billing, $totalKeys));
 
                 //footer
                 $event->sheet->SetCellValue("B44", 'Payment Method:');

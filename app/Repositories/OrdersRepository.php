@@ -69,7 +69,7 @@ WHERE
 FROM
     rma_refund_list a
         LEFT JOIN
-    uat_a4lution.exchange_rates r ON a.currency = r.base_currency
+    exchange_rates r ON a.currency = r.base_currency
         AND DATE_FORMAT(a.create_date, '%Y%M') = DATE_FORMAT(r.quoted_date, '%Y%M')
 WHERE
     a.pc_name = '{$clientCode}'
