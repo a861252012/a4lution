@@ -100,13 +100,6 @@ class UploadFileToAWS implements ShouldQueue
         //check if exchange rate exist
         if (!$exchangeRate) {
             Log::error('uploadFileToS3_failed: exchangeRate is empty');
-//            return response()->json(
-//                [
-//                    'msg' => 'Currency Exchange Rate Not Found Error',
-//                    'status' => 'error',
-//                    'icon' => 'error'
-//                ]
-//            );
         }
 
         $commissionSettings = CommissionSettings::where('client_code', $data['client_code'])
@@ -165,7 +158,6 @@ class UploadFileToAWS implements ShouldQueue
             true
         );
 
-//        $fees['clientRefundFees'] = $clientRefundFees ? $clientRefundFees[0]->refund_amount_hkd : 0;
         $clientRefundFees = $clientRefundFees ? $clientRefundFees[0]->refund_amount_hkd : 0;
 
         $a4RefundFees = $orderRepository->getAccountRefund(
@@ -174,7 +166,7 @@ class UploadFileToAWS implements ShouldQueue
             $supplierName,
             false
         );
-//        $fees['a4ReportRefundFees'] = $a4RefundFees ? $a4RefundFees[0]->refund_amount_hkd : 0;
+
         $a4RefundFees = $a4RefundFees ? $a4RefundFees[0]->refund_amount_hkd : 0;
 
         //getAccountResend
@@ -196,7 +188,6 @@ class UploadFileToAWS implements ShouldQueue
 
         $a4AccountResend = $a4AccountResend ? $a4AccountResend[0]->total_sales_hkd : 0;
 
-        //getAccountAmazonTotal (AmazonTotal + resend + refund = account_refund_and_resend)
         $clientAccountAmazonTotal = $orderRepository->getAccountAmzTotal(
             $data['report_date'],
             $data['client_code'],
@@ -214,7 +205,6 @@ class UploadFileToAWS implements ShouldQueue
             false
         );
 
-//        $fees['a4AccountAmazonTotal'] = $a4AccountAmazonTotal ? $a4AccountAmazonTotal[0]->amazon_total_hkd : 0;
         $a4AccountAmazonTotal = $a4AccountAmazonTotal ? $a4AccountAmazonTotal[0]->amazon_total_hkd : 0;
 
         $fees['a4_account_refund_and_resend'] = abs((float)$a4RefundFees + (float)$a4AccountResend + (float)$a4AccountAmazonTotal);
@@ -366,14 +356,6 @@ class UploadFileToAWS implements ShouldQueue
             (float)$totalSalesAmount
         );
 
-//        if ($commissionRate['status'] === 'error') {
-//            return request()->json([
-//                'msg' => $commissionRate['msg'],
-//                'status' => 'error',
-//                'icon' => 'error'
-//            ]);
-//        }
-
         $tieredParam = $billingItems['total_sales_amount'] - $fees['a4_account_refund_and_resend']
             - $fees['client_account_refund_and_resend'];
         $billingItems['commission_type'] = $commissionRate['type'] ?? null;
@@ -419,28 +401,29 @@ class UploadFileToAWS implements ShouldQueue
         $billingItems['a4_account_marketing_and_promotion'] = round($fees['a4AccountMarketingAndPromotion'], 2);
 
         //count opexInvoice value
-//        SUM(a4lution_account所有費用) + ClientAccount.logistics_fee + avolution_commission + sales_tax_handling
-//    + extraordinary_item - a4lution_account.return_and_refund
-
         $opexInvoiceKeys = [
             'a4_account_logistics_fee',
+            'client_account_logistics_fee',
+            'a4_account_platform_fee',
             'a4_account_fba_fee',
             'a4_account_fba_storage_fee',
-            'a4_account_platform_fee',
-            'a4_account_miscellaneous',
             'a4_account_advertisement',
             'a4_account_marketing_and_promotion',
-            'client_account_logistics_fee',
-            'extraordinary_item',
-            'avolution_commission',
             'sales_tax_handling',
+            'a4_account_miscellaneous',
+            'avolution_commission',
+            'extraordinary_item'
         ];
 
-        $billingItems['opex_invoice'] = $this->getSumValue($billingItems, $opexInvoiceKeys)
-            - $billingItems['a4_account_refund_and_resend'];
+        if ($billingItems['client_code'] === 'G73A') {
+            $opexInvoiceKeys = collect($opexInvoiceKeys)->forget('client_account_logistics_fee')->all();
+        }
+
+        $billingItems['opex_invoice'] = $this->getSumValue($billingItems, $opexInvoiceKeys);
 
         $billingItems['final_credit'] = round(
-            $billingItems['sales_credit'] - $billingItems['opex_invoice'] - $billingItems['fba_storage_fee_invoice'],
+            $billingItems['sales_credit'] - $billingItems['opex_invoice']
+            - $billingItems['a4_account_fba_storage_fee'] - $billingItems['a4_account_fba_fee'],
             2
         );
 
