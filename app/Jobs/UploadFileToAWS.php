@@ -114,6 +114,10 @@ class UploadFileToAWS implements ShouldQueue
         //getReportFees
         $supplierCode = Customers::where('client_code', $data['client_code'])->value('supplier_code');
 
+        if (!$supplierCode) {
+            Log::error("uploadFileToS3_failed: the supplierCode of {$data['client_code']} is empty");
+        }
+
         $getSupplierName = $this->sendERPRequest(
             env("ERP_WMS_URL"),
             'getSupplierInfo',
@@ -427,8 +431,7 @@ class UploadFileToAWS implements ShouldQueue
             2
         );
 
-        $billingStatements = new BillingStatements();
-        $billingInsertID = $billingStatements->insertGetId($billingItems);
+        $billingInsertID = BillingStatements::insertGetId($billingItems);
 
         $invoices = new Invoices();
 

@@ -63,8 +63,7 @@ class EmployeeController extends Controller
     public function commissionDetail(Request $request): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
         $userID = $request->route('userID');
-        $date = $request->route('date');
-
+        $date = Carbon::parse($request->route('date'))->format('Y-m-d');
         $query = EmployeeCommission::query()
             ->from('employee_commissions as a')
             ->join('employee_commission_entries as c', function ($join) {
