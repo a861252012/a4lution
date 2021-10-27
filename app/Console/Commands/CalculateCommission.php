@@ -292,7 +292,7 @@ class CalculateCommission extends Command
             }
         }
 
-        return (float)$customerRate;
+        return $customerRate;
     }
 
     private function getOpsCommissionRate(int $contractMonths)
