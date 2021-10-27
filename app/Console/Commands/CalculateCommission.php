@@ -41,8 +41,8 @@ class CalculateCommission extends Command
         DB::beginTransaction();
         try {
             //鎖定上個月份的帳
-            BillingStatements::where('active', 1)
-                ->where('report_date', $date)
+            BillingStatements::where('report_date', $date)
+                ->active()
                 ->update(
                     [
                         'cutoff_time' => Carbon::now()->copy()->toDateTimeString()
@@ -175,7 +175,7 @@ class CalculateCommission extends Command
                         $contractYears
                     );
 
-                    $calculationFormat = "%s = %d * %d HKD \n";
+                    $calculationFormat = "%s = %d * %.2f HKD \n";
 
                     $employeeEntries['monthly_fee'] = (float)$customerBilling->total * $customerMonthlyFeeRate;
                     $employeeEntries['calculation_expression'] = sprintf(
@@ -276,27 +276,23 @@ class CalculateCommission extends Command
             Log::error("CalculateCommission employee_monthly_fee_rules is empty");
             return false;
         }
+
         if ($employeeRule->is_tiered_rate === 'F') {
-            if ($hKDCommission <= $employeeRule->threshold && $contractYears <= 1) {
-                $customerRate = $employeeRule->tier_1_first_year;
-            }
-
-            if ($hKDCommission > $employeeRule->threshold && $contractYears <= 1) {
-                $customerRate = $employeeRule->tier_2_first_year;
-            }
-        }
-
-        if ($employeeRule->is_tiered_rate === 'T') {
-            if ($hKDCommission <= $employeeRule->threshold && $contractYears > 1) {
-                $customerRate = $employeeRule->tier_1_over_a_year;
-            }
-
-            if ($hKDCommission > $employeeRule->threshold && $contractYears > 1) {
-                $customerRate = $employeeRule->tier_2_over_a_year;
+            $customerRate = ($contractYears <= 1) ? $employeeRule->rate_base : $employeeRule->rate;
+        } else {
+            //is_tiered_rate 為 true
+            if ($contractYears <= 1) {
+                //一年內的約
+                $customerRate = ($hKDCommission <= $employeeRule->threshold) ? $employeeRule->tier_1_first_year
+                    : $employeeRule->tier_2_first_year;
+            } else {
+                //大於一年的約
+                $customerRate = ($hKDCommission <= $employeeRule->threshold) ? $employeeRule->tier_1_over_a_year
+                    : $employeeRule->tier_2_over_a_year;
             }
         }
 
-        return $customerRate ?? 0;
+        return (float)$customerRate;
     }
 
     private function getOpsCommissionRate(int $contractMonths)
