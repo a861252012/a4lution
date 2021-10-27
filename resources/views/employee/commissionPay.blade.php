@@ -147,7 +147,7 @@
                 '<tr>' +
                 '<th>Customer</th>' +
                 '<th>Contract (Month)</th>' +
-                '<th>Completed At</th>' +
+                '<th>Computed Date</th>' +
                 '<th>Billed Commissions</th>' +
                 '<th>Monthly Fee</th>' +
                 '<th>Cross Sales</th>' +

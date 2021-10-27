@@ -445,7 +445,7 @@ WHERE
 
     public function runReport(Request $request)
     {
-        $this->dispatchNow(new UploadFileToAWS($request->all(), Auth::id(), (bool)$request->route('store')));
+        $this->dispatch(new UploadFileToAWS($request->all(), Auth::id(), (bool)$request->route('store')));
     }
 
     public function getSkuCommissionRate(object $item, float $sellingPrice, float $threshold)

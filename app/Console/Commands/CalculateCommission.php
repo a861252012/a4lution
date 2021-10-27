@@ -83,7 +83,7 @@ class CalculateCommission extends Command
                     ->where('x.active', 1)
                     ->where('u.active', 1);
 
-                if ($item !== 'ops') {
+                if ($item['role_name'] !== 'ops') {
                     $customerListQuery->where('u.user_name', '=', $item['user_name']);
                 }
 
