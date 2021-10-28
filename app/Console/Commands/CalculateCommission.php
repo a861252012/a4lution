@@ -29,13 +29,8 @@ class CalculateCommission extends Command
 
     public function handle()
     {
-        $date = $this->option('date') ? $this->option('date') : Carbon::now()
-            ->copy()
-            ->subMonth()
-            ->firstOfMonth()
-            ->toDateString();
-
-        $currentDate = Carbon::now()->copy()->format('Y-m-d');
+        $date = $this->option('date') ?? now()->subMonth()->firstOfMonth()->toDateString();
+        $currentDate = now()->format('Y-m-d');
         $userID = Auth::id() ?? 999999999;
 
         DB::beginTransaction();
@@ -45,7 +40,27 @@ class CalculateCommission extends Command
                 ->active()
                 ->update(
                     [
-                        'cutoff_time' => Carbon::now()->copy()->toDateTimeString()
+                        'cutoff_time' => now()
+                    ]
+                );
+
+            EmployeeCommission::where('report_date', $date)
+                ->active()
+                ->update(
+                    [
+                        'active' => 0,
+                        'deleted_at' => now(),
+                        'deleted_by' => Auth::id()
+                    ]
+                );
+
+            EmployeeCommissionEntries::where('report_date', $date)
+                ->active()
+                ->update(
+                    [
+                        'active' => 0,
+                        'deleted_at' => now(),
+                        'deleted_by' => Auth::id()
                     ]
                 );
 
@@ -83,14 +98,14 @@ class CalculateCommission extends Command
                     ->where('x.active', 1)
                     ->where('u.active', 1);
 
-                if ($item['role_name'] !== 'ops') {
+                if ($item['role_name'] !== 'operation') {
                     $customerListQuery->where('u.user_name', '=', $item['user_name']);
                 }
 
                 $customerList = $customerListQuery->get();
 
                 //取得各個員工的客戶
-                $clientCodeArr = collect($customerList)->map(function ($customer) {
+                $clientCodeArr = collect($customerList)->unique('client_code')->map(function ($customer) {
                     return $customer->client_code;
                 })->toArray();
 
@@ -119,7 +134,7 @@ class CalculateCommission extends Command
                 }
 
                 //employee_commissions.extra_ops_commission
-                if ($item['role_name'] === 'ops' && $item['region'] === 'HK') {
+                if ($item['role_name'] === 'operation' && $item['region'] === 'HK') {
                     $employeeCommission['extra_ops_commission_rate'] = $this->getCommissionRate($hKDCommissionSum);
                     $employeeCommission['extra_ops_commission_amount'] = $employeeCommission['extra_ops_commission_rate']
                         ? $hKDCommissionSum * $employeeCommission['extra_ops_commission_rate'] : 0;
@@ -206,7 +221,7 @@ class CalculateCommission extends Command
                         }
                     }
 
-                    if ($item['role_name'] === 'ops') {
+                    if ($item['role_name'] === 'operation') {
                         $opsCommissionRate = $this->getOpsCommissionRate($contractMonths);
                         $employeeEntries['ops_commission'] = (float)$customerBilling->total * $opsCommissionRate;
 
