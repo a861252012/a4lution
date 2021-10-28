@@ -49,6 +49,10 @@ class EmployeeController extends Controller
                 $query->where('a.report_date', $reportDate);
             }
 
+            if ($request->input('client_code')) {
+                $query->where('r.client_code', $request->input('client_code'));
+            }
+
             if ($request->input('user_name')) {
                 $query->where('u.user_name', $request->input('user_name'));
             }
