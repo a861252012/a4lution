@@ -29,12 +29,7 @@ class CalculateCommission extends Command
 
     public function handle()
     {
-        $date = $this->option('date') ? $this->option('date') : now()
-            ->copy()
-            ->subMonth()
-            ->firstOfMonth()
-            ->toDateString();
-
+        $date = $this->option('date') ?? now()->subMonth()->firstOfMonth()->toDateString();
         $currentDate = now()->format('Y-m-d');
         $userID = Auth::id() ?? 999999999;
 
