@@ -42,15 +42,15 @@ class EmployeeController extends Controller
                     AS 'total_employee_sharing'"),
                 )
                 ->where('a.active', 1)
-                ->when(request()->input('report_date'), function ($query) {
-                    $reportDate = Carbon::parse(request()->input('report_date'))->format('Y-m-01');
-                    return $query->where('a.report_date', $reportDate);
+                ->when(request()->input('report_date'), function ($q, $reportDate) {
+                    $reportDate = Carbon::parse($reportDate)->format('Y-m-01');
+                    return $q->where('a.report_date', $reportDate);
                 })
-                ->when(request()->input('client_code'), function ($query) {
-                    return $query->where('r.client_code', request()->input('client_code'));
+                ->when(request()->input('client_code'), function ($q, $clientCode) {
+                    return $q->where('r.client_code', $clientCode);
                 })
-                ->when(request()->input('user_name'), function ($query) {
-                    return $query->where('u.user_name', request()->input('user_name'));
+                ->when(request()->input('user_name'), function ($q, $userName) {
+                    return $q->where('u.user_name', $userName);
                 })
                 ->groupBy(['u.user_name', 'a.report_date'])
                 ->paginate(15);
