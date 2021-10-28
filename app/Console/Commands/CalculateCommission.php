@@ -29,13 +29,13 @@ class CalculateCommission extends Command
 
     public function handle()
     {
-        $date = $this->option('date') ? $this->option('date') : Carbon::now()
+        $date = $this->option('date') ? $this->option('date') : now()
             ->copy()
             ->subMonth()
             ->firstOfMonth()
             ->toDateString();
 
-        $currentDate = Carbon::now()->copy()->format('Y-m-d');
+        $currentDate = now()->format('Y-m-d');
         $userID = Auth::id() ?? 999999999;
 
         DB::beginTransaction();
@@ -45,7 +45,7 @@ class CalculateCommission extends Command
                 ->active()
                 ->update(
                     [
-                        'cutoff_time' => Carbon::now()->toDateTimeString()
+                        'cutoff_time' => now()
                     ]
                 );
 
@@ -54,7 +54,7 @@ class CalculateCommission extends Command
                 ->update(
                     [
                         'active' => 0,
-                        'deleted_at' => Carbon::now()->toDateTimeString(),
+                        'deleted_at' => now(),
                         'deleted_by' => Auth::id()
                     ]
                 );
@@ -64,7 +64,7 @@ class CalculateCommission extends Command
                 ->update(
                     [
                         'active' => 0,
-                        'deleted_at' => Carbon::now()->toDateTimeString(),
+                        'deleted_at' => now(),
                         'deleted_by' => Auth::id()
                     ]
                 );

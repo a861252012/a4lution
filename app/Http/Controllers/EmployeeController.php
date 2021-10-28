@@ -11,13 +11,13 @@ use Illuminate\Support\Facades\DB;
 class EmployeeController extends Controller
 {
 
-    public function commissionPayView(Request $request)
+    public function commissionPayView()
     {
-        $data = $request->all();
+        $data = request()->all();
         $data['lists'] = [];
 
-        if (count($request->all())) {
-            $query = EmployeeCommission::from('employee_commissions as a')
+        if (count(request()->all())) {
+            $data['lists'] = EmployeeCommission::from('employee_commissions as a')
                 ->leftJoin('users as u', function ($join) {
                     $join->on('a.employee_user_id', '=', 'u.id');
                 })
@@ -41,23 +41,18 @@ class EmployeeController extends Controller
                     DB::RAW("SUM(IFNULL(r.monthly_fee, 0) + IFNULL(r.cross_sales, 0) + IFNULL(r.ops_commission, 0))
                     AS 'total_employee_sharing'"),
                 )
-                ->where('a.active', 1);
-
-            if ($request->input('report_date')) {
-                $reportDate = Carbon::parse($request->input('report_date'))->format('Y-m-01');
-
-                $query->where('a.report_date', $reportDate);
-            }
-
-            if ($request->input('client_code')) {
-                $query->where('r.client_code', $request->input('client_code'));
-            }
-
-            if ($request->input('user_name')) {
-                $query->where('u.user_name', $request->input('user_name'));
-            }
-
-            $data['lists'] = $query->groupBy(['u.user_name', 'a.report_date'])
+                ->where('a.active', 1)
+                ->when(request()->input('report_date'), function ($query) {
+                    $reportDate = Carbon::parse(request()->input('report_date'))->format('Y-m-01');
+                    return $query->where('a.report_date', $reportDate);
+                })
+                ->when(request()->input('client_code'), function ($query) {
+                    return $query->where('r.client_code', request()->input('client_code'));
+                })
+                ->when(request()->input('user_name'), function ($query) {
+                    return $query->where('u.user_name', request()->input('user_name'));
+                })
+                ->groupBy(['u.user_name', 'a.report_date'])
                 ->paginate(15);
         }
 
