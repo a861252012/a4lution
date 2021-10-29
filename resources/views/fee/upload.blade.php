@@ -329,7 +329,6 @@
             $('#inline_report_date').datepicker('update', new Date());
 
             $("#upload_btn").colorbox({inline: true, width: "40%", height: "70%", closeButton: true});
-            // $("#upload_btn").colorbox({inline: true, width: "auto", height: "auto", closeButton: true});
 
             $('#cancel_btn').click(function () {
                 $.colorbox.close();
@@ -337,18 +336,14 @@
             });
 
             $('#inline_submit').click(function () {
-                let _token = $('meta[name="csrf-token"]').attr('content');
-
                 $.ajaxSetup({
                     headers: {
-                        'X-CSRF-TOKEN': _token
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     }
                 });
 
-                // Append data
-                // let fd = new FormData();
-                let origin = window.location.origin;
-                let inlineReportDate = $('#inline_report_date').val();
+                let date = $('#inline_report_date').val();
+                let type = $('#inline_select_fee_type :selected').val();
 
                 //檢查副檔名
                 if ($.trim($("#inline_file").val()) === '') {
@@ -362,6 +357,9 @@
                 let file = $('#inline_file')[0].files[0];
                 let fileType = file.name.slice((file.name.lastIndexOf(".") - 1 >>> 0) + 2);
 
+                let data = new FormData();
+                data.append('file', file);
+
                 if (fileType !== 'xlsx') {
                     swal({
                         icon: "error",
@@ -370,23 +368,29 @@
                     return false;
                 }
 
-                //call api to check if monthly report exist
+                //call api to check if monthly report exist and validate title
                 $.ajax({
-                    url: origin + '/fee/checkIfReportExist/' + inlineReportDate,
-                    type: 'get',
-                    async: false,
+                    url: window.location.origin + '/fee/preValidation/' + date + '/' + type,
+                    type: 'post',
+                    processData: false,
+                    contentType: false,
+                    data: data,
                     success: function (res) {
-                        if (res.status === "failed") {
-                            console.log('failed');
+                        if (res.status !== 200) {
                             swal({
                                 icon: "error",
-                                text: "The selected report date " + inlineReportDate + " was closed"
+                                text: res.msg
                             })
                             return false;
-                        } else {
-                            console.log('secAjax');
-                            secAjax();
                         }
+
+                        uploadAjax(file, date, type);
+                    }, error: function (e) {
+                        console.log(e);
+                        swal({
+                            icon: 'error',
+                            text: 'upload error'
+                        });
                     }
                 });
             });
@@ -410,7 +414,7 @@
             });
         });
 
-        function secAjax() {
+        function uploadAjax(file, date, type) {
             swal({
                 icon: "success",
                 text: "file uploaded"
@@ -420,19 +424,19 @@
                         $.colorbox.close();
                     }
                 });
-            let fd = new FormData();
-            let origin = window.location.origin;
 
-            fd.append('file', $('#inline_file')[0].files[0]);
-            fd.append('inline_report_date', $('#inline_report_date').val());
-            fd.append('inline_fee_type', $('#inline_select_fee_type :selected').val());
+            let data = new FormData();
+
+            data.append('file', file);
+            data.append('inline_report_date', date);
+            data.append('inline_fee_type', type);
 
             $.ajax({
-                url: origin + '/fee/upload/file',
+                url: window.location.origin + '/fee/upload/file',
                 type: 'post',
                 processData: false,
                 contentType: false,
-                data: fd,
+                data: data,
                 success: function () {
                     console.log('success');
                 }
