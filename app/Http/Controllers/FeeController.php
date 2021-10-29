@@ -57,8 +57,7 @@ class FeeController extends Controller
         BillingStatements       $billingStatements,
         CustomersRepository     $customersRepository,
         ExchangeRatesRepository $exchangeRatesRepository
-    )
-    {
+    ) {
         $this->batchJobs = $batchJobs;
         $this->amazonDateRangeReport = $amazonDateRangeReport;
         $this->platformAdFees = $platformAdFees;
