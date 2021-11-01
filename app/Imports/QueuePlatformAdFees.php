@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\PlatformAdFees;
 use App\Models\BatchJobs;
+use App\Services\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Importable;
@@ -99,7 +100,7 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
                         ->where('upload_id', '<', $this->batchID)
                         ->where('active', '=', 1)
                         ->cursor()
-                        ->each(function ($item) {
+                        ->chunk(1000, function ($item) {
                             $item->update(['active' => 0]);
                         });
 
@@ -125,7 +126,8 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
                         [
                             'status' => 'failed',
                             'total_count' => $this->getRowCount(),
-                            'exit_message' => $event->getException()
+                            'exit_message' => $event->getException(),
+                            'user_error_msg' => (new ImportService)->getUserErrorMsg($event->getException())
                         ]
                     );
 
@@ -133,8 +135,8 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
                         ->where('active', '=', 1)
                         ->where('upload_id', '=', $this->batchID)
                         ->cursor()
-                        ->each(function ($item) {
-                            $item->delete();
+                        ->chunk(1000, function ($item) {
+                            $item->update(['active' => 0]);
                         });
 
                     BatchJobs::where('id', $this->batchID)->update(

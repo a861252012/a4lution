@@ -182,26 +182,6 @@ class InvoiceController extends Controller
         return (float)$sum;
     }
 
-    public function getAccountMiscellaneous(string $reportDate, string $clientCode, string $supplierName, bool $isCrafter)
-    {
-        $sql = "SELECT
-    SUM(a.amazon_total * r.exchange_rate) AS 'Miscellaneous'
-FROM
-    amazon_date_range_report a
-        LEFT JOIN
-    exchange_rates r ON a.report_date = r.quoted_date
-        AND a.currency = r.base_currency
-WHERE
-    a.report_date = '{$reportDate}'
-        AND a.supplier = '{$clientCode}'
-        AND a.`type` IN ('FBA Customer Return Fee','Adjustment','other')
-        AND a.active = 1";
-
-        $isCrafter ? $sql .= " AND a.account = '{$supplierName}'" : $sql .= " AND a.account != '{$supplierName}'";
-
-        return DB::select($sql);
-    }
-
     public function listView(Request $request)
     {
         $data['clientCode'] = $request->input('client_code') ?? null;
@@ -287,13 +267,6 @@ WHERE
         ];
 
         return \Response::make(Storage::disk('s3')->get($token), 200, $headers);
-
-//        return (new InvoiceExport)->download($fileName, \Maatwebsite\Excel\Excel::XLSX);//working fine
-
-//        dd(Excel::store(new InvoiceExport('S53A', '2021-08-01'), $fileName, 's3', \Maatwebsite\Excel\Excel::XLSX));
-
-//        (new InvoiceExport)->queue($fileName);
-//        return back()->withSuccess('Export started!');
     }
 
     public function issueView(Request $request)
@@ -421,7 +394,6 @@ WHERE
             'country'
         )
             ->where('client_code', $data['clientCode'])
-//            ->where('client_code', 'C101A')//TODO need to be modified
             ->first()
             ->toArray();
 

@@ -4,7 +4,6 @@ namespace App\Imports;
 
 use App\Models\BatchJobs;
 use App\Models\MonthlyStorageFees;
-use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Events\AfterImport;
@@ -19,7 +18,7 @@ use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\ImportFailed;
 use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
+use App\Services\ImportService;
 
 class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading, WithBatchInserts, WithCalculatedFormulas, WithEvents, WithValidation
 {
@@ -34,8 +33,7 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
         $userID,
         $batchID,
         $inputReportDate
-    )
-    {
+    ) {
         $this->userID = $userID;
         $this->batchID = $batchID;
         $this->inputReportDate = $inputReportDate;
@@ -116,8 +114,8 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
                         ->where('active', '=', 1)
                         ->where('upload_id', '<', $this->batchID)
                         ->cursor()
-                        ->each(function ($item) {
-                            $item->update(['active' => 0]);
+                        ->chunk(1000, function ($items) {
+                            $items->update(['active' => 0]);
                         });
 
                     BatchJobs::where('id', $this->batchID)->update(
@@ -141,7 +139,8 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
                         [
                             'status' => 'failed',
                             'total_count' => $this->getRowCount(),
-                            'exit_message' => $event->getException()
+                            'exit_message' => $event->getException(),
+                            'user_error_msg' => (new ImportService)->getUserErrorMsg($event->getException())
                         ]
                     );
 
@@ -149,17 +148,9 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
                         ->where('active', '=', 1)
                         ->where('upload_id', '=', $this->batchID)
                         ->cursor()
-                        ->each(function ($item) {
-                            $item->delete();
+                        ->chunk(1000, function ($item) {
+                            $item->update(['active' => 0]);
                         });
-
-
-                    BatchJobs::where('id', $this->batchID)->update(
-                        [
-                            'status' => 'completed',
-                            'total_count' => $this->getRowCount()
-                        ]
-                    );
 
                     DB::commit();
                 } catch (\Exception $e) {
@@ -253,17 +244,9 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
 
     public function prepareForValidation(array $row): array
     {
-        $row['month_of_charge'] = $row['month_of_charge'] ? $this->transformDate($row['month_of_charge']) : null;
+        $row['month_of_charge'] = $row['month_of_charge'] ? (new ImportService)->transformDate($row['month_of_charge'])
+            : null;
 
         return $row;
-    }
-
-    public function transformDate($value, $format = 'Y/m/d'): string
-    {
-        try {
-            return Carbon::instance(Date::excelToDateTimeObject($value));
-        } catch (\ErrorException $e) {
-            return Carbon::parse($value)->format('Y-m-d H:i:s');
-        }
     }
 }

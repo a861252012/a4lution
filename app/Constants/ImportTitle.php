@@ -92,7 +92,7 @@ class ImportTitle
 
     //monthly_storage_fees
     const MONTHLY_STORAGE = [
-        "acount",
+        "account",
         "asin",
         "fnsku",
         "product_name",

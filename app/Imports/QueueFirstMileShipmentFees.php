@@ -4,7 +4,7 @@ namespace App\Imports;
 
 use App\Models\BatchJobs;
 use App\Models\FirstMileShipmentFees;
-use Carbon\Carbon;
+use App\Services\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Importable;
@@ -19,7 +19,6 @@ use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading, WithBatchInserts, WithCalculatedFormulas, WithEvents, withValidation
 {
@@ -34,8 +33,7 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
         $userID,
         $batchID,
         $inputReportDate
-    )
-    {
+    ) {
         $this->userID = $userID;
         $this->batchID = $batchID;
         $this->inputReportDate = $inputReportDate;
@@ -107,7 +105,7 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
                         ->where('upload_id', '<', $this->batchID)
                         ->where('active', '=', 1)
                         ->cursor()
-                        ->each(function ($item) {
+                        ->chunk(1000, function ($item) {
                             $item->update(['active' => 0]);
                         });
 
@@ -134,7 +132,8 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
                             [
                                 'status' => 'failed',
                                 'total_count' => $this->getRowCount(),
-                                'exit_message' => $event->getException()
+                                'exit_message' => $event->getException(),
+                                'user_error_msg' => (new ImportService)->transformDate($event->getException()),
                             ]
                         );
 
@@ -142,8 +141,8 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
                         ->where('upload_id', '=', $this->batchID)
                         ->where('active', '=', 1)
                         ->cursor()
-                        ->each(function ($item) {
-                            $item->delete();
+                        ->chunk(1000, function ($item) {
+                            $item->update(['active' => 0]);
                         });
 
                     DB::commit();
@@ -221,23 +220,8 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
 
     public function prepareForValidation(array $row): array
     {
-        $row['date'] = $row['date'] ? $this->transformDate($row['date']) : null;
+        $row['date'] = $row['date'] ? (new ImportService)->transformDate($row['date']) : null;
 
         return $row;
-    }
-
-    /**
-     * Transform a date value into a Carbon object.
-     *
-     * @param $value
-     * @return string
-     */
-    public function transformDate($value): string
-    {
-        try {
-            return Carbon::instance(Date::excelToDateTimeObject($value));
-        } catch (\ErrorException $e) {
-            return Carbon::parse($value)->format('Y-m-d H:i:s');
-        }
     }
 }
