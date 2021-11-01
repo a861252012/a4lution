@@ -136,7 +136,7 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
                         ->where('upload_id', '=', $this->batchID)
                         ->cursor()
                         ->chunk(1000, function ($item) {
-                            $item->update(['active' => 0]);
+                            $item->delete();
                         });
 
                     BatchJobs::where('id', $this->batchID)->update(

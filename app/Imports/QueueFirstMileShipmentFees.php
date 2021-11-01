@@ -142,7 +142,7 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
                         ->where('active', '=', 1)
                         ->cursor()
                         ->chunk(1000, function ($item) {
-                            $item->update(['active' => 0]);
+                            $item->delete();
                         });
 
                     DB::commit();
