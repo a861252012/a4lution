@@ -4,7 +4,7 @@ namespace App\Imports;
 
 use App\Models\BatchJobs;
 use App\Models\LongTermStorageFees;
-use Carbon\Carbon;
+use App\Services\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Importable;
@@ -19,7 +19,6 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
 use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading, WithBatchInserts, WithCalculatedFormulas, WithEvents, WithValidation
 {
@@ -34,8 +33,7 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
         $userID,
         $batchID,
         $inputReportDate
-    )
-    {
+    ) {
         $this->userID = $userID;
         $this->batchID = $batchID;
         $this->inputReportDate = $inputReportDate;
@@ -103,7 +101,7 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
                         ->where('upload_id', '<', $this->batchID)
                         ->where('active', '=', 1)
                         ->cursor()
-                        ->each(function ($item) {
+                        ->chunk(1000, function ($item) {
                             $item->update(['active' => 0]);
                         });
 
@@ -130,7 +128,8 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
                             [
                                 'status' => 'failed',
                                 'total_count' => $this->getRowCount(),
-                                'exit_message' => $event->getException()
+                                'exit_message' => $event->getException(),
+                                'user_error_msg' => (new ImportService)->getUserErrorMsg($event->getException())
                             ]
                         );
 
@@ -138,7 +137,7 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
                         ->where('upload_id', '=', $this->batchID)
                         ->where('active', '=', 1)
                         ->cursor()
-                        ->each(function ($item) {
+                        ->chunk(1000, function ($item) {
                             $item->delete();
                         });
 
@@ -149,15 +148,6 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
                     \Log::channel('daily_queue_import')
                         ->info("[QueueLongTermStorageFees.errors]" . $e);
                 }
-
-                BatchJobs::where('id', $this->batchID)->update(
-                    [
-                        'status' => 'failed',
-                        'total_count' => $this->getRowCount(),
-                        'exit_message' => $event->getException()
-
-                    ]
-                );
 
                 foreach ($event->getException() as $failure) {
                     \Log::channel('daily_queue_import')
@@ -217,17 +207,9 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
 
     public function prepareForValidation(array $row): array
     {
-        $row['snapshot_date'] = $row['snapshot_date'] ? $this->transformDate($row['snapshot_date']) : null;
+        $row['snapshot_date'] = $row['snapshot_date'] ? (new ImportService)->transformDate($row['snapshot_date'])
+            : null;
 
         return $row;
-    }
-
-    public function transformDate($value): string
-    {
-        try {
-            return Carbon::instance(Date::excelToDateTimeObject($value));
-        } catch (\ErrorException $e) {
-            return Carbon::parse($value)->format('Y-m-d H:i:s');
-        }
     }
 }

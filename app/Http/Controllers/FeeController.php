@@ -87,6 +87,7 @@ class FeeController extends Controller
             'batch_jobs.file_name',
             'batch_jobs.status',
             'batch_jobs.created_at',
+            'batch_jobs.user_error_msg',
             'users.user_name'
         )
             ->join('users', 'users.id', '=', 'batch_jobs.user_id')

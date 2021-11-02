@@ -1,10 +1,3 @@
-{{--@extends('layouts.app', [--}}
-{{--    'title' => __('User Profile'),--}}
-{{--    'navClass' => 'bg-default',--}}
-{{--    'parentSection' => 'laravel',--}}
-{{--    'elementName' => 'profile'--}}
-{{--])--}}
-
 @extends('layouts.app', [
     'parentSection' => 'fee',
     'elementName' => 'upload'
@@ -34,8 +27,6 @@
                 <div class="card">
                     <!-- Card header -->
                     <div class="card-header">
-                        {{--                        <h3 class="mb-0">Datatable</h3>--}}
-                        {{--                        <div class="row input-daterange datepicker align-items-center">--}}
                         <div>
                             <form method="GET" action="/fee/upload" role="form" class="form">
 
@@ -48,7 +39,6 @@
                                                    type="text" value="{{ $createdAt }}">
                                         </div>
                                     </div>
-                                    {{--                                    {{ dd(get_defined_vars()) }}--}}
 
                                     <div class=" col-2 col-lg-2 col-sm-2">
                                         <div class="form-group">
@@ -118,19 +108,6 @@
                                         </div>
                                     </div>
 
-                                    {{--                                    <div class="col-2 col-lg-2 col-sm-2 text-right">--}}
-                                    {{--                                        <label class="form-control-label" for="inline_href"></label>--}}
-                                    {{--                                        <div class="form-group">--}}
-                                    {{--                                            <a id="upload_btn" class="form-control btn btn-primary" id="inline_href"--}}
-                                    {{--                                               href="#inline_content" style="margin-top: 6px;">--}}
-                                    {{--                                                <div>--}}
-                                    {{--                                                    <i class="ni ni-cloud-upload-96"></i>--}}
-                                    {{--                                                    <span>UPLOAD</span>--}}
-                                    {{--                                                </div>--}}
-                                    {{--                                            </a>--}}
-                                    {{--                                        </div>--}}
-                                    {{--                                    </div>--}}
-
                                     <div class="col-2 col-lg-2 col-sm-2 text-right">
                                         <label class="form-control-label" for="upload_btn"></label>
                                         <div class="form-group">
@@ -159,6 +136,7 @@
                                 <th>FEE TYPE</th>
                                 <th>FILE NAME</th>
                                 <th>STATUS</th>
+                                <th>ERROR MSG</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -170,6 +148,7 @@
                                     <td>{{ $item->fee_type }}</td>
                                     <td>{{ $item->file_name }}</td>
                                     <td>{{ $item->status }}</td>
+                                    <td>{{ $item->user_error_msg }}</td>
                                 </tr>
                             @endforeach
                             </tbody>
@@ -193,9 +172,7 @@
         <div class="container" id='inline_content'>
 
             <!-- Data Import/Platform Ads -->
-            {{--            <form action="/fee/upload/file" method="post" id="inline_form" enctype="multipart/form-data">--}}
             <form enctype="multipart/form-data">
-                {{--            <form enctype="multipart/form-data">--}}
 
                 <div class="row">
                     <div class="col-4 form-group">
@@ -247,17 +224,10 @@
                         <div class="dropzone dropzone-single mb-3" data-toggle="dropzone">
                             <div class="fallback">
                                 <div class="custom-file">
-                                    {{--                                    <input type="file" class="custom-file-input" id="projectCoverUploads" required>--}}
                                     <input type="file" name="file" class="form-control" id="inline_file" required>
                                     <div class="required">Maximum size: 30 MB</div>
-                                    {{--                                    <label class="custom-file-label" for="projectCoverUploads">Choose file</label>--}}
                                 </div>
                             </div>
-                            {{--                            <div class="dz-preview dz-preview-single">--}}
-                            {{--                                <div class="dz-preview-cover">--}}
-                            {{--                                    <img class="dz-preview-img" data-dz-thumbnail>--}}
-                            {{--                                </div>--}}
-                            {{--                            </div>--}}
                         </div>
                     </div>
                 </div>
@@ -368,6 +338,15 @@
                     return false;
                 }
 
+                swal({
+                    icon: "success",
+                    text: "processing"
+                })
+                    .then(function (isConfirm) {
+                        if (isConfirm) {
+                            $.colorbox.close();
+                        }
+                    });
                 //call api to check if monthly report exist and validate title
                 $.ajax({
                     url: window.location.origin + '/fee/preValidation/' + date + '/' + type,
@@ -415,16 +394,6 @@
         });
 
         function uploadAjax(file, date, type) {
-            swal({
-                icon: "success",
-                text: "file uploaded"
-            })
-                .then(function (isConfirm) {
-                    if (isConfirm) {
-                        $.colorbox.close();
-                    }
-                });
-
             let data = new FormData();
 
             data.append('file', file);
