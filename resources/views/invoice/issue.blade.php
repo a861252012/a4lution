@@ -120,7 +120,7 @@
                                     <td class="fba_storage_fee_invoice">{{ $item->fba_storage_fee_invoice ?? '' }}</td>
                                     <td class="final_credit">{{ $item->final_credit ?? '' }}</td>
                                     <td>
-                                        <button class="btn btn-primary issue_btn btn-sm" type="button">
+                                        <button class="btn btn-primary issue_btn btn-sm" type="button" billing-statement-id="{{ $item->id }}">
                                             <span class="btn-inner--text">ISSUE INVOICE</span>
                                         </button>
                                         <button class="btn btn-danger delete_btn btn-sm" type="button">
@@ -169,7 +169,7 @@
                 data['report_date'] = $(this).parent().parent().find('[class="report_date"]').text();
                 data['client_code'] = $(this).parent().parent().find('[class="client_code"]').text();
                 data['_token'] = $('meta[name="csrf-token"]').attr('content');
-
+                data['billing_statement_id'] = $(this).attr('billing-statement-id');
 
                 $.colorbox({
                     iframe: false,
@@ -182,6 +182,7 @@
                         _token: data['_token'],
                         report_date: data['report_date'],
                         client_code: data['client_code'],
+                        billing_statement_id: data['billing_statement_id'],
                     },
                     onComplete: function () {
                         //binding jquery.steps plugin
@@ -222,7 +223,7 @@
 
                         // prepare Options Object
                         let options = {
-                            url: '/invoice/runReport/1',
+                            url: '/ajax/invoice/export',
                             responseType: 'blob', // important
                             type: 'POST',
                             success: function (res) {
@@ -325,24 +326,24 @@
                             buttons: true,
                             buttons: ["No,Cancel Plx!", "Yes,Delete it!"]
                         })
-                            .then(function (isConfirm) {
-                                if (isConfirm) {
+                        .then(function (isConfirm) {
+                            if (isConfirm) {
 
-                                    swal({
-                                        text: "processing!",
-                                        icon: "success",
-                                        button: "OK",
-                                    });
+                                swal({
+                                    text: "processing!",
+                                    icon: "success",
+                                    button: "OK",
+                                });
 
-                                    deleteIssue(reportDate);
-                                    ajaxRunBillingStatement();
-                                }
-                                // else {
-                                //     // $('#cboxOverlay').remove();
-                                //     // $('#colorbox').remove();
-                                //     $.colorbox.close();
-                                // }
-                            });
+                                deleteIssue(reportDate);
+                                ajaxRunBillingStatement();
+                            }
+                            // else {
+                            //     // $('#cboxOverlay').remove();
+                            //     // $('#colorbox').remove();
+                            //     $.colorbox.close();
+                            // }
+                        });
                     }
                 }
             });
@@ -360,11 +361,20 @@
             });
 
             $.ajax({
-                url: origin + '/invoice/runReport/0',
+                url: origin + '/ajax/billing-statements',
                 type: 'post',
-                data: {step_report_date: reportDate, client_code: clientCode},
+                data: {
+                    report_date: reportDate, 
+                    client_code: clientCode
+                },
                 success: function (res) {
                     console.log(res);
+                    swal({
+                        text: "Generate Summary Complete!",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    location.reload();
                 }
             });
         }

@@ -72,8 +72,10 @@ Route::group(['middleware' => 'auth'], function () {
         'uses' => 'InvoiceController@checkIfReportExist'
     ]);
     Route::post('invoice/edit', ['as' => 'invoice.edit', 'uses' => 'InvoiceController@editView']);
-    Route::post('invoice/runReport/{store?}', ['as' => 'invoice.runReport', 'uses' => 'InvoiceController@runReport']);
 
+    Route::post('ajax/billing-statements', 'BillingStatementController@ajaxStore')->name('ajax.billing_statement.store');
+    Route::post('ajax/invoice/export', 'InvoiceController@ajaxExport')->name('ajax.invoice.export');
+    
     Route::get('{page}', ['as' => 'page.index', 'uses' => 'PageController@index']);
 
     Route::get('refund/search', ['as' => 'refund.search', 'uses' => 'ErpOrdersController@refundSearchView']);

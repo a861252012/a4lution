@@ -47,19 +47,19 @@
                         <table class="ml-4">
                             <tr>
                                 <td class='w-75'>Total Sales Orders</td>
-                                <td class='w-25'>{{ number_format($lists['total_sales_orders'], 3, '.', ',') ?? '' }}</td>
+                                <td class='w-25'>{{ number_format($billingStatement->total_sales_orders, 3, '.', ',') ?? '' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>Total Sales Amount</td>
-                                <td class='w-25'>${{ number_format($lists['total_sales_amount'], 3, '.', ',') ?? '' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->total_sales_amount, 3, '.', ',') ?? '' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>Total Expenses</td>
-                                <td class='w-25'>${{ number_format($lists['total_expenses'], 3, '.', ',') ?? '' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->total_expenses, 3, '.', ',') ?? '' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>Sales GP</td>
-                                <td class='w-25'>${{ number_format($lists['sales_gp'], 3, '.', ',') ?? '' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->sales_gp, 3, '.', ',') ?? '' }}</td>
                             </tr>
                         </table>
 
@@ -67,27 +67,27 @@
                         <table class="ml-4">
                             <tr>
                                 <td class='w-75'>Avolution Commission</td>
-                                <td class='w-25'>${{ number_format($lists['avolution_commission'], 3, '.', ',') ?? '' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->avolution_commission, 3, '.', ',') ?? '' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>Sales Tax Handling</td>
-                                <td class='w-25'>${{ number_format($lists['sales_tax_handling'], 3, '.', ',') ?? '' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->sales_tax_handling, 3, '.', ',') ?? '' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>Sales Credit</td>
-                                <td class='w-25'>${{ number_format($lists['sales_credit'], 3, '.', ',') ?? '' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->sales_credit, 3, '.', ',') ?? '' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>OPEX Invoice</td>
-                                <td class='w-25'>${{ number_format($lists['opex_invoice'], 3, '.', ',') ?? '' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->opex_invoice, 3, '.', ',') ?? '' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>FBA & Storage Fee Invoice</td>
-                                <td class='w-25'>${{ number_format($lists['fba_storage_fee_invoice'], 3, '.', ',') ?? '' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->fba_storage_fee_invoice, 3, '.', ',') ?? '' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>Final Credit</td>
-                                <td class='w-25'>${{ number_format($lists['final_credit'], 3, '.', ',') ?? '' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->final_credit, 3, '.', ',') ?? '' }}</td>
                             </tr>
                         </table>
                     </div>
@@ -111,55 +111,55 @@
                                 <tr>
                                     <th scope="row">-Logistics Fee</th>
                                     <td class="text-right">
-                                        {{ number_format($lists['a4_account_logistics_fee'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->a4_account_logistics_fee, 3, '.', ',') ?? '' }}
                                     </td>
                                     <td class="text-right">
-                                        {{ number_format($lists['client_account_logistics_fee'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->client_account_logistics_fee, 3, '.', ',') ?? '' }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <th scope="row">-FBA Fee</th>
                                     <td class="text-right">
-                                        {{ number_format($lists['a4_account_fba_fee'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->a4_account_fba_fee, 3, '.', ',') ?? '' }}
                                     </td>
                                     <td class="text-right">
-                                        {{ number_format($lists['client_account_fba_fee'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->client_account_fba_fee, 3, '.', ',') ?? '' }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <th scope="row">-FBA Storage Fee</th>
                                     <td class="text-right">
-                                        {{ number_format($lists['a4_account_fba_storage_fee'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->a4_account_fba_storage_fee, 3, '.', ',') ?? '' }}
                                     </td>
                                     <td class="text-right">
-                                        {{ number_format($lists['client_account_fba_storage_fee'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->client_account_fba_storage_fee, 3, '.', ',') ?? '' }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <th scope="row">-Platform Fee</th>
                                     <td class="text-right">
-                                        {{ number_format($lists['a4_account_platform_fee'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->a4_account_platform_fee, 3, '.', ',') ?? '' }}
                                     </td>
                                     <td class="text-right">
-                                        {{ number_format($lists['client_account_platform_fee'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->client_account_platform_fee, 3, '.', ',') ?? '' }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <th scope="row">-Refund and Resend</th>
                                     <td class="text-right">
-                                        {{ number_format($lists['a4_account_refund_and_resend'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->a4_account_refund_and_resend, 3, '.', ',') ?? '' }}
                                     </td>
                                     <td class="text-right">
-                                        {{ number_format($lists['client_account_refund_and_resend'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->client_account_refund_and_resend, 3, '.', ',') ?? '' }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <th scope="row">-Miscellaneous</th>
                                     <td class="text-right">
-                                        {{ number_format($lists['a4_account_miscellaneous'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->a4_account_miscellaneous, 3, '.', ',') ?? '' }}
                                     </td>
                                     <td class="text-right">
-                                        {{ number_format($lists['client_account_miscellaneous'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->client_account_miscellaneous, 3, '.', ',') ?? '' }}
                                     </td>
                                 </tr>
                                 {{-- MARKETING FEE --}}
@@ -171,19 +171,19 @@
                                 <tr class="">
                                     <th scope="row">-ADVERTISEMENT</th>
                                     <td class="text-right">
-                                        {{ number_format($lists['a4_account_advertisement'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->a4_account_advertisement, 3, '.', ',') ?? '' }}
                                     </td>
                                     <td class="text-right">
-                                        {{ number_format($lists['client_account_advertisement'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->client_account_advertisement, 3, '.', ',') ?? '' }}
                                     </td>
                                 </tr>
                                 <tr class="">
                                     <th scope="row">-MARKETING AND PROMOTION</th>
                                     <td class="text-right">
-                                        {{ number_format($lists['a4_account_marketing_and_promotion'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->a4_account_marketing_and_promotion, 3, '.', ',') ?? '' }}
                                     </td>
                                     <td class="text-right">
-                                        {{ number_format($lists['client_account_marketing_and_promotion'], 3, '.', ',') ?? '' }}
+                                        {{ number_format($billingStatement->client_account_marketing_and_promotion, 3, '.', ',') ?? '' }}
                                     </td>
                                 </tr>
 
@@ -201,7 +201,7 @@
                 {{--                <form id="step_form" method="POST" action="/invoice/runReport" role="form" class="form">--}}
                 <form id="step_form" role="form" class="form">
                     @csrf
-                    <input type="hidden" name="billing_statement_id" value="{{ $lists->id }}">
+                    <input type="hidden" name="billing_statement_id" value="{{ $billingStatement->id }}">
 
                     <div class="row">
                         <div class="col-3 form-group">
