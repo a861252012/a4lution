@@ -47,19 +47,19 @@
                         <table class="ml-4">
                             <tr>
                                 <td class='w-75'>Total Sales Orders</td>
-                                <td class='w-25'>{{ number_format($lists['total_sales_orders']) ?: '-' }}</td>
+                                <td class='w-25'>{{ number_format($billingStatement->total_sales_orders) ?: '-' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>Total Sales Amount</td>
-                                <td class='w-25'>${{ number_format($lists['total_sales_amount']) ?: '-' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->total_sales_amount) ?: '-' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>Total Expenses</td>
-                                <td class='w-25'>${{ number_format($lists['total_expenses']) ?: '-' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->total_expenses) ?: '-' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>Sales GP</td>
-                                <td class='w-25'>${{ number_format($lists['sales_gp']) ?: '-' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->sales_gp) ?: '-' }}</td>
                             </tr>
                         </table>
 
@@ -67,27 +67,27 @@
                         <table class="ml-4">
                             <tr>
                                 <td class='w-75'>Avolution Commission</td>
-                                <td class='w-25'>${{ number_format($lists['avolution_commission']) ?: '-' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->avolution_commission) ?: '-' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>Sales Tax Handling</td>
-                                <td class='w-25'>${{ number_format($lists['sales_tax_handling']) ?: '-' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->sales_tax_handling) ?: '-' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>Sales Credit</td>
-                                <td class='w-25'>${{ number_format($lists['sales_credit']) ?: '-' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->sales_credit) ?: '-' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>OPEX Invoice</td>
-                                <td class='w-25'>${{ number_format($lists['opex_invoice']) ?: '-' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->opex_invoice) ?: '-' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>FBA & Storage Fee Invoice</td>
-                                <td class='w-25'>${{ number_format($lists['fba_storage_fee_invoice']) ?: '-' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->fba_storage_fee_invoice) ?: '-' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>Final Credit</td>
-                                <td class='w-25'>${{ number_format($lists['final_credit']) ?: '-' }}</td>
+                                <td class='w-25'>${{ number_format($billingStatement->final_credit) ?: '-' }}</td>
                             </tr>
                         </table>
                     </div>
@@ -111,55 +111,55 @@
                                 <tr>
                                     <th scope="row">-Logistics Fee</th>
                                     <td class="text-right">
-                                        ${{ number_format($lists['a4_account_logistics_fee']) ?: '-' }}
+                                        ${{ number_format($billingStatement->a4_account_logistics_fee) ?: '-' }}
                                     </td>
                                     <td class="text-right">
-                                        ${{ number_format($lists['client_account_logistics_fee']) ?: '-' }}
+                                        ${{ number_format($billingStatement->client_account_logistics_fee) ?: '-' }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <th scope="row">-FBA Fee</th>
                                     <td class="text-right">
-                                        ${{ number_format($lists['a4_account_fba_fee']) ?: '-' }}
+                                        ${{ number_format($billingStatement->a4_account_fba_fee) ?: '-' }}
                                     </td>
                                     <td class="text-right">
-                                        ${{ number_format($lists['client_account_fba_fee']) ?: '-' }}
+                                        ${{ number_format($billingStatement->client_account_fba_fee) ?: '-' }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <th scope="row">-FBA Storage Fee</th>
                                     <td class="text-right">
-                                        ${{ number_format($lists['a4_account_fba_storage_fee']) ?: '-' }}
+                                        ${{ number_format($billingStatement->a4_account_fba_storage_fee) ?: '-' }}
                                     </td>
                                     <td class="text-right">
-                                        ${{ number_format($lists['client_account_fba_storage_fee']) ?: '-' }}
+                                        ${{ number_format($billingStatement->client_account_fba_storage_fee) ?: '-' }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <th scope="row">-Platform Fee</th>
                                     <td class="text-right">
-                                        ${{ number_format($lists['a4_account_platform_fee']) ?: '-' }}
+                                        ${{ number_format($billingStatement->a4_account_platform_fee) ?: '-' }}
                                     </td>
                                     <td class="text-right">
-                                        ${{ number_format($lists['client_account_platform_fee']) ?: '-' }}
+                                        ${{ number_format($billingStatement->client_account_platform_fee) ?: '-' }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <th scope="row">-Refund and Resend</th>
                                     <td class="text-right">
-                                        ${{ number_format($lists['a4_account_refund_and_resend']) ?: '-' }}
+                                        ${{ number_format($billingStatement->a4_account_refund_and_resend) ?: '-' }}
                                     </td>
                                     <td class="text-right">
-                                        ${{ number_format($lists['client_account_refund_and_resend']) ?: '-' }}
+                                        ${{ number_format($billingStatement->client_account_refund_and_resend) ?: '-' }}
                                     </td>
                                 </tr>
                                 <tr>
                                     <th scope="row">-Miscellaneous</th>
                                     <td class="text-right">
-                                        ${{ number_format($lists['a4_account_miscellaneous']) ?: '-' }}
+                                        ${{ number_format($billingStatement->a4_account_miscellaneous) ?: '-' }}
                                     </td>
                                     <td class="text-right">
-                                        ${{ number_format($lists['client_account_miscellaneous']) ?: '-' }}
+                                        ${{ number_format($billingStatement->client_account_miscellaneous) ?: '-' }}
                                     </td>
                                 </tr>
                                 {{-- MARKETING FEE --}}
@@ -171,19 +171,19 @@
                                 <tr class="">
                                     <th scope="row">-ADVERTISEMENT</th>
                                     <td class="text-right">
-                                        ${{ number_format($lists['a4_account_advertisement']) ?: '-' }}
+                                        ${{ number_format($billingStatement->a4_account_advertisement) ?: '-' }}
                                     </td>
                                     <td class="text-right">
-                                        ${{ number_format($lists['client_account_advertisement']) ?: '-' }}
+                                        ${{ number_format($billingStatement->client_account_advertisement) ?: '-' }}
                                     </td>
                                 </tr>
                                 <tr class="">
                                     <th scope="row">-MARKETING AND PROMOTION</th>
                                     <td class="text-right">
-                                        ${{ number_format($lists['a4_account_marketing_and_promotion']) ?: '-' }}
+                                        ${{ number_format($billingStatement->a4_account_marketing_and_promotion) ?: '-' }}
                                     </td>
                                     <td class="text-right">
-                                        ${{ number_format($lists['client_account_marketing_and_promotion']) ?: '-' }}
+                                        ${{ number_format($billingStatement->client_account_marketing_and_promotion) ?: '-' }}
                                     </td>
                                 </tr>
 
