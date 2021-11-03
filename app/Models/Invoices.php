@@ -3,14 +3,12 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use App\Models\BillingStatements;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Invoices extends Model
 {
     protected $table = "invoices";
-
-//    protected $fillable = ['client_code'];
 
     protected $guarded = ['id'];
 
@@ -29,5 +27,16 @@ class Invoices extends Model
     public function billingStatement()
     {
         return $this->belongsTo(BillingStatements::class);
+    }
+    
+    /**
+     * Scope a query to only include active users.
+     *
+     * @param Builder $query
+     * @return Builder
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('active', 1);
     }
 }

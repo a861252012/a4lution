@@ -33,7 +33,7 @@ class EmployeeController extends Controller
                     'u.region',
                     'a.currency',
                     'a.customer_qty',
-                    'a.report_date',
+                    DB::RAW("DATE_FORMAT(a.report_date,'%b-%Y') AS report_date"),
                     'a.total_billed_commissions_amount',
                     DB::RAW("SUM(CASE WHEN r.billing_statement_id IS NOT NULL THEN 1 ELSE 0 END) AS 'billed_qty'"),
                     DB::RAW("IFNULL(a.extra_monthly_fee_amount, 0) AS 'extra_monthly_fee'"),
@@ -63,8 +63,7 @@ class EmployeeController extends Controller
     public function commissionDetail(Request $request): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
         $userID = $request->route('userID');
-        $date = $request->route('date');
-
+        $date = Carbon::parse($request->route('date'))->format('Y-m-d');
         $query = EmployeeCommission::query()
             ->from('employee_commissions as a')
             ->join('employee_commission_entries as c', function ($join) {

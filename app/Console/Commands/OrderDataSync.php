@@ -438,6 +438,7 @@ class OrderDataSync extends Command
                     $v['paypal_fee'] = $item['payment_platform_fee_org'];
                     $v['other_fee'] = $item['other_fee_org'] - $v['marketplace_tax'] - $v['cost_of_point']
                         - $v['exclusives_referral_fee'];
+                    $v['other_transaction'] = $item['other_fee_org'];
                 }
 
                 $getPromotion = $this->orderProductsRepository->countPromotionAmount(

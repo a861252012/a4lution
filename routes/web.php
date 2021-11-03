@@ -139,5 +139,17 @@ Route::group(['middleware' => 'auth'], function () {
 
     Route::get('admin/approvaladmin', ['as' => 'admin.adminView', 'uses' => 'AdminController@approvalAdminView']);
 
-    Route::put('admin/approvaladmin/{date}', ['as' => 'admin.batchApprove', 'uses' => 'AdminController@batchApprove']);
+    Route::put(
+        'admin/approvaladmin/batch/{date}',
+        [
+            'as' => 'admin.batchApprove', 'uses' => 'AdminController@batchApprove'
+        ]
+    );
+
+    Route::put(
+        'admin/approvaladmin/revoke/{date}',
+        [
+            'as' => 'admin.RevokeApprove', 'uses' => 'AdminController@revokeApprove'
+        ]
+    );
 });

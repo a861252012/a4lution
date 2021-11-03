@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Models\RoleAssignment;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -18,26 +18,35 @@ class Users extends Authenticatable
     protected $hidden = ['password'];
 
     protected $fillable = [
-        'user_name', 'email', 'password', 'actor_type', 'full_name', 'company_name', 'phone_number'
-        , 'address', 'active', 'created_by', 'updated_by'
+        'user_name',
+        'email',
+        'password',
+        'actor_type',
+        'full_name',
+        'company_name',
+        'phone_number',
+        'address',
+        'active',
+        'created_by',
+        'updated_by'
     ];
 
     /**
      * Get the role of the user
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * @return HasOne
      */
-    public function roleAssignment()
+    public function roleAssignment(): HasOne
     {
         return $this->hasOne('App\Models\RoleAssignment', 'user_id', 'id');
     }
 
-    public function batchJobs()
+    public function batchJobs(): HasMany
     {
         return $this->hasMany('App\Models\BatchJobs', 'user_id', 'id');
     }
 
-    public function customerRelations()
+    public function customerRelations(): HasMany
     {
         return $this->hasMany('App\Models\CustomerRelations', 'user_id', 'id');
     }
@@ -53,10 +62,19 @@ class Users extends Authenticatable
             return "/{$this->picture}";
         }
 
-        return 'http://i.pravatar.cc/200';
-//        return asset('pictures') . "/A4lution_logo.png";
+        return asset('pictures') . '/people_icon.jpg';
     }
 
+
+    /**
+     * Check if the user has admin role
+     *
+     * @return boolean
+     */
+    public function isManager(): bool
+    {
+        return $this->roleAssignment->role_id === 2;
+    }
 //    /**
 //     * Check if the user has admin role
 //     *

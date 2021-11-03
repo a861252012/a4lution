@@ -65,6 +65,7 @@ class CalculateCommission extends Command
                 ->where('a.active', '=', 1)
                 ->where('u.active', '=', 1)
                 ->where('r.active', '=', 1)
+                ->whereIn('r.id', [1, 3, 4])//sales, operation , account_service
                 ->get()
                 ->toArray();
 
@@ -82,7 +83,7 @@ class CalculateCommission extends Command
                     ->where('x.active', 1)
                     ->where('u.active', 1);
 
-                if ($item !== 'ops') {
+                if ($item['role_name'] !== 'ops') {
                     $customerListQuery->where('u.user_name', '=', $item['user_name']);
                 }
 
