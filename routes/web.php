@@ -64,12 +64,11 @@ Route::group(['middleware' => 'auth'], function () {
     Route::delete('invoice/{id}', ['as' => 'invoice.deleteByID', 'uses' => 'InvoiceController@deleteInvoice']);
 
     Route::get('invoice/download/{token?}', ['as' => 'invoice.download', 'uses' => 'InvoiceController@downloadFile']);
-    Route::post('invoice/checkIfReportExist', [
-        'as' => 'invoice.checkIfReportExist',
-        'uses' => 'InvoiceController@checkIfReportExist'
-    ]);
+    Route::get('invoice/validation/{date}/{clientCode}', ['uses' => 'InvoiceController@reportValidation'])
+        ->name('invoice.reportValidation');
     Route::post('invoice/edit', ['as' => 'invoice.edit', 'uses' => 'InvoiceController@editView']);
     Route::post('invoice/runReport/{store?}', ['as' => 'invoice.runReport', 'uses' => 'InvoiceController@runReport']);
+    Route::post('invoice/createBill', 'InvoiceController@createBill')->name('invoice.createBill');
 
     Route::get('{page}', ['as' => 'page.index', 'uses' => 'PageController@index']);
 
