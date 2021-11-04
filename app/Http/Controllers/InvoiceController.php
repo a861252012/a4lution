@@ -397,9 +397,13 @@ WHERE
         $data['reportDate'] = $request->report_date ?? null;
         $data['status'] = $request->status ?? null;
 
+        $reportDate = Carbon::parse($data['reportDate']);
+
         $data['formattedStartDate'] = date('jS F Y', strtotime($data['reportDate']));
-        $data['formattedEndDate'] = date('jS F Y', strtotime(date("Y-m-t", strtotime($data['reportDate']))));
-        $data['formattedReportDate'] = date('F Y', strtotime(date("Y-m-t", strtotime($data['reportDate']))));
+        $data['formattedStartDate'] = $reportDate->format('jS F Y');
+
+        $data['formattedEndDate'] = $reportDate->endOfMonth()->format('jS F Y');
+        $data['formattedReportDate'] = $reportDate->endOfMonth()->format('jS F Y');
         $data['currentDate'] = date("m/d/Y");
         $data['nextMonthDate'] = date("m/d/Y", strtotime('+30 days', strtotime($data['currentDate'])));
 
