@@ -35,7 +35,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('fee/upload', ['as' => 'fee.upload', 'uses' => 'FeeController@uploadView']);
     Route::post('fee/upload/file', ['as' => 'fee.upload.file', 'uses' => 'FeeController@uploadFile']);
     Route::get('fee/platformads', ['as' => 'fee.platformads', 'uses' => 'FeeController@platformAdsView']);
-    Route::get('fee/amzdaterange', ['as' => 'fee.amzdaterange', 'uses' => 'FeeController@amzDaterangeView']);
+    Route::get('fee/amzdaterange', ['as' => 'fee.amzdaterange', 'uses' => 'FeeController@amzDateRangeView']);
     Route::get('fee/monthlystorage', ['as' => 'fee.monthlystorage', 'uses' => 'FeeController@monthlyStorageView']);
     Route::get('fee/longtermstorage', ['as' => 'fee.longtermstorage', 'uses' => 'FeeController@longTermStorageView']);
     Route::get('fee/firstmileshipment', [
@@ -43,10 +43,7 @@ Route::group(['middleware' => 'auth'], function () {
         'uses' => 'FeeController@firstMileShipmentView'
     ]);
     Route::get('fee/export/{export_type}', ['as' => 'fee.export', 'uses' => 'FeeController@exportSampleFile']);
-    Route::get('fee/checkIfReportExist/{report_date}', [
-        'as' => 'fee.checkMonthlyReportExist',
-        'uses' => 'FeeController@checkIfMonthlyReportExist'
-    ]);
+    Route::post('fee/preValidation/{date}/{type}', ['as' => 'fee.checkMonthlyReportExist', 'uses' => 'FeeController@preValidation',]);
 
     Route::post('orders/edit', ['as' => 'orders.edit', 'uses' => 'ErpOrdersController@editOrders']);
     Route::put('orders/orderDetail/{id}', [
@@ -67,12 +64,11 @@ Route::group(['middleware' => 'auth'], function () {
     Route::delete('invoice/{id}', ['as' => 'invoice.deleteByID', 'uses' => 'InvoiceController@deleteInvoice']);
 
     Route::get('invoice/download/{token?}', ['as' => 'invoice.download', 'uses' => 'InvoiceController@downloadFile']);
-    Route::post('invoice/checkIfReportExist', [
-        'as' => 'invoice.checkIfReportExist',
-        'uses' => 'InvoiceController@checkIfReportExist'
-    ]);
+    Route::get('invoice/validation/{date}/{clientCode}', 'InvoiceController@reportValidation')
+        ->name('invoice.reportValidation');
     Route::post('invoice/edit', ['as' => 'invoice.edit', 'uses' => 'InvoiceController@editView']);
     Route::post('invoice/runReport/{store?}', ['as' => 'invoice.runReport', 'uses' => 'InvoiceController@runReport']);
+    Route::post('invoice/createBill', 'InvoiceController@createBill')->name('invoice.createBill');
 
     Route::get('{page}', ['as' => 'page.index', 'uses' => 'PageController@index']);
 

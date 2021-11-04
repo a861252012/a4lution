@@ -1,10 +1,3 @@
-{{--@extends('layouts.app', [--}}
-{{--    'title' => __('User Profile'),--}}
-{{--    'navClass' => 'bg-default',--}}
-{{--    'parentSection' => 'laravel',--}}
-{{--    'elementName' => 'profile'--}}
-{{--])--}}
-
 @extends('layouts.app', [
     'parentSection' => 'fee',
     'elementName' => 'upload'
@@ -34,8 +27,6 @@
                 <div class="card">
                     <!-- Card header -->
                     <div class="card-header">
-                        {{--                        <h3 class="mb-0">Datatable</h3>--}}
-                        {{--                        <div class="row input-daterange datepicker align-items-center">--}}
                         <div>
                             <form method="GET" action="/fee/upload" role="form" class="form">
 
@@ -48,7 +39,6 @@
                                                    type="text" value="{{ $createdAt }}">
                                         </div>
                                     </div>
-                                    {{--                                    {{ dd(get_defined_vars()) }}--}}
 
                                     <div class=" col-2 col-lg-2 col-sm-2">
                                         <div class="form-group">
@@ -118,19 +108,6 @@
                                         </div>
                                     </div>
 
-                                    {{--                                    <div class="col-2 col-lg-2 col-sm-2 text-right">--}}
-                                    {{--                                        <label class="form-control-label" for="inline_href"></label>--}}
-                                    {{--                                        <div class="form-group">--}}
-                                    {{--                                            <a id="upload_btn" class="form-control btn btn-primary" id="inline_href"--}}
-                                    {{--                                               href="#inline_content" style="margin-top: 6px;">--}}
-                                    {{--                                                <div>--}}
-                                    {{--                                                    <i class="ni ni-cloud-upload-96"></i>--}}
-                                    {{--                                                    <span>UPLOAD</span>--}}
-                                    {{--                                                </div>--}}
-                                    {{--                                            </a>--}}
-                                    {{--                                        </div>--}}
-                                    {{--                                    </div>--}}
-
                                     <div class="col-2 col-lg-2 col-sm-2 text-right">
                                         <label class="form-control-label" for="upload_btn"></label>
                                         <div class="form-group">
@@ -159,6 +136,7 @@
                                 <th>FEE TYPE</th>
                                 <th>FILE NAME</th>
                                 <th>STATUS</th>
+                                <th>ERROR MSG</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -170,6 +148,7 @@
                                     <td>{{ $item->fee_type }}</td>
                                     <td>{{ $item->file_name }}</td>
                                     <td>{{ $item->status }}</td>
+                                    <td>{{ $item->user_error_msg }}</td>
                                 </tr>
                             @endforeach
                             </tbody>
@@ -193,9 +172,7 @@
         <div class="container" id='inline_content'>
 
             <!-- Data Import/Platform Ads -->
-            {{--            <form action="/fee/upload/file" method="post" id="inline_form" enctype="multipart/form-data">--}}
             <form enctype="multipart/form-data">
-                {{--            <form enctype="multipart/form-data">--}}
 
                 <div class="row">
                     <div class="col-4 form-group">
@@ -247,17 +224,10 @@
                         <div class="dropzone dropzone-single mb-3" data-toggle="dropzone">
                             <div class="fallback">
                                 <div class="custom-file">
-                                    {{--                                    <input type="file" class="custom-file-input" id="projectCoverUploads" required>--}}
                                     <input type="file" name="file" class="form-control" id="inline_file" required>
                                     <div class="required">Maximum size: 30 MB</div>
-                                    {{--                                    <label class="custom-file-label" for="projectCoverUploads">Choose file</label>--}}
                                 </div>
                             </div>
-                            {{--                            <div class="dz-preview dz-preview-single">--}}
-                            {{--                                <div class="dz-preview-cover">--}}
-                            {{--                                    <img class="dz-preview-img" data-dz-thumbnail>--}}
-                            {{--                                </div>--}}
-                            {{--                            </div>--}}
                         </div>
                     </div>
                 </div>
@@ -329,7 +299,6 @@
             $('#inline_report_date').datepicker('update', new Date());
 
             $("#upload_btn").colorbox({inline: true, width: "40%", height: "70%", closeButton: true});
-            // $("#upload_btn").colorbox({inline: true, width: "auto", height: "auto", closeButton: true});
 
             $('#cancel_btn').click(function () {
                 $.colorbox.close();
@@ -337,18 +306,14 @@
             });
 
             $('#inline_submit').click(function () {
-                let _token = $('meta[name="csrf-token"]').attr('content');
-
                 $.ajaxSetup({
                     headers: {
-                        'X-CSRF-TOKEN': _token
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     }
                 });
 
-                // Append data
-                // let fd = new FormData();
-                let origin = window.location.origin;
-                let inlineReportDate = $('#inline_report_date').val();
+                let date = $('#inline_report_date').val();
+                let type = $('#inline_select_fee_type :selected').val();
 
                 //檢查副檔名
                 if ($.trim($("#inline_file").val()) === '') {
@@ -362,6 +327,9 @@
                 let file = $('#inline_file')[0].files[0];
                 let fileType = file.name.slice((file.name.lastIndexOf(".") - 1 >>> 0) + 2);
 
+                let data = new FormData();
+                data.append('file', file);
+
                 if (fileType !== 'xlsx') {
                     swal({
                         icon: "error",
@@ -370,23 +338,38 @@
                     return false;
                 }
 
-                //call api to check if monthly report exist
+                swal({
+                    icon: "success",
+                    text: "processing"
+                })
+                    .then(function (isConfirm) {
+                        if (isConfirm) {
+                            $.colorbox.close();
+                        }
+                    });
+                //call api to check if monthly report exist and validate title
                 $.ajax({
-                    url: origin + '/fee/checkIfReportExist/' + inlineReportDate,
-                    type: 'get',
-                    async: false,
+                    url: window.location.origin + '/fee/preValidation/' + date + '/' + type,
+                    type: 'post',
+                    processData: false,
+                    contentType: false,
+                    data: data,
                     success: function (res) {
-                        if (res.status === "failed") {
-                            console.log('failed');
+                        if (res.status !== 200) {
                             swal({
                                 icon: "error",
-                                text: "The selected report date " + inlineReportDate + " was closed"
+                                text: res.msg
                             })
                             return false;
-                        } else {
-                            console.log('secAjax');
-                            secAjax();
                         }
+
+                        uploadAjax(file, date, type);
+                    }, error: function (e) {
+                        console.log(e);
+                        swal({
+                            icon: 'error',
+                            text: 'upload error'
+                        });
                     }
                 });
             });
@@ -410,29 +393,19 @@
             });
         });
 
-        function secAjax() {
-            swal({
-                icon: "success",
-                text: "file uploaded"
-            })
-                .then(function (isConfirm) {
-                    if (isConfirm) {
-                        $.colorbox.close();
-                    }
-                });
-            let fd = new FormData();
-            let origin = window.location.origin;
+        function uploadAjax(file, date, type) {
+            let data = new FormData();
 
-            fd.append('file', $('#inline_file')[0].files[0]);
-            fd.append('inline_report_date', $('#inline_report_date').val());
-            fd.append('inline_fee_type', $('#inline_select_fee_type :selected').val());
+            data.append('file', file);
+            data.append('inline_report_date', date);
+            data.append('inline_fee_type', type);
 
             $.ajax({
-                url: origin + '/fee/upload/file',
+                url: window.location.origin + '/fee/upload/file',
                 type: 'post',
                 processData: false,
                 contentType: false,
-                data: fd,
+                data: data,
                 success: function () {
                     console.log('success');
                 }

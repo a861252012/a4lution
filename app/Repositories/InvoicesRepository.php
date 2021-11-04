@@ -31,4 +31,14 @@ class InvoicesRepository
             return -1;
         }
     }
+
+    //檢核若已出invoice則提示訊息(需先刪除相關聯的invoices)
+    public function checkIfDuplicated(string $date, string $clientCode): int
+    {
+        return $this->invoices
+            ->active()
+            ->where('report_date', $date)
+            ->where("client_code", $clientCode)
+            ->count();
+    }
 }
