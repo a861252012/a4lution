@@ -395,11 +395,9 @@ class InvoiceController extends Controller
 
         $reportDate = Carbon::parse($data['reportDate']);
 
-        $data['formattedStartDate'] = date('jS F Y', strtotime($data['reportDate']));
         $data['formattedStartDate'] = $reportDate->format('jS F Y');
-
         $data['formattedEndDate'] = $reportDate->endOfMonth()->format('jS F Y');
-        $data['formattedReportDate'] = $reportDate->endOfMonth()->format('jS F Y');
+        $data['formattedReportDate'] = $reportDate->endOfMonth()->format('F Y');
         $data['currentDate'] = date("m/d/Y");
         $data['nextMonthDate'] = date("m/d/Y", strtotime('+30 days', strtotime($data['currentDate'])));
 
