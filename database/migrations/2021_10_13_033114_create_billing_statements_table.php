@@ -33,7 +33,7 @@ class CreateBillingStatementsTable extends Migration
             $table->decimal('client_account_fba_fee', 10, 2)->nullable();
             $table->decimal('client_account_fba_storage_fee', 10, 2)->nullable();
             $table->decimal('client_account_platform_fee', 10, 2)->nullable();
-            $table->decimal('client_account_refund_and_resend', 10, 2);
+            $table->decimal('client_account_refund_and_resend', 10, 2)->nullable();
             $table->decimal('client_account_miscellaneous', 10, 2)->nullable();
             $table->decimal('client_account_advertisement', 10, 2)->nullable();
             $table->decimal('client_account_marketing_and_promotion', 10, 2)->nullable();
@@ -54,7 +54,7 @@ class CreateBillingStatementsTable extends Migration
             $table->tinyInteger('active');
             $table->string('commission_type')->default('');
             
-            $table->primary(['id', 'client_account_refund_and_resend']);
+            $table->primary(['id']);
         });
     }
 

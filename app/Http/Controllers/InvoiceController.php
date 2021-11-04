@@ -3,13 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\UploadFileToAWS;
-use App\Models\AmazonDateRangeReport;
-use App\Models\Orders;
-use App\Models\PlatformAdFees;
-use App\Models\RmaRefundList;
 use DateTime;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\Invoices;
+use App\Services\InvoiceService;
 use App\Models\Roles;
 use App\Models\CustomerRelations;
 use App\Models\RoleAssignment;
@@ -23,14 +22,10 @@ use App\Repositories\OrdersRepository;
 use App\Repositories\OrderProductsRepository;
 use App\Repositories\AmazonReportListRepository;
 use App\Repositories\FirstMileShipmentFeesRepository;
-use Illuminate\Support\Facades\App;
+use App\Repositories\BillingStatementRepository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Exports\InvoiceExport;
-use App\Exports\SalesExpenseExport;
-use App\Exports\FBADateExport;
 use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
 
 class InvoiceController extends Controller
 {
@@ -46,7 +41,9 @@ class InvoiceController extends Controller
     private $orderProductRepository;
     private $amazonReportListRepository;
     private $firstMileShipmentFeesRepository;
+    private $billingStatementRepository;
     private $firstMileShipmentFees;
+    private $invoiceService;
     private const MANAGER_ROLE_NAME = 'manager';
 
     public function __construct(
@@ -62,9 +59,10 @@ class InvoiceController extends Controller
         OrderProductsRepository         $orderProductRepository,
         AmazonReportListRepository      $amazonReportListRepository,
         FirstMileShipmentFeesRepository $firstMileShipmentFeesRepository,
-        FirstMileShipmentFees           $firstMileShipmentFees
-    )
-    {
+        FirstMileShipmentFees           $firstMileShipmentFees,
+        InvoiceService                  $invoiceService,
+        BillingStatementRepository      $billingStatementRepository
+    ) {
         $this->invoices = $invoices;
         $this->customerRelations = $customerRelations;
         $this->roleAssignment = $roleAssignment;
@@ -77,9 +75,10 @@ class InvoiceController extends Controller
         $this->orderProductRepository = $orderProductRepository;
         $this->amazonReportListRepository = $amazonReportListRepository;
         $this->firstMileShipmentFeesRepository = $firstMileShipmentFeesRepository;
+        $this->billingStatementRepository = $billingStatementRepository;
         $this->firstMileShipmentFees = $firstMileShipmentFees;
+        $this->invoiceService = $invoiceService;
     }
-
 
     public function getAvolutionCommission(string $clientCode, string $shipDate, float $tieredParam, array $commissionRate)
     {
@@ -307,16 +306,11 @@ class InvoiceController extends Controller
             $query = $this->billingStatements->select(
                 'id',
                 'client_code',
+                'avolution_commission',
+                'commission_type',
                 'total_sales_orders',
                 'total_sales_amount',
                 'total_expenses',
-                'sales_gp',
-                'avolution_commission',
-                'sales_tax_handling',
-                'sales_credit',
-                'opex_invoice',
-                'fba_storage_fee_invoice',
-                'final_credit',
                 $formattedShipDate
             )->where('active', 1);
 
@@ -333,25 +327,44 @@ class InvoiceController extends Controller
         return view('invoice/issue', $data);
     }
 
-    public function checkIfReportExist()
+    public function createBill(Request $request): JsonResponse
     {
-        $reportDate = request()->input('report_date');
-        $clientCode = request()->input('client_code');
+        $data = collect($request)->only($this->billingStatementRepository->getTableColumns());
 
-        $formattedDate = date('Ym', strtotime($reportDate));
+        $data->put('report_date', date('Y-m-d', strtotime($data['report_date'])));
+        $data->put('created_at', date('Y-m-d h:i:s'));
+        $data->put('created_by', Auth::id());
+        $data->put('active', 1);
+        $data->put('commission_type', 'manual');
 
-        $formattedReportDate = DB::raw("DATE_FORMAT(report_date,'%Y%m')");
-
-        $hasMonthlyBilling = $this->billingStatements->where("active", 1)
-            ->where($formattedReportDate, $formattedDate)
-            ->where("client_code", $clientCode)
-            ->count();
-
-        if ($hasMonthlyBilling) {
-            return response()->json(['status' => 'failed', 'icon' => 'error']);
+        try {
+            $this->billingStatementRepository->create($data->all());
+        } catch (QueryException $exception) {
+            return response()->json(
+                [
+                    'msg' => $exception->errorInfo,
+                    'status' => 500,
+                ],
+                500
+            );
         }
 
-        return response()->json(['status' => 'success', 'icon' => 'success']);
+        return response()->json(['msg' => 'success', 'status' => 200]);
+    }
+
+    public function reportValidation(): JsonResponse
+    {
+        $res = $this->invoiceService->reportValidation(
+            request()->route('date'),
+            request()->route('clientCode')
+        );
+
+        return response()->json(
+            [
+                'msg' => $res['msg'],
+                'status' => $res['status'],
+            ]
+        );
     }
 
     public function editView(Request $request)
@@ -460,7 +473,7 @@ class InvoiceController extends Controller
         }
     }
 
-    public function deleteInvoice(Request $request): \Illuminate\Http\JsonResponse
+    public function deleteInvoice(Request $request): JsonResponse
     {
         $id = $request->route('id');
 
