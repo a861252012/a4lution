@@ -40,4 +40,10 @@ return [
         ],
     ],
 
+    'erp' => [
+        'ebUrl' => env('ERP_EB_URL'),
+        'wmsUrl' => env('ERP_WMS_URL'),
+    ]
+
+
 ];

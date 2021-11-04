@@ -18,7 +18,7 @@ class CreateRoleAssignmentTable extends Migration
             $table->unsignedInteger('user_id')->index('user_id');
             $table->unsignedInteger('role_id')->index('role_id');
             $table->timestamp('created_at')->useCurrent()->useCurrentOnUpdate();
-            $table->timestamp('updated_at')->default('0000-00-00 00:00:00 COMMENT '更新時間'');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00');
             $table->bit('active', 1);
         });
     }

@@ -24,7 +24,7 @@ class CreateCommissionSkuSettingsTable extends Migration
             $table->boolean('active')->default(1);
             $table->timestamp('created_at')->useCurrent()->useCurrentOnUpdate();
             $table->integer('created_by');
-            $table->timestamp('updated_at')->default('0000-00-00 00:00:00 COMMENT '修改時間'');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00');
             $table->integer('updated_by');
         });
     }
