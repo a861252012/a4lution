@@ -20,7 +20,7 @@ class CreateBatchJobsTable extends Migration
             $table->string('file_name');
             $table->date('report_date');
             $table->unsignedInteger('total_count')->nullable();
-            $table->string('status', 50)->default('Processing')->index('batch_jobs_status_index');
+            $table->string('status', 50)->default('Processing COMMENT '處理狀態(Error')->index('batch_jobs_status_index');
             $table->timestamp('created_at')->useCurrent()->useCurrentOnUpdate()->index('created_at');
             $table->timestamp('finished_at')->nullable();
             $table->longText('exit_message')->nullable();

@@ -3,7 +3,6 @@
 /public/storage
 /storage/*.key
 /storage/framework/laravel-excel
-/storage/invoice-export
 /vendor
 /packages
 .history/

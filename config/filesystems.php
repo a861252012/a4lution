@@ -64,11 +64,6 @@ return [
             'url' => env('AWS_URL'),
         ],
 
-        'invoice-export' => [
-            'driver' => 'local',
-            'root' => storage_path('invoice-export'),
-        ],
-
     ],
 
 ];

@@ -2,33 +2,33 @@
 
 namespace App\Exports;
 
-use Throwable;
-use App\Models\Users;
-use App\Models\Invoices;
-use Maatwebsite\Excel\Excel;
-use App\Exports\FBADateExport;
-use App\Exports\PaymentExport;
-use App\Exports\StorageFeeExport;
 use App\Models\BillingStatements;
-use App\Exports\OpexInvoiceExport;
-use Illuminate\Support\Facades\DB;
-use App\Exports\ADSPromotionExport;
-use App\Exports\SalesExpenseExport;
-use Illuminate\Support\Facades\Log;
-use App\Exports\MisCellaneousExport;
 use App\Models\FirstMileShipmentFees;
-use App\Exports\ReturnAndRefundExport;
-use Maatwebsite\Excel\Events\AfterSheet;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Events\BeforeSheet;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\WithEvents;
+use App\Models\Invoices;
+use App\Models\Users;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use App\Exports\FBAFirstMileShipmentFeesExport;
-use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use Maatwebsite\Excel\Events\AfterSheet;
+use Maatwebsite\Excel\Events\BeforeSheet;
+use Maatwebsite\Excel\Excel;
+use App\Exports\SalesExpenseExport;
+use App\Exports\PaymentExport;
+use App\Exports\OpexInvoiceExport;
+use App\Exports\FBAFirstMileShipmentFeesExport;
+use App\Exports\FBADateExport;
+use App\Exports\ADSPromotionExport;
+use App\Exports\ReturnAndRefundExport;
+use App\Exports\MisCellaneousExport;
+use App\Exports\StorageFeeExport;
+use Throwable;
 
-class InvoiceExport implements WithMultipleSheets, WithEvents
+class InvoiceExport implements WithMultipleSheets, ShouldQueue, WithEvents
 {
     use RegistersEventListeners;
 

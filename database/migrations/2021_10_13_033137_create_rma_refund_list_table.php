@@ -55,7 +55,7 @@ class CreateRmaRefundListTable extends Migration
             $table->string('refund_data_source')->nullable();
             $table->string('sync_message', 1000)->nullable();
             $table->string('rmap_ship_fee')->nullable();
-            $table->timestamp('created_at')->default('0000-00-00 00:00:00');
+            $table->timestamp('created_at')->default('0000-00-00 00:00:00 COMMENT '系統資料-資料同步寫入時間'');
         });
     }
 
