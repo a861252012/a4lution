@@ -1,58 +1,125 @@
 <?php
 
-namespace App\Service;
+namespace App\Jobs;
 
-use Carbon\Carbon;
-use App\Models\Customers;
-use App\Models\OrderProducts;
-use App\Support\ERPRequester;
+use App\Exports\InvoiceExport;
+use App\Models\ExchangeRates;
+use App\Models\Invoices;
 use App\Models\CommissionSettings;
+use App\Models\OrderProducts;
+use App\Models\BillingStatements;
+use App\Models\Customers;
 use App\Models\ExtraordinaryItems;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use App\Repositories\OrdersRepository;
-use App\Repositories\ExchangeRatesRepository;
 use App\Repositories\OrderProductsRepository;
+use App\Repositories\OrdersRepository;
 use App\Repositories\AmazonReportListRepository;
-use App\Repositories\BillingStatementsRepository;
 use App\Repositories\FirstMileShipmentFeesRepository;
+use GuzzleHttp\Client;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 
-class BillingStatementsService
+class UploadFileToAWS implements ShouldQueue
 {
-    private $billingStatementsRepo;
+    use Dispatchable, InteractsWithQueue, Queueable;
 
-    public function __construct(BillingStatementsRepository $billingStatementsRepo)
+//    const BATCH_STATUS = 'processing';
+    protected $request;
+    protected $userID;
+    protected $store;
+
+    private const EB_ACCOUNT = 'IT2';
+    private const EB_PWD = 'AbAO@12';
+
+    public function __construct(
+        array $request,
+        int   $userID,
+        bool  $store
+    )
     {
-        $this->billingStatementsRepo = $billingStatementsRepo;
+        $this->request = $request;
+        $this->userID = $userID;
+        $this->store = $store;
     }
 
-    // TODO: do all repository
-    public function create($request)
+    /**
+     * Execute the job.
+     *
+     * @return void
+     */
+    public function handle()
     {
-        $reportDate = Carbon::parse($request->report_date)->format('Y-m-d');
-        $clientCode = $request->client_code;
+        $data = $this->request;
+        $data['report_date'] = date("Y-m-01", strtotime($data['step_report_date']));
+
+        if ($this->store) {
+            $data['issue_date'] = isset($data['issue_date']) ?
+                date("Y-m-d", strtotime($data['issue_date'])) : date("Y-m-d");
+
+            $data['due_date'] = isset($data['due_date']) ?
+                date("Y-m-d", strtotime($data['due_date'])) : date('Y-m-d', strtotime('+30 days'));
+
+            $formattedIssueDate = date("ymd", strtotime($data['issue_date']));
+            $formattedSupplier = str_replace(' ', '_', ($data['supplier_name']));
+
+            $data['opex_invoice_no'] = sprintf('INV-%d%s_1', $formattedIssueDate, $formattedSupplier);
+            $data['fba_shipment_invoice_no'] = sprintf('INV-%d%s_FBA', $formattedIssueDate, $formattedSupplier);
+            $data['credit_note_no'] = sprintf('CR-%d%s_1', $formattedIssueDate, $formattedSupplier);
+            $data['created_at'] = date('Y-m-d H:i:s');
+            $data['updated_at'] = date('Y-m-d H:i:s');
+            $data['updated_by'] = $this->userID;
+            $data['created_by'] = $this->userID;
+            $data['active'] = 1;
+            $data['doc_status'] = "processing";
+            $data['doc_file_name'] = sprintf(
+                '%s_invoice_%s%d',
+                $data['client_code'],
+                date("Fy", strtotime($data['report_date'])),
+                date('YmdHis')
+            );
+
+            $data['approved_at'] = null;
+            $data['approved_by'] = null;
+
+            unset($data['_token']);
+            unset($data['step_report_date']);
+
+            $insertInvoiceID = Invoices::insertGetId($data);
+        }
 
         //4-1 Commission Rate
-        $exchangeRate = (new ExchangeRatesRepository)->getByQuotedDate($reportDate);
-        if ($exchangeRate->isEmpty()) {
+        $exchangeRate = ExchangeRates::where('quoted_date', $data['report_date'])
+            ->where('active', 1)
+            ->get();
+
+        //check if exchange rate exist
+        if (!$exchangeRate) {
             Log::error('uploadFileToS3_failed: exchangeRate is empty');
         }
 
-        $commissionSettings = CommissionSettings::where('client_code', $clientCode)
+        $commissionSettings = CommissionSettings::where('client_code', $data['client_code'])
             ->exists();
 
         if (!$commissionSettings) {
             Log::error('uploadFileToS3_failed: commissionSettings is empty');
             return;
         }
-
         //4-2 Expenses Breakdown start
 
         //getReportFees
-        $supplierCode = Customers::where('client_code', $clientCode)->value('supplier_code');
+        $supplierCode = Customers::where('client_code', $data['client_code'])->value('supplier_code');
 
-        $getSupplierName = (new ERPRequester)->send(
-            config('services.erp.wmsUrl'),
+        if (!$supplierCode) {
+            Log::error("uploadFileToS3_failed: the supplierCode of {$data['client_code']} is empty");
+        }
+
+        $getSupplierName = $this->sendERPRequest(
+            env("ERP_WMS_URL"),
             'getSupplierInfo',
             ["supplierCode" => $supplierCode]
         );
@@ -61,8 +128,8 @@ class BillingStatementsService
 
         $orderRepository = new OrdersRepository();
         $clientReportFees = $orderRepository->getReportFees(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             true
         );
@@ -75,8 +142,8 @@ class BillingStatementsService
         $fees['clientPlatformFeeHKD'] = (float)$clientPlatformFeeHKD + (float)$fees['clientOtherTransactionFeesHKD'];
 
         $a4ReportFees = $orderRepository->getReportFees(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             false
         );
@@ -89,8 +156,8 @@ class BillingStatementsService
 
         //getAccountRefund
         $clientRefundFees = $orderRepository->getAccountRefund(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             true
         );
@@ -98,8 +165,8 @@ class BillingStatementsService
         $clientRefundFees = $clientRefundFees ? $clientRefundFees[0]->refund_amount_hkd : 0;
 
         $a4RefundFees = $orderRepository->getAccountRefund(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             false
         );
@@ -108,8 +175,8 @@ class BillingStatementsService
 
         //getAccountResend
         $clientAccountResend = $orderRepository->getAccountResend(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             true
         );
@@ -117,8 +184,8 @@ class BillingStatementsService
         $clientAccountResend = $clientAccountResend ? $clientAccountResend[0]->total_sales_hkd : 0;
 
         $a4AccountResend = $orderRepository->getAccountResend(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             false
         );
@@ -126,8 +193,8 @@ class BillingStatementsService
         $a4AccountResend = $a4AccountResend ? $a4AccountResend[0]->total_sales_hkd : 0;
 
         $clientAccountAmazonTotal = $orderRepository->getAccountAmzTotal(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             true
         );
@@ -136,8 +203,8 @@ class BillingStatementsService
             $clientAccountAmazonTotal[0]->amazon_total_hkd : 0;
 
         $a4AccountAmazonTotal = $orderRepository->getAccountAmzTotal(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             false
         );
@@ -152,8 +219,8 @@ class BillingStatementsService
         $amazonReportListRepository = new AmazonReportListRepository();
 
         $clientAccountMiscellaneous = $amazonReportListRepository->getAccountMiscellaneous(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             true
         );
@@ -162,8 +229,8 @@ class BillingStatementsService
             ? -1 * abs($clientAccountMiscellaneous[0]->Miscellaneous) : 0;
 
         $a4AccountMiscellaneous = $amazonReportListRepository->getAccountMiscellaneous(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             false
         );
@@ -173,8 +240,8 @@ class BillingStatementsService
 
         //getAccountAds
         $clientAccountAds = $orderRepository->getAccountAds(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             true
         );
@@ -182,8 +249,8 @@ class BillingStatementsService
         $fees['clientAccountAds'] = $clientAccountAds ? $clientAccountAds[0]->ad : 0;
 
         $a4AccountAds = $orderRepository->getAccountAds(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             false
         );
@@ -192,8 +259,8 @@ class BillingStatementsService
 
         //getAccountMarketingAndPromotion
         $clientAccountMarketingAndPromotion = $amazonReportListRepository->getAccountMarketingAndPromotion(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             true
         );
@@ -202,8 +269,8 @@ class BillingStatementsService
             $clientAccountMarketingAndPromotion[0]->Miscellaneous : 0;
 
         $a4AccountMarketingAndPromotion = $amazonReportListRepository->getAccountMarketingAndPromotion(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             false
         );
@@ -213,8 +280,8 @@ class BillingStatementsService
 
         //getAccountFbaStorageFee
         $clientAccountFbaStorageFee = $orderRepository->getAccountFbaStorageFee(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             true
         );
@@ -222,8 +289,8 @@ class BillingStatementsService
         $fees['clientAccountFbaStorageFee'] = $clientAccountFbaStorageFee ? $clientAccountFbaStorageFee[0]->storage_fee_hkd_sum : 0;
 
         $a4AccountFbaStorageFee = $orderRepository->getAccountFbaStorageFee(
-            $reportDate,
-            $clientCode,
+            $data['report_date'],
+            $data['client_code'],
             $supplierName,
             false
         );
@@ -234,26 +301,26 @@ class BillingStatementsService
 
         //4-3 prepare data for step3,for insert billing statement
         $billingItems['sales_tax_handling'] = 0;
-        $billingItems['report_date'] = $reportDate;
-        $billingItems['client_code'] = $clientCode;
+        $billingItems['report_date'] = $data['report_date'];
+        $billingItems['client_code'] = $data['client_code'];
 
         $totalSalesOrders = $orderRepository->getTotalSalesOrders(
-            $reportDate,
-            $clientCode
+            $data['report_date'],
+            $data['client_code']
         );
 
         $billingItems['total_sales_orders'] = $totalSalesOrders ? $totalSalesOrders[0]->total_sales_orders : 0;
 
         $sumOfSalesAmount = $orderRepository->getSumOfSalesAmount(
-            $reportDate,
-            $clientCode
+            $data['report_date'],
+            $data['client_code']
         );
 
         $billingItems['total_sales_amount'] = $sumOfSalesAmount ? round($sumOfSalesAmount[0]->total_sales_hkd, 2) : 0;
 
         $fees['extraordinary_item'] = ExtraordinaryItems::where('active', 1)
-            ->where('report_date', $reportDate)
-            ->where('client_code', $clientCode)
+            ->where('report_date', $data['report_date'])
+            ->where('client_code', $data['client_code'])
             ->groupBy('client_code', 'report_date')
             ->get()
             ->sum('item_amount');
@@ -288,8 +355,8 @@ class BillingStatementsService
         //get comission setting
         $totalSalesAmount = $billingItems['sales_credit'] - $clientRefundFees - $clientAccountResend;
         $commissionRate = $this->getCommissionRate(
-            $clientCode,
-            $reportDate,
+            $data['client_code'],
+            $data['report_date'],
             (float)$totalSalesAmount
         );
 
@@ -297,22 +364,22 @@ class BillingStatementsService
             - $fees['client_account_refund_and_resend'];
         $billingItems['commission_type'] = $commissionRate['type'] ?? null;
         $billingItems['avolution_commission'] = $this->getAvolutionCommission(
-            $clientCode,
-            $reportDate,
+            $data['client_code'],
+            $data['report_date'],
             $tieredParam,
             $commissionRate
         );
 
         //final_credit
         $billingItems['created_at'] = date('Y-m-d h:i:s');
-        $billingItems['created_by'] = Auth::id();
+        $billingItems['created_by'] = $this->userID;
         $billingItems['active'] = 1;
 
         $firstMileShipmentFeesRepository = new FirstMileShipmentFeesRepository();
 
         $getFbaStorageFeeInvoices = $firstMileShipmentFeesRepository->getFbaStorageFeeInvoice(
-            $reportDate,
-            $clientCode
+            $data['report_date'],
+            $data['client_code']
         );
 
         $billingItems['fba_storage_fee_invoice'] = round(
@@ -364,7 +431,27 @@ class BillingStatementsService
             2
         );
 
-        $this->billingStatementsRepo->create($billingItems);
+        $billingInsertID = BillingStatements::insertGetId($billingItems);
+
+        $invoices = new Invoices();
+
+        $uniqueFileName = $this->genDocStorageToken();
+
+        if (isset($insertInvoiceID)) {
+            $invoices->where('id', $insertInvoiceID)
+                ->update(
+                    ['doc_storage_token' => $uniqueFileName]
+                );
+        }
+
+        if ($this->store && isset($insertInvoiceID)) {
+            Excel::store(
+                new InvoiceExport($data['report_date'], $data['client_code'], $insertInvoiceID, $billingInsertID),
+                $uniqueFileName,
+                's3',
+                \Maatwebsite\Excel\Excel::XLSX
+            );
+        }
     }
 
     public function getSumValue(array $fees, array $keys = []): float
@@ -429,25 +516,6 @@ class BillingStatementsService
         return ['type' => 'tiered', 'value' => $settings->basic_rate, 'status' => 'success'];
     }
 
-    public function getAvolutionCommission(
-        string $clientCode,
-        string $shipDate,
-        float  $tieredParam,
-        array  $commissionRate
-    )
-    {
-        switch ($commissionRate['type']) {
-            case 'sku':
-                $orderProductRepository = new OrderProductsRepository();
-
-                return round($orderProductRepository->getSkuAvolutionCommission($clientCode, $shipDate), 2);
-            case 'promotion':
-                return $commissionRate['value'];
-            case 'tiered':
-                return round($tieredParam * $commissionRate['value'], 2);
-        }
-    }
-
     public function getSkuCommissionRate(object $item, float $sellingPrice, float $threshold)
     {
         if ($sellingPrice > $threshold) {
@@ -482,5 +550,93 @@ class BillingStatementsService
         }
 
         return ['type' => 'tiered', 'value' => $setting->basic_rate, 'status' => 'success'];
+    }
+
+    public function getAvolutionCommission(
+        string $clientCode,
+        string $shipDate,
+        float  $tieredParam,
+        array  $commissionRate
+    )
+    {
+        switch ($commissionRate['type']) {
+            case 'sku':
+                $orderProductRepository = new OrderProductsRepository();
+
+                return round($orderProductRepository->getSkuAvolutionCommission($clientCode, $shipDate), 2);
+            case 'promotion':
+                return $commissionRate['value'];
+            case 'tiered':
+                return round($tieredParam * $commissionRate['value'], 2);
+        }
+    }
+
+    private function sendERPRequest(
+        string $url,
+        string $serviceName,
+        array  $customParam = []
+    ): array
+    {
+        $ebSoapRequest = $this->genXML(
+            json_encode($customParam),
+            self::EB_ACCOUNT,
+            self::EB_PWD,
+            $serviceName
+        );
+
+        $client = new Client();
+
+        $res = $client->request(
+            'POST',
+            $url,
+            [
+                'body' => $ebSoapRequest
+            ]
+        )->getBody()->getContents();
+
+        return json_decode($this->analyzeSOAP($res), true);
+    }
+
+    private function genXML(string $paramsJson, string $userName, string $userPass, string $serviceName): string
+    {
+        return <<< EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.example.org/Ec/">
+  <SOAP-ENV:Body>
+    <ns1:callService>
+      <paramsJson>$paramsJson</paramsJson>
+      <userName>$userName</userName>
+      <userPass>$userPass</userPass>
+      <service>$serviceName</service>
+    </ns1:callService>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+EOF;
+    }
+
+    private function analyzeSOAP(string $soapForm): string
+    {
+        // converting
+        $soapForm = preg_replace('/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', ' ', $soapForm);
+        $soapForm = str_replace("SOAP-ENV:", "", $soapForm);
+        $soapForm = str_replace("<ns1:callServiceResponse>", "", $soapForm);
+        $soapForm = str_replace("</ns1:callServiceResponse>", "", $soapForm);
+
+        // converting to XML
+        $parser = simplexml_load_string($soapForm);
+
+        // get response
+        return $parser->Body->response->__toString();
+    }
+
+    public function genDocStorageToken(): string
+    {
+        $microTime = (int)(microtime(true) * 1000);
+        $uniqID = str_shuffle(uniqid());
+        return sprintf(
+            '%s_%d.xlsx',
+            $uniqID,
+            $microTime
+        );
     }
 }

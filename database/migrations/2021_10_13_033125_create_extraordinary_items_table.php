@@ -25,7 +25,7 @@ class CreateExtraordinaryItemsTable extends Migration
             $table->char('currency_code', 3);
             $table->timestamp('created_at')->useCurrent()->useCurrentOnUpdate();
             $table->unsignedInteger('created_by');
-            $table->timestamp('updated_at')->default('0000-00-00 00:00:00');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00 COMMENT '修改時間'');
             $table->integer('updated_by')->default(0);
             $table->tinyInteger('active');
         });

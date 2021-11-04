@@ -21,7 +21,7 @@ class CreateRolesTable extends Migration
             $table->bit('active', 1);
             $table->timestamp('created_at')->useCurrent()->useCurrentOnUpdate();
             $table->unsignedInteger('created_by');
-            $table->timestamp('updated_at')->default('0000-00-00 00:00:00');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00 COMMENT '更新時間'');
             $table->unsignedInteger('updated_by');
             
             $table->unique(['system_type', 'role_name'], 'unique');
