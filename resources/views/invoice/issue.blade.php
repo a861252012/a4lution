@@ -74,8 +74,8 @@
                                     <label class="form-control-label" for="create_sales_btn"></label>
                                     <div class="form-group">
                                         <a id="create_sales_btn" href="#inline_content">
-                                            <div class="form-control btn btn-success" id="create_sales_btn"
-                                                 type="button" style="margin-top: 6px;">Create Sales Summary
+                                            <div class="form-control btn btn-success" type="button"
+                                                 style="margin-top: 6px;">Create Sales Summary
                                             </div>
                                         </a>
                                     </div>
@@ -156,17 +156,17 @@
 
             <br>
 
-            <form role="form" method="POST" id="cbx_form">
+            <form id="cbx_form" enctype="multipart/form-data">
                 @csrf
                 <div class="row">
                     {{-- CLIENT CODE --}}
                     <div class="col-2 col-lg-2 col-sm-2 text-right">
-                        <label class="form-control-label required" for="sel_client_code">Client Code</label>
+                        <label class="form-control-label required" for="cbx_client_code">Client Code</label>
                     </div>
 
                     <div class="col-2">
                         <select class="form-control" data-toggle="select" name="sel_client_code"
-                                id="sel_client_code">
+                                id="cbx_client_code">
                             @forelse ($client_code_lists as $item)
                                 <option value="{{$item}}" @if($sel_client_code == $item) {{ 'selected' }} @endif>
                                     {{$item}}
@@ -558,12 +558,25 @@
                         autoclose: true
                     });
 
-                    $('#cbx_submit').click(function () {
+                    $("#cbx_form").submit(function (e) {
+                        e.preventDefault();
+
+                        let reportDate = $('#inline_report_date').val();
+                        let clientCode = $('#sel_client_code').find(":selected").val();
+
+                        $.ajaxSetup({
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            }
+                        });
+
                         let ajaxFormOption = {
                             type: "post", //提交方式
-                            data: {client_code : $('#sel_client_code').find(":selected").val()}, //提交方式
+                            data: {client_code: clientCode}, //提交方式
                             url: origin + "/invoice/createBill",
                             success: function (res) { //提交成功的回撥函式
+                                console.log(res);
+                                console.log('form');
                                 let icon = 'success';
                                 if (res.status !== 200) {
                                     icon = 'error';
@@ -577,6 +590,8 @@
                                     }
                                 });
                             }, error: function (e) {
+                                console.log('error');
+                                console.log(e);
                                 swal({
                                     icon: 'error',
                                     text: e
@@ -584,7 +599,35 @@
                             }
                         };
 
-                        $("#cbx_form").ajaxForm(ajaxFormOption);
+                        $.ajax({
+                            url: origin + '/invoice/validation/' + reportDate + '/' + clientCode,
+                            type: 'get',
+                            success: function (res) {
+                                if (res.status === 200) {
+                                    $("#cbx_form").ajaxSubmit(ajaxFormOption);
+                                } else if (res.status === 202) {
+                                    swal({
+                                        title: "Are you sure ?",
+                                        text: (res.msg),
+                                        icon: 'warning',
+                                        buttons: true,
+                                        buttons: ["No,Cancel Plx!", "Yes,Delete it!"]
+                                    })
+                                        .then(function (isConfirm) {
+                                            if (isConfirm) {
+                                                deleteIssue(reportDate);
+                                                $("#cbx_form").ajaxSubmit(ajaxFormOption);
+                                            }
+                                        });
+                                } else {
+                                    swal({
+                                        icon: 'warning',
+                                        text: res.msg
+                                    });
+                                    return false;
+                                }
+                            }
+                        });
                     });
 
                     $('#cbx_cancel_btn').click(function () {
@@ -631,7 +674,7 @@
                                     console.log('x');
                                     $.colorbox.close();
                                 });
-                                
+
                                 // prepare Options Object
                                 let options = {
                                     url: '/invoice/runReport/1',

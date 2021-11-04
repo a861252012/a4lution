@@ -64,7 +64,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::delete('invoice/{id}', ['as' => 'invoice.deleteByID', 'uses' => 'InvoiceController@deleteInvoice']);
 
     Route::get('invoice/download/{token?}', ['as' => 'invoice.download', 'uses' => 'InvoiceController@downloadFile']);
-    Route::get('invoice/validation/{date}/{clientCode}', ['uses' => 'InvoiceController@reportValidation'])
+    Route::get('invoice/validation/{date}/{clientCode}', 'InvoiceController@reportValidation')
         ->name('invoice.reportValidation');
     Route::post('invoice/edit', ['as' => 'invoice.edit', 'uses' => 'InvoiceController@editView']);
     Route::post('invoice/runReport/{store?}', ['as' => 'invoice.runReport', 'uses' => 'InvoiceController@runReport']);

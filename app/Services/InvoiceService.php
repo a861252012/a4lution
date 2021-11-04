@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Repositories\BillingStatementRepository;
 use App\Repositories\InvoicesRepository;
+use Symfony\Component\HttpFoundation\Response;
 
 class InvoiceService
 {
@@ -18,7 +19,7 @@ class InvoiceService
         $this->invoicesRepository = $invoicesRepository;
     }
 
-    public function reportValidation(string $date, string $clientCode): \Illuminate\Http\JsonResponse
+    public function reportValidation(string $date, string $clientCode): array
     {
         $reportDateTime = date('Y-m-01', strtotime($date));
 
@@ -26,35 +27,32 @@ class InvoiceService
 
         //檢核若該月份已結算員工commission則提示訊息(需Revoke Approval)
         if ($this->billingStatementRepository->checkIfSettled($reportDateTime)) {
-            return response()->json(
-                [
-                    'status' => 403,
-                    'msg' => $formattedReportDate . ' employee commission was generated. 
+            return [
+                'status' => Response::HTTP_FORBIDDEN,
+                'msg' => $formattedReportDate . ' employee commission was generated. 
                     To recalculate employee commission, go to the "Approval Admin" and click on "Revoke Approval"',
-                ]
-            );
+            ];
         }
 
         //檢核若已出invoice則提示訊息(需先刪除相關聯的invoices)
         if ($this->invoicesRepository->checkIfDuplicated($reportDateTime, $clientCode)) {
-            return response()->json(
-                [
-                    'status' => 403,
-                    'msg' => 'The record are referenced by other invoice(s), please delete all the references first.',
-                ]
-            );
+            return [
+                'status' => Response::HTTP_FORBIDDEN,
+                'msg' => 'The record are referenced by other invoice(s), please delete all the references first.',
+            ];
         }
 
         //檢核是否重複
         if ($this->billingStatementRepository->checkIfDuplicated($reportDateTime, $clientCode)) {
-            return response()->json(
-                [
-                    'status' => 202,
-                    'msg' => 'Duplicate entry with the Client Code and Report!',
-                ]
-            );
+            return [
+                'status' => Response::HTTP_ACCEPTED,
+                'msg' => 'The record are referenced by other invoice(s), please delete all the references first.',
+            ];
         }
 
-        return response()->json(['status' => 200]);
+        return [
+            'status' => Response::HTTP_OK,
+            'msg' => 'success',
+        ];
     }
 }

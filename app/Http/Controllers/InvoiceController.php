@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Jobs\UploadFileToAWS;
 use DateTime;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\Invoices;
 use App\Services\InvoiceService;
@@ -60,8 +62,7 @@ class InvoiceController extends Controller
         FirstMileShipmentFees           $firstMileShipmentFees,
         InvoiceService                  $invoiceService,
         BillingStatementRepository      $billingStatementRepository
-    )
-    {
+    ) {
         $this->invoices = $invoices;
         $this->customerRelations = $customerRelations;
         $this->roleAssignment = $roleAssignment;
@@ -326,31 +327,19 @@ class InvoiceController extends Controller
         return view('invoice/issue', $data);
     }
 
-    public function createBill(Request $request): \Illuminate\Http\JsonResponse
+    public function createBill(Request $request): JsonResponse
     {
         $data = collect($request)->only($this->billingStatementRepository->getTableColumns());
-
-        $res = $this->invoiceService->reportValidation(
-            $data['report_date'],
-            $data['client_code']
-        );
-
-        if (!str_contains($res->getContent(), 200)) {
-            return $res;
-        }
 
         $data->put('report_date', date('Y-m-d', strtotime($data['report_date'])));
         $data->put('created_at', date('Y-m-d h:i:s'));
         $data->put('created_by', Auth::id());
         $data->put('active', 1);
-        $data->put('commission_type', 'Manual');
+        $data->put('commission_type', 'manual');
 
         try {
             $this->billingStatementRepository->create($data->all());
-//            abort(500);
-
-//            return response()->json(['msg' => 'deleted', 'status' => 200, 'icon' => 'success']);
-        } catch (\Illuminate\Database\QueryException $exception) {
+        } catch (QueryException $exception) {
             return response()->json(
                 [
                     'msg' => $exception->errorInfo,
@@ -363,11 +352,18 @@ class InvoiceController extends Controller
         return response()->json(['msg' => 'success', 'status' => 200]);
     }
 
-    public function reportValidation(): \Illuminate\Http\JsonResponse
+    public function reportValidation(): JsonResponse
     {
-        return $this->invoiceService->reportValidation(
+        $res = $this->invoiceService->reportValidation(
             request()->route('date'),
             request()->route('clientCode')
+        );
+
+        return response()->json(
+            [
+                'msg' => $res['msg'],
+                'status' => $res['status'],
+            ]
         );
     }
 
@@ -477,7 +473,7 @@ class InvoiceController extends Controller
         }
     }
 
-    public function deleteInvoice(Request $request): \Illuminate\Http\JsonResponse
+    public function deleteInvoice(Request $request): JsonResponse
     {
         $id = $request->route('id');
 
