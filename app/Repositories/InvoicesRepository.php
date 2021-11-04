@@ -33,7 +33,7 @@ class InvoicesRepository
     }
 
     //檢核若已出invoice則提示訊息(需先刪除相關聯的invoices)
-    public function checkIfDuplicate(string $date, string $clientCode): int
+    public function checkIfDuplicated(string $date, string $clientCode): int
     {
         return $this->invoices
             ->active()
