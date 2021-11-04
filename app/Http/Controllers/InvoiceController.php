@@ -18,8 +18,10 @@ use App\Exports\FBADateExport;
 use App\Exports\InvoiceExport;
 use App\Models\PlatformAdFees;
 use App\Models\RoleAssignment;
+use App\Services\InvoiceService;
 use App\Models\BillingStatements;
 use App\Models\CustomerRelations;
+use Illuminate\Http\JsonResponse;
 use App\Models\CommissionSettings;
 use Illuminate\Support\Facades\DB;
 use App\Exports\SalesExpenseExport;
@@ -32,12 +34,14 @@ use App\Models\FirstMileShipmentFees;
 use Illuminate\Filesystem\Filesystem;
 use App\Repositories\OrdersRepository;
 use App\Jobs\Invoice\ExportInvoicePDFs;
+use App\Repositories\InvoiceRepository;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Storage;
 use App\Jobs\Invoice\ExportInvoiceExcel;
 use App\Repositories\OrderProductsRepository;
 use App\Repositories\AmazonReportListRepository;
+use App\Repositories\BillingStatementRepository;
 use App\Repositories\FirstMileShipmentFeesRepository;
-use App\Repositories\InvoiceRepository;
 
 class InvoiceController extends Controller
 {
@@ -53,7 +57,9 @@ class InvoiceController extends Controller
     private $orderProductRepository;
     private $amazonReportListRepository;
     private $firstMileShipmentFeesRepository;
+    private $billingStatementRepository;
     private $firstMileShipmentFees;
+    private $invoiceService;
     private const MANAGER_ROLE_NAME = 'manager';
 
     public function __construct(
@@ -69,9 +75,10 @@ class InvoiceController extends Controller
         OrderProductsRepository         $orderProductRepository,
         AmazonReportListRepository      $amazonReportListRepository,
         FirstMileShipmentFeesRepository $firstMileShipmentFeesRepository,
-        FirstMileShipmentFees           $firstMileShipmentFees
-    )
-    {
+        FirstMileShipmentFees           $firstMileShipmentFees,
+        InvoiceService                  $invoiceService,
+        BillingStatementRepository      $billingStatementRepository
+    ) {
         $this->invoices = $invoices;
         $this->customerRelations = $customerRelations;
         $this->roleAssignment = $roleAssignment;
@@ -84,9 +91,10 @@ class InvoiceController extends Controller
         $this->orderProductRepository = $orderProductRepository;
         $this->amazonReportListRepository = $amazonReportListRepository;
         $this->firstMileShipmentFeesRepository = $firstMileShipmentFeesRepository;
+        $this->billingStatementRepository = $billingStatementRepository;
         $this->firstMileShipmentFees = $firstMileShipmentFees;
+        $this->invoiceService = $invoiceService;
     }
-
 
     public function getAvolutionCommission(string $clientCode, string $shipDate, float $tieredParam, array $commissionRate)
     {
@@ -189,26 +197,6 @@ class InvoiceController extends Controller
         return (float)$sum;
     }
 
-    public function getAccountMiscellaneous(string $reportDate, string $clientCode, string $supplierName, bool $isCrafter)
-    {
-        $sql = "SELECT
-    SUM(a.amazon_total * r.exchange_rate) AS 'Miscellaneous'
-FROM
-    amazon_date_range_report a
-        LEFT JOIN
-    exchange_rates r ON a.report_date = r.quoted_date
-        AND a.currency = r.base_currency
-WHERE
-    a.report_date = '{$reportDate}'
-        AND a.supplier = '{$clientCode}'
-        AND a.`type` IN ('FBA Customer Return Fee','Adjustment','other')
-        AND a.active = 1";
-
-        $isCrafter ? $sql .= " AND a.account = '{$supplierName}'" : $sql .= " AND a.account != '{$supplierName}'";
-
-        return DB::select($sql);
-    }
-
     public function listView(Request $request)
     {
         $data['clientCode'] = $request->input('client_code') ?? null;
@@ -297,12 +285,6 @@ WHERE
             $headers
         );
 
-//        return (new InvoiceExport)->download($fileName, \Maatwebsite\Excel\Excel::XLSX);//working fine
-
-//        dd(Excel::store(new InvoiceExport('S53A', '2021-08-01'), $fileName, 's3', \Maatwebsite\Excel\Excel::XLSX));
-
-//        (new InvoiceExport)->queue($fileName);
-//        return back()->withSuccess('Export started!');
     }
 
     public function issueView(Request $request)
@@ -343,16 +325,11 @@ WHERE
             $query = $this->billingStatements->select(
                 'id',
                 'client_code',
+                'avolution_commission',
+                'commission_type',
                 'total_sales_orders',
                 'total_sales_amount',
                 'total_expenses',
-                'sales_gp',
-                'avolution_commission',
-                'sales_tax_handling',
-                'sales_credit',
-                'opex_invoice',
-                'fba_storage_fee_invoice',
-                'final_credit',
                 $formattedShipDate
             )->where('active', 1);
 
@@ -369,25 +346,44 @@ WHERE
         return view('invoice/issue', $data);
     }
 
-    public function checkIfReportExist()
+    public function createBill(Request $request): JsonResponse
     {
-        $reportDate = request()->input('report_date');
-        $clientCode = request()->input('client_code');
+        $data = collect($request)->only($this->billingStatementRepository->getTableColumns());
 
-        $formattedDate = date('Ym', strtotime($reportDate));
+        $data->put('report_date', date('Y-m-d', strtotime($data['report_date'])));
+        $data->put('created_at', date('Y-m-d h:i:s'));
+        $data->put('created_by', Auth::id());
+        $data->put('active', 1);
+        $data->put('commission_type', 'manual');
 
-        $formattedReportDate = DB::raw("DATE_FORMAT(report_date,'%Y%m')");
-
-        $hasMonthlyBilling = $this->billingStatements->where("active", 1)
-            ->where($formattedReportDate, $formattedDate)
-            ->where("client_code", $clientCode)
-            ->count();
-
-        if ($hasMonthlyBilling) {
-            return response()->json(['status' => 'failed', 'icon' => 'error']);
+        try {
+            $this->billingStatementRepository->create($data->all());
+        } catch (QueryException $exception) {
+            return response()->json(
+                [
+                    'msg' => $exception->errorInfo,
+                    'status' => 500,
+                ],
+                500
+            );
         }
 
-        return response()->json(['status' => 'success', 'icon' => 'success']);
+        return response()->json(['msg' => 'success', 'status' => 200]);
+    }
+
+    public function reportValidation(): JsonResponse
+    {
+        $res = $this->invoiceService->reportValidation(
+            request()->route('date'),
+            request()->route('clientCode')
+        );
+
+        return response()->json(
+            [
+                'msg' => $res['msg'],
+                'status' => $res['status'],
+            ]
+        );
     }
 
     public function editView(Request $request)
@@ -423,7 +419,6 @@ WHERE
                 'country'
             )
             ->where('client_code', $data['clientCode'])
-//            ->where('client_code', 'C101A')//TODO need to be modified
             ->first()
             ->toArray();
 
@@ -561,7 +556,7 @@ WHERE
         }
     }
 
-    public function deleteInvoice(Request $request): \Illuminate\Http\JsonResponse
+    public function deleteInvoice(Request $request): JsonResponse
     {
         $id = $request->route('id');
 

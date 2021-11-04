@@ -4,7 +4,7 @@ namespace App\Imports;
 
 use App\Models\AmazonDateRangeReport;
 use App\Models\BatchJobs;
-use Carbon\Carbon;
+use App\Services\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Importable;
@@ -19,7 +19,6 @@ use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQueue, WithHeadingRow, WithCalculatedFormulas, WithBatchInserts, WithValidation, WithEvents
 {
@@ -34,8 +33,7 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
         $userID,
         $batchID,
         $inputReportDate
-    )
-    {
+    ) {
         $this->userID = $userID;
         $this->batchID = $batchID;
         $this->inputReportDate = $inputReportDate;
@@ -116,7 +114,7 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
                         ->where('upload_id', '<', $this->batchID)
                         ->where('active', '=', 1)
                         ->cursor()
-                        ->each(function ($item) {
+                        ->chunk(1000, function ($item) {
                             $item->update(['active' => 0]);
                         });
 
@@ -143,7 +141,8 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
                             [
                                 'status' => 'failed',
                                 'total_count' => $this->getRowCount(),
-                                'exit_message' => $event->getException()
+                                'exit_message' => $event->getException(),
+                                'user_error_msg' => (new ImportService)->getUserErrorMsg($event->getException())
                             ]
                         );
 
@@ -151,7 +150,7 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
                         ->where('upload_id', '=', $this->batchID)
                         ->where('active', '=', 1)
                         ->cursor()
-                        ->each(function ($item) {
+                        ->chunk(1000, function ($item) {
                             $item->delete();
                         });
 
@@ -247,17 +246,8 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
 
     public function prepareForValidation(array $row): array
     {
-        $row['paid_date'] = $row['paid_date'] ? $this->transformDate($row['paid_date']) : null;
+        $row['paid_date'] = $row['paid_date'] ? (new ImportService)->transformDate($row['paid_date']) : null;
 
         return $row;
-    }
-
-    public function transformDate($value): string
-    {
-        try {
-            return Carbon::instance(Date::excelToDateTimeObject($value));
-        } catch (\ErrorException $e) {
-            return Carbon::parse($value)->format('Y-m-d H:i:s');
-        }
     }
 }

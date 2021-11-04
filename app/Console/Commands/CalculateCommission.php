@@ -29,23 +29,38 @@ class CalculateCommission extends Command
 
     public function handle()
     {
-        $date = $this->option('date') ? $this->option('date') : Carbon::now()
-            ->copy()
-            ->subMonth()
-            ->firstOfMonth()
-            ->toDateString();
-
-        $currentDate = Carbon::now()->copy()->format('Y-m-d');
+        $date = $this->option('date') ?? now()->subMonth()->firstOfMonth()->toDateString();
+        $currentDate = now()->format('Y-m-d');
         $userID = Auth::id() ?? 999999999;
 
         DB::beginTransaction();
         try {
             //鎖定上個月份的帳
-            BillingStatements::where('active', 1)
-                ->where('report_date', $date)
+            BillingStatements::where('report_date', $date)
+                ->active()
                 ->update(
                     [
-                        'cutoff_time' => Carbon::now()->copy()->toDateTimeString()
+                        'cutoff_time' => now()
+                    ]
+                );
+
+            EmployeeCommission::where('report_date', $date)
+                ->active()
+                ->update(
+                    [
+                        'active' => 0,
+                        'deleted_at' => now(),
+                        'deleted_by' => Auth::id()
+                    ]
+                );
+
+            EmployeeCommissionEntries::where('report_date', $date)
+                ->active()
+                ->update(
+                    [
+                        'active' => 0,
+                        'deleted_at' => now(),
+                        'deleted_by' => Auth::id()
                     ]
                 );
 
@@ -83,14 +98,14 @@ class CalculateCommission extends Command
                     ->where('x.active', 1)
                     ->where('u.active', 1);
 
-                if ($item['role_name'] !== 'ops') {
+                if ($item['role_name'] !== 'operation') {
                     $customerListQuery->where('u.user_name', '=', $item['user_name']);
                 }
 
                 $customerList = $customerListQuery->get();
 
                 //取得各個員工的客戶
-                $clientCodeArr = collect($customerList)->map(function ($customer) {
+                $clientCodeArr = collect($customerList)->unique('client_code')->map(function ($customer) {
                     return $customer->client_code;
                 })->toArray();
 
@@ -119,7 +134,7 @@ class CalculateCommission extends Command
                 }
 
                 //employee_commissions.extra_ops_commission
-                if ($item['role_name'] === 'ops' && $item['region'] === 'HK') {
+                if ($item['role_name'] === 'operation' && $item['region'] === 'HK') {
                     $employeeCommission['extra_ops_commission_rate'] = $this->getCommissionRate($hKDCommissionSum);
                     $employeeCommission['extra_ops_commission_amount'] = $employeeCommission['extra_ops_commission_rate']
                         ? $hKDCommissionSum * $employeeCommission['extra_ops_commission_rate'] : 0;
@@ -175,7 +190,7 @@ class CalculateCommission extends Command
                         $contractYears
                     );
 
-                    $calculationFormat = "%s = %d * %d HKD \n";
+                    $calculationFormat = "%s = %d * %.2f HKD \n";
 
                     $employeeEntries['monthly_fee'] = (float)$customerBilling->total * $customerMonthlyFeeRate;
                     $employeeEntries['calculation_expression'] = sprintf(
@@ -206,7 +221,7 @@ class CalculateCommission extends Command
                         }
                     }
 
-                    if ($item['role_name'] === 'ops') {
+                    if ($item['role_name'] === 'operation') {
                         $opsCommissionRate = $this->getOpsCommissionRate($contractMonths);
                         $employeeEntries['ops_commission'] = (float)$customerBilling->total * $opsCommissionRate;
 
@@ -276,27 +291,23 @@ class CalculateCommission extends Command
             Log::error("CalculateCommission employee_monthly_fee_rules is empty");
             return false;
         }
+
         if ($employeeRule->is_tiered_rate === 'F') {
-            if ($hKDCommission <= $employeeRule->threshold && $contractYears <= 1) {
-                $customerRate = $employeeRule->tier_1_first_year;
-            }
-
-            if ($hKDCommission > $employeeRule->threshold && $contractYears <= 1) {
-                $customerRate = $employeeRule->tier_2_first_year;
-            }
-        }
-
-        if ($employeeRule->is_tiered_rate === 'T') {
-            if ($hKDCommission <= $employeeRule->threshold && $contractYears > 1) {
-                $customerRate = $employeeRule->tier_1_over_a_year;
-            }
-
-            if ($hKDCommission > $employeeRule->threshold && $contractYears > 1) {
-                $customerRate = $employeeRule->tier_2_over_a_year;
+            $customerRate = ($contractYears <= 1) ? $employeeRule->rate_base : $employeeRule->rate;
+        } else {
+            //is_tiered_rate 為 true
+            if ($contractYears <= 1) {
+                //一年內的約
+                $customerRate = ($hKDCommission <= $employeeRule->threshold) ? $employeeRule->tier_1_first_year
+                    : $employeeRule->tier_2_first_year;
+            } else {
+                //大於一年的約
+                $customerRate = ($hKDCommission <= $employeeRule->threshold) ? $employeeRule->tier_1_over_a_year
+                    : $employeeRule->tier_2_over_a_year;
             }
         }
 
-        return $customerRate ?? 0;
+        return $customerRate;
     }
 
     private function getOpsCommissionRate(int $contractMonths)
