@@ -46,7 +46,7 @@ class InvoiceService
         if ($this->billingStatementRepository->checkIfDuplicated($reportDateTime, $clientCode)) {
             return [
                 'status' => Response::HTTP_ACCEPTED,
-                'msg' => 'The record are referenced by other invoice(s), please delete all the references first.',
+                'msg' => 'Duplicate entry with the same client code and report date',
             ];
         }
 

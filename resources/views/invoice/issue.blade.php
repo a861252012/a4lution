@@ -562,7 +562,7 @@
                         e.preventDefault();
 
                         let reportDate = $('#inline_report_date').val();
-                        let clientCode = $('#sel_client_code').find(":selected").val();
+                        let clientCode = $('#cbx_client_code').find(":selected").val();
 
                         $.ajaxSetup({
                             headers: {
