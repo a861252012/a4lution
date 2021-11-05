@@ -4,9 +4,8 @@ namespace App\Imports;
 
 use App\Models\AmazonDateRangeReport;
 use App\Models\BatchJobs;
-use App\Models\BillingStatements;
+use App\Services\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
@@ -20,8 +19,6 @@ use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
-use Maatwebsite\Excel\Facades\Excel;
-use \Maatwebsite\Excel\Reader;
 
 class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQueue, WithHeadingRow, WithCalculatedFormulas, WithBatchInserts, WithValidation, WithEvents
 {
@@ -36,8 +33,7 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
         $userID,
         $batchID,
         $inputReportDate
-    )
-    {
+    ) {
         $this->userID = $userID;
         $this->batchID = $batchID;
         $this->inputReportDate = $inputReportDate;
@@ -98,7 +94,6 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
 
     public function getRowCount(): int
     {
-//        return $this->rows;
         return AmazonDateRangeReport::where('upload_id', $this->batchID)
             ->where('active', 1)
             ->count();
@@ -112,25 +107,16 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
     public function registerEvents(): array
     {
         return [
-//            BeforeImport::class => function (BeforeImport $event) {
-//            },
             AfterImport::class => function (AfterImport $event) {
                 DB::beginTransaction();
                 try {
-                    $haveInsert = AmazonDateRangeReport::where('report_date', '=', $this->inputReportDate)
-                        ->where('active', '=', 1)
+                    AmazonDateRangeReport::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '<', $this->batchID)
-                        ->sharedLock()
-                        ->count();
-                    if ($haveInsert) {
-                        AmazonDateRangeReport::where('report_date', $this->inputReportDate)
-                            ->where('upload_id', '<', $this->batchID)
-                            ->where('active', '=', 1)
-                            ->lockForUpdate()
-                            ->chunkById(1000, function ($items) {
-                                $items->each->update(['active' => 0]);
-                            }, 'id');
-                    }
+                        ->where('active', '=', 1)
+                        ->cursor()
+                        ->chunk(1000, function ($item) {
+                            $item->update(['active' => 0]);
+                        });
 
                     BatchJobs::where('id', $this->batchID)->update(
                         [
@@ -148,18 +134,34 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
                 }
             },
             ImportFailed::class => function (ImportFailed $event) {
-                BatchJobs::where('id', $this->batchID)->update(
-                    [
-                        'status' => 'failed',
-                        'total_count' => $this->getRowCount(),
-                        'exit_message' => json_encode($event->getException())
+                DB::beginTransaction();
+                try {
+                    BatchJobs::where('id', $this->batchID)
+                        ->update(
+                            [
+                                'status' => 'failed',
+                                'total_count' => $this->getRowCount(),
+                                'exit_message' => $event->getException(),
+                                'user_error_msg' => (new ImportService)->getUserErrorMsg($event->getException())
+                            ]
+                        );
 
-                    ]
-                );
-//                foreach ($event->getException()->failures() as $failure) {
-//                    \Log::channel('daily_queue_import')
-//                        ->info("[QueueAmazonDateRangeImport.errors]" . implode(',', $failure->toArray()));
-//                }
+                    AmazonDateRangeReport::where('report_date', $this->inputReportDate)
+                        ->where('upload_id', '=', $this->batchID)
+                        ->where('active', '=', 1)
+                        ->cursor()
+                        ->chunk(1000, function ($item) {
+                            $item->delete();
+                        });
+
+                    DB::commit();
+                } catch (\Exception $e) {
+                    DB::rollback();
+
+                    \Log::channel('daily_queue_import')
+                        ->info("[QueueAmazonDateRangeImport.errors]" . $e);
+                }
+
                 foreach ($event->getException() as $failure) {
                     \Log::channel('daily_queue_import')
                         ->info("[QueueAmazonDateRangeImport.errors]" . $failure);
@@ -244,17 +246,8 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
 
     public function prepareForValidation(array $row): array
     {
-        $row['paid_date'] = $row['paid_date'] ? $this->transformDate($row['paid_date']) : null;
+        $row['paid_date'] = $row['paid_date'] ? (new ImportService)->transformDate($row['paid_date']) : null;
 
         return $row;
-    }
-
-    public function transformDate($value, $format = 'Y-m-d')
-    {
-        try {
-            return \Carbon\Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value));
-        } catch (\ErrorException $e) {
-            return \Carbon\Carbon::parse($value)->format('Y-m-d H:i:s');
-        }
     }
 }

@@ -97,7 +97,7 @@
                 });
 
                 $.ajax({
-                    url: origin + '/admin/approvaladmin/' + reportDate,
+                    url: origin + '/admin/approvaladmin/batch/' + reportDate,
                     type: 'put',
                     success: function (res) {
                         if (res.status !== 200) {
@@ -111,6 +111,55 @@
                                 text: 'UPDATED'
                             });
                         }
+                    },
+                    error: function (e) {
+                        swal({
+                            icon: 'error',
+                            text: e
+                        });
+                    }
+                });
+            });
+
+            $('#revoke_approval_btn').click(function () {
+                let reportDate = $('#report_date').val();
+                let _token = $('meta[name="csrf-token"]').attr('content');
+
+                if (!reportDate) {
+                    swal({
+                        icon: "error",
+                        text: "report date can't be empty"
+                    });
+                    return;
+                }
+
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': _token
+                    }
+                });
+
+                $.ajax({
+                    url: origin + '/admin/approvaladmin/revoke/' + reportDate,
+                    type: 'put',
+                    success: function (res) {
+                        if (res.status !== 200) {
+                            swal({
+                                icon: 'error',
+                                text: res.msg
+                            });
+                        } else {
+                            swal({
+                                icon: 'success',
+                                text: 'UPDATED'
+                            });
+                        }
+                    },
+                    error: function () {
+                        swal({
+                            icon: 'error',
+                            text: 'API ERROR'
+                        });
                     }
                 });
             });

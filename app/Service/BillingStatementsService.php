@@ -1,128 +1,58 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Service;
 
-use App\Exports\InvoiceExport;
-use App\Models\ExchangeRates;
-use App\Models\Invoices;
-use App\Models\CommissionSettings;
-use App\Models\OrderProducts;
-use App\Models\BillingStatements;
+use Carbon\Carbon;
 use App\Models\Customers;
+use App\Models\OrderProducts;
+use App\Support\ERPRequester;
+use App\Models\CommissionSettings;
 use App\Models\ExtraordinaryItems;
-use App\Repositories\OrderProductsRepository;
-use App\Repositories\OrdersRepository;
-use App\Repositories\AmazonReportListRepository;
-use App\Repositories\FirstMileShipmentFeesRepository;
-use GuzzleHttp\Client;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Auth;
+use App\Repositories\OrdersRepository;
+use App\Repositories\ExchangeRatesRepository;
+use App\Repositories\OrderProductsRepository;
+use App\Repositories\AmazonReportListRepository;
+use App\Repositories\BillingStatementsRepository;
+use App\Repositories\FirstMileShipmentFeesRepository;
 
-class UploadFileToAWS implements ShouldQueue
+class BillingStatementsService
 {
-    use Dispatchable, InteractsWithQueue, Queueable;
+    private $billingStatementsRepo;
 
-//    const BATCH_STATUS = 'processing';
-    protected $request;
-    protected $userID;
-    protected $store;
-
-    private const EB_ACCOUNT = 'IT2';
-    private const EB_PWD = 'AbAO@12';
-
-    public function __construct(
-        array $request,
-        int   $userID,
-        bool  $store
-    )
+    public function __construct(BillingStatementsRepository $billingStatementsRepo)
     {
-        $this->request = $request;
-        $this->userID = $userID;
-        $this->store = $store;
+        $this->billingStatementsRepo = $billingStatementsRepo;
     }
 
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
-    public function handle()
+    // TODO: do all repository
+    public function create($request)
     {
-        $data = $this->request;
-        $data['report_date'] = date("Y-m-01", strtotime($data['step_report_date']));
-
-        if ($this->store) {
-            $data['issue_date'] = isset($data['issue_date']) ?
-                date("Y-m-d", strtotime($data['issue_date'])) : date("Y-m-d");
-
-            $data['due_date'] = isset($data['due_date']) ?
-                date("Y-m-d", strtotime($data['due_date'])) : date('Y-m-d', strtotime('+30 days'));
-
-            $formattedIssueDate = date("ymd", strtotime($data['issue_date']));
-            $formattedSupplier = str_replace(' ', '_', ($data['supplier_name']));
-
-            $data['opex_invoice_no'] = sprintf('INV-%d%s_1', $formattedIssueDate, $formattedSupplier);
-            $data['fba_shipment_invoice_no'] = sprintf('INV-%d%s_FBA', $formattedIssueDate, $formattedSupplier);
-            $data['credit_note_no'] = sprintf('CR-%d%s_1', $formattedIssueDate, $formattedSupplier);
-            $data['created_at'] = date('Y-m-d H:i:s');
-            $data['updated_at'] = date('Y-m-d H:i:s');
-            $data['updated_by'] = $this->userID;
-            $data['created_by'] = $this->userID;
-            $data['active'] = 1;
-            $data['doc_status'] = "processing";
-            $data['doc_file_name'] = sprintf(
-                '%s_invoice_%s%d',
-                $data['client_code'],
-                date("Fy", strtotime($data['report_date'])),
-                date('YmdHis')
-            );
-
-            $data['approved_at'] = null;
-            $data['approved_by'] = null;
-
-            unset($data['_token']);
-            unset($data['step_report_date']);
-
-            $insertInvoiceID = Invoices::insertGetId($data);
-        }
+        $reportDate = Carbon::parse($request->report_date)->format('Y-m-d');
+        $clientCode = $request->client_code;
 
         //4-1 Commission Rate
-        $exchangeRate = ExchangeRates::where('quoted_date', $data['report_date'])
-            ->where('active', 1)
-            ->get();
-
-        //check if exchange rate exist
-        if (!$exchangeRate) {
+        $exchangeRate = (new ExchangeRatesRepository)->getByQuotedDate($reportDate);
+        if ($exchangeRate->isEmpty()) {
             Log::error('uploadFileToS3_failed: exchangeRate is empty');
-//            return response()->json(
-//                [
-//                    'msg' => 'Currency Exchange Rate Not Found Error',
-//                    'status' => 'error',
-//                    'icon' => 'error'
-//                ]
-//            );
         }
 
-        $commissionSettings = CommissionSettings::where('client_code', $data['client_code'])
+        $commissionSettings = CommissionSettings::where('client_code', $clientCode)
             ->exists();
 
         if (!$commissionSettings) {
             Log::error('uploadFileToS3_failed: commissionSettings is empty');
             return;
         }
+
         //4-2 Expenses Breakdown start
 
         //getReportFees
-        $supplierCode = Customers::where('client_code', $data['client_code'])->value('supplier_code');
+        $supplierCode = Customers::where('client_code', $clientCode)->value('supplier_code');
 
-        $getSupplierName = $this->sendERPRequest(
-            env("ERP_WMS_URL"),
+        $getSupplierName = (new ERPRequester)->send(
+            config('services.erp.wmsUrl'),
             'getSupplierInfo',
             ["supplierCode" => $supplierCode]
         );
@@ -131,8 +61,8 @@ class UploadFileToAWS implements ShouldQueue
 
         $orderRepository = new OrdersRepository();
         $clientReportFees = $orderRepository->getReportFees(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             true
         );
@@ -145,8 +75,8 @@ class UploadFileToAWS implements ShouldQueue
         $fees['clientPlatformFeeHKD'] = (float)$clientPlatformFeeHKD + (float)$fees['clientOtherTransactionFeesHKD'];
 
         $a4ReportFees = $orderRepository->getReportFees(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             false
         );
@@ -159,28 +89,27 @@ class UploadFileToAWS implements ShouldQueue
 
         //getAccountRefund
         $clientRefundFees = $orderRepository->getAccountRefund(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             true
         );
 
-//        $fees['clientRefundFees'] = $clientRefundFees ? $clientRefundFees[0]->refund_amount_hkd : 0;
         $clientRefundFees = $clientRefundFees ? $clientRefundFees[0]->refund_amount_hkd : 0;
 
         $a4RefundFees = $orderRepository->getAccountRefund(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             false
         );
-//        $fees['a4ReportRefundFees'] = $a4RefundFees ? $a4RefundFees[0]->refund_amount_hkd : 0;
+
         $a4RefundFees = $a4RefundFees ? $a4RefundFees[0]->refund_amount_hkd : 0;
 
         //getAccountResend
         $clientAccountResend = $orderRepository->getAccountResend(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             true
         );
@@ -188,18 +117,17 @@ class UploadFileToAWS implements ShouldQueue
         $clientAccountResend = $clientAccountResend ? $clientAccountResend[0]->total_sales_hkd : 0;
 
         $a4AccountResend = $orderRepository->getAccountResend(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             false
         );
 
         $a4AccountResend = $a4AccountResend ? $a4AccountResend[0]->total_sales_hkd : 0;
 
-        //getAccountAmazonTotal (AmazonTotal + resend + refund = account_refund_and_resend)
         $clientAccountAmazonTotal = $orderRepository->getAccountAmzTotal(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             true
         );
@@ -208,13 +136,12 @@ class UploadFileToAWS implements ShouldQueue
             $clientAccountAmazonTotal[0]->amazon_total_hkd : 0;
 
         $a4AccountAmazonTotal = $orderRepository->getAccountAmzTotal(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             false
         );
 
-//        $fees['a4AccountAmazonTotal'] = $a4AccountAmazonTotal ? $a4AccountAmazonTotal[0]->amazon_total_hkd : 0;
         $a4AccountAmazonTotal = $a4AccountAmazonTotal ? $a4AccountAmazonTotal[0]->amazon_total_hkd : 0;
 
         $fees['a4_account_refund_and_resend'] = abs((float)$a4RefundFees + (float)$a4AccountResend + (float)$a4AccountAmazonTotal);
@@ -225,8 +152,8 @@ class UploadFileToAWS implements ShouldQueue
         $amazonReportListRepository = new AmazonReportListRepository();
 
         $clientAccountMiscellaneous = $amazonReportListRepository->getAccountMiscellaneous(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             true
         );
@@ -235,8 +162,8 @@ class UploadFileToAWS implements ShouldQueue
             ? -1 * abs($clientAccountMiscellaneous[0]->Miscellaneous) : 0;
 
         $a4AccountMiscellaneous = $amazonReportListRepository->getAccountMiscellaneous(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             false
         );
@@ -246,8 +173,8 @@ class UploadFileToAWS implements ShouldQueue
 
         //getAccountAds
         $clientAccountAds = $orderRepository->getAccountAds(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             true
         );
@@ -255,8 +182,8 @@ class UploadFileToAWS implements ShouldQueue
         $fees['clientAccountAds'] = $clientAccountAds ? $clientAccountAds[0]->ad : 0;
 
         $a4AccountAds = $orderRepository->getAccountAds(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             false
         );
@@ -265,8 +192,8 @@ class UploadFileToAWS implements ShouldQueue
 
         //getAccountMarketingAndPromotion
         $clientAccountMarketingAndPromotion = $amazonReportListRepository->getAccountMarketingAndPromotion(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             true
         );
@@ -275,8 +202,8 @@ class UploadFileToAWS implements ShouldQueue
             $clientAccountMarketingAndPromotion[0]->Miscellaneous : 0;
 
         $a4AccountMarketingAndPromotion = $amazonReportListRepository->getAccountMarketingAndPromotion(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             false
         );
@@ -286,8 +213,8 @@ class UploadFileToAWS implements ShouldQueue
 
         //getAccountFbaStorageFee
         $clientAccountFbaStorageFee = $orderRepository->getAccountFbaStorageFee(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             true
         );
@@ -295,8 +222,8 @@ class UploadFileToAWS implements ShouldQueue
         $fees['clientAccountFbaStorageFee'] = $clientAccountFbaStorageFee ? $clientAccountFbaStorageFee[0]->storage_fee_hkd_sum : 0;
 
         $a4AccountFbaStorageFee = $orderRepository->getAccountFbaStorageFee(
-            $data['report_date'],
-            $data['client_code'],
+            $reportDate,
+            $clientCode,
             $supplierName,
             false
         );
@@ -307,26 +234,26 @@ class UploadFileToAWS implements ShouldQueue
 
         //4-3 prepare data for step3,for insert billing statement
         $billingItems['sales_tax_handling'] = 0;
-        $billingItems['report_date'] = $data['report_date'];
-        $billingItems['client_code'] = $data['client_code'];
+        $billingItems['report_date'] = $reportDate;
+        $billingItems['client_code'] = $clientCode;
 
         $totalSalesOrders = $orderRepository->getTotalSalesOrders(
-            $data['report_date'],
-            $data['client_code']
+            $reportDate,
+            $clientCode
         );
 
         $billingItems['total_sales_orders'] = $totalSalesOrders ? $totalSalesOrders[0]->total_sales_orders : 0;
 
         $sumOfSalesAmount = $orderRepository->getSumOfSalesAmount(
-            $data['report_date'],
-            $data['client_code']
+            $reportDate,
+            $clientCode
         );
 
         $billingItems['total_sales_amount'] = $sumOfSalesAmount ? round($sumOfSalesAmount[0]->total_sales_hkd, 2) : 0;
 
         $fees['extraordinary_item'] = ExtraordinaryItems::where('active', 1)
-            ->where('report_date', $data['report_date'])
-            ->where('client_code', $data['client_code'])
+            ->where('report_date', $reportDate)
+            ->where('client_code', $clientCode)
             ->groupBy('client_code', 'report_date')
             ->get()
             ->sum('item_amount');
@@ -361,39 +288,31 @@ class UploadFileToAWS implements ShouldQueue
         //get comission setting
         $totalSalesAmount = $billingItems['sales_credit'] - $clientRefundFees - $clientAccountResend;
         $commissionRate = $this->getCommissionRate(
-            $data['client_code'],
-            $data['report_date'],
+            $clientCode,
+            $reportDate,
             (float)$totalSalesAmount
         );
-
-//        if ($commissionRate['status'] === 'error') {
-//            return request()->json([
-//                'msg' => $commissionRate['msg'],
-//                'status' => 'error',
-//                'icon' => 'error'
-//            ]);
-//        }
 
         $tieredParam = $billingItems['total_sales_amount'] - $fees['a4_account_refund_and_resend']
             - $fees['client_account_refund_and_resend'];
         $billingItems['commission_type'] = $commissionRate['type'] ?? null;
         $billingItems['avolution_commission'] = $this->getAvolutionCommission(
-            $data['client_code'],
-            $data['report_date'],
+            $clientCode,
+            $reportDate,
             $tieredParam,
             $commissionRate
         );
 
         //final_credit
         $billingItems['created_at'] = date('Y-m-d h:i:s');
-        $billingItems['created_by'] = $this->userID;
+        $billingItems['created_by'] = Auth::id();
         $billingItems['active'] = 1;
 
         $firstMileShipmentFeesRepository = new FirstMileShipmentFeesRepository();
 
         $getFbaStorageFeeInvoices = $firstMileShipmentFeesRepository->getFbaStorageFeeInvoice(
-            $data['report_date'],
-            $data['client_code']
+            $reportDate,
+            $clientCode
         );
 
         $billingItems['fba_storage_fee_invoice'] = round(
@@ -419,53 +338,33 @@ class UploadFileToAWS implements ShouldQueue
         $billingItems['a4_account_marketing_and_promotion'] = round($fees['a4AccountMarketingAndPromotion'], 2);
 
         //count opexInvoice value
-//        SUM(a4lution_account所有費用) + ClientAccount.logistics_fee + avolution_commission + sales_tax_handling
-//    + extraordinary_item - a4lution_account.return_and_refund
-
         $opexInvoiceKeys = [
             'a4_account_logistics_fee',
+            'client_account_logistics_fee',
+            'a4_account_platform_fee',
             'a4_account_fba_fee',
             'a4_account_fba_storage_fee',
-            'a4_account_platform_fee',
-            'a4_account_miscellaneous',
             'a4_account_advertisement',
             'a4_account_marketing_and_promotion',
-            'client_account_logistics_fee',
-            'extraordinary_item',
-            'avolution_commission',
             'sales_tax_handling',
+            'a4_account_miscellaneous',
+            'avolution_commission',
+            'extraordinary_item'
         ];
 
-        $billingItems['opex_invoice'] = $this->getSumValue($billingItems, $opexInvoiceKeys)
-            - $billingItems['a4_account_refund_and_resend'];
+        if ($billingItems['client_code'] === 'G73A') {
+            $opexInvoiceKeys = collect($opexInvoiceKeys)->forget('client_account_logistics_fee')->all();
+        }
+
+        $billingItems['opex_invoice'] = $this->getSumValue($billingItems, $opexInvoiceKeys);
 
         $billingItems['final_credit'] = round(
-            $billingItems['sales_credit'] - $billingItems['opex_invoice'] - $billingItems['fba_storage_fee_invoice'],
+            $billingItems['sales_credit'] - $billingItems['opex_invoice']
+            - $billingItems['a4_account_fba_storage_fee'] - $billingItems['a4_account_fba_fee'],
             2
         );
 
-        $billingStatements = new BillingStatements();
-        $billingInsertID = $billingStatements->insertGetId($billingItems);
-
-        $invoices = new Invoices();
-
-        $uniqueFileName = $this->genDocStorageToken();
-
-        if (isset($insertInvoiceID)) {
-            $invoices->where('id', $insertInvoiceID)
-                ->update(
-                    ['doc_storage_token' => $uniqueFileName]
-                );
-        }
-
-        if ($this->store && isset($insertInvoiceID)) {
-            Excel::store(
-                new InvoiceExport($data['report_date'], $data['client_code'], $insertInvoiceID, $billingInsertID),
-                $uniqueFileName,
-                's3',
-                \Maatwebsite\Excel\Excel::XLSX
-            );
-        }
+        $this->billingStatementsRepo->create($billingItems);
     }
 
     public function getSumValue(array $fees, array $keys = []): float
@@ -530,6 +429,25 @@ class UploadFileToAWS implements ShouldQueue
         return ['type' => 'tiered', 'value' => $settings->basic_rate, 'status' => 'success'];
     }
 
+    public function getAvolutionCommission(
+        string $clientCode,
+        string $shipDate,
+        float  $tieredParam,
+        array  $commissionRate
+    )
+    {
+        switch ($commissionRate['type']) {
+            case 'sku':
+                $orderProductRepository = new OrderProductsRepository();
+
+                return round($orderProductRepository->getSkuAvolutionCommission($clientCode, $shipDate), 2);
+            case 'promotion':
+                return $commissionRate['value'];
+            case 'tiered':
+                return round($tieredParam * $commissionRate['value'], 2);
+        }
+    }
+
     public function getSkuCommissionRate(object $item, float $sellingPrice, float $threshold)
     {
         if ($sellingPrice > $threshold) {
@@ -564,93 +482,5 @@ class UploadFileToAWS implements ShouldQueue
         }
 
         return ['type' => 'tiered', 'value' => $setting->basic_rate, 'status' => 'success'];
-    }
-
-    public function getAvolutionCommission(
-        string $clientCode,
-        string $shipDate,
-        float  $tieredParam,
-        array  $commissionRate
-    )
-    {
-        switch ($commissionRate['type']) {
-            case 'sku':
-                $orderProductRepository = new OrderProductsRepository();
-
-                return round($orderProductRepository->getSkuAvolutionCommission($clientCode, $shipDate), 2);
-            case 'promotion':
-                return $commissionRate['value'];
-            case 'tiered':
-                return round($tieredParam * $commissionRate['value'], 2);
-        }
-    }
-
-    private function sendERPRequest(
-        string $url,
-        string $serviceName,
-        array  $customParam = []
-    ): array
-    {
-        $ebSoapRequest = $this->genXML(
-            json_encode($customParam),
-            self::EB_ACCOUNT,
-            self::EB_PWD,
-            $serviceName
-        );
-
-        $client = new Client();
-
-        $res = $client->request(
-            'POST',
-            $url,
-            [
-                'body' => $ebSoapRequest
-            ]
-        )->getBody()->getContents();
-
-        return json_decode($this->analyzeSOAP($res), true);
-    }
-
-    private function genXML(string $paramsJson, string $userName, string $userPass, string $serviceName): string
-    {
-        return <<< EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.example.org/Ec/">
-  <SOAP-ENV:Body>
-    <ns1:callService>
-      <paramsJson>$paramsJson</paramsJson>
-      <userName>$userName</userName>
-      <userPass>$userPass</userPass>
-      <service>$serviceName</service>
-    </ns1:callService>
-  </SOAP-ENV:Body>
-</SOAP-ENV:Envelope>
-EOF;
-    }
-
-    private function analyzeSOAP(string $soapForm): string
-    {
-        // converting
-        $soapForm = preg_replace('/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', ' ', $soapForm);
-        $soapForm = str_replace("SOAP-ENV:", "", $soapForm);
-        $soapForm = str_replace("<ns1:callServiceResponse>", "", $soapForm);
-        $soapForm = str_replace("</ns1:callServiceResponse>", "", $soapForm);
-
-        // converting to XML
-        $parser = simplexml_load_string($soapForm);
-
-        // get response
-        return $parser->Body->response->__toString();
-    }
-
-    public function genDocStorageToken(): string
-    {
-        $microTime = (int)(microtime(true) * 1000);
-        $uniqID = str_shuffle(uniqid());
-        return sprintf(
-            '%s_%d.xlsx',
-            $uniqID,
-            $microTime
-        );
     }
 }

@@ -2,35 +2,47 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\UploadFileToAWS;
-use App\Models\AmazonDateRangeReport;
-use App\Models\Orders;
-use App\Models\PlatformAdFees;
-use App\Models\RmaRefundList;
 use DateTime;
-use Illuminate\Http\Request;
-use App\Models\Invoices;
+use Carbon\Carbon;
 use App\Models\Roles;
-use App\Models\CustomerRelations;
-use App\Models\RoleAssignment;
-use App\Models\BillingStatements;
+use App\Models\Orders;
+use App\Models\Invoices;
 use App\Models\Customers;
+use Illuminate\Bus\Batch;
+use Illuminate\Http\Request;
+use App\Jobs\UploadFileToAWS;
 use App\Models\ExchangeRates;
-use App\Models\CommissionSettings;
 use App\Models\OrderProducts;
-use App\Models\FirstMileShipmentFees;
-use App\Repositories\OrdersRepository;
-use App\Repositories\OrderProductsRepository;
-use App\Repositories\AmazonReportListRepository;
-use App\Repositories\FirstMileShipmentFeesRepository;
+use App\Models\RmaRefundList;
+use App\Exports\FBADateExport;
+use App\Exports\InvoiceExport;
+use App\Models\PlatformAdFees;
+use App\Models\RoleAssignment;
+use App\Jobs\Invoice\SetSaveDir;
+use App\Services\InvoiceService;
+use App\Models\BillingStatements;
+use App\Models\CustomerRelations;
+use Illuminate\Http\JsonResponse;
+use App\Models\CommissionSettings;
+use Illuminate\Support\Facades\DB;
+use App\Exports\SalesExpenseExport;
+use App\Jobs\Invoice\CreateZipToS3;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use App\Exports\InvoiceExport;
-use App\Exports\SalesExpenseExport;
-use App\Exports\FBADateExport;
-use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\AmazonDateRangeReport;
+use App\Models\FirstMileShipmentFees;
+use Illuminate\Filesystem\Filesystem;
+use App\Repositories\OrdersRepository;
+use App\Jobs\Invoice\ExportInvoicePDFs;
+use App\Repositories\InvoiceRepository;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Storage;
+use App\Jobs\Invoice\ExportInvoiceExcel;
+use App\Repositories\OrderProductsRepository;
+use App\Repositories\AmazonReportListRepository;
+use App\Repositories\BillingStatementRepository;
+use App\Repositories\FirstMileShipmentFeesRepository;
 
 class InvoiceController extends Controller
 {
@@ -46,7 +58,9 @@ class InvoiceController extends Controller
     private $orderProductRepository;
     private $amazonReportListRepository;
     private $firstMileShipmentFeesRepository;
+    private $billingStatementRepository;
     private $firstMileShipmentFees;
+    private $invoiceService;
     private const MANAGER_ROLE_NAME = 'manager';
 
     public function __construct(
@@ -62,9 +76,10 @@ class InvoiceController extends Controller
         OrderProductsRepository         $orderProductRepository,
         AmazonReportListRepository      $amazonReportListRepository,
         FirstMileShipmentFeesRepository $firstMileShipmentFeesRepository,
-        FirstMileShipmentFees           $firstMileShipmentFees
-    )
-    {
+        FirstMileShipmentFees           $firstMileShipmentFees,
+        InvoiceService                  $invoiceService,
+        BillingStatementRepository      $billingStatementRepository
+    ) {
         $this->invoices = $invoices;
         $this->customerRelations = $customerRelations;
         $this->roleAssignment = $roleAssignment;
@@ -77,9 +92,10 @@ class InvoiceController extends Controller
         $this->orderProductRepository = $orderProductRepository;
         $this->amazonReportListRepository = $amazonReportListRepository;
         $this->firstMileShipmentFeesRepository = $firstMileShipmentFeesRepository;
+        $this->billingStatementRepository = $billingStatementRepository;
         $this->firstMileShipmentFees = $firstMileShipmentFees;
+        $this->invoiceService = $invoiceService;
     }
-
 
     public function getAvolutionCommission(string $clientCode, string $shipDate, float $tieredParam, array $commissionRate)
     {
@@ -182,26 +198,6 @@ class InvoiceController extends Controller
         return (float)$sum;
     }
 
-    public function getAccountMiscellaneous(string $reportDate, string $clientCode, string $supplierName, bool $isCrafter)
-    {
-        $sql = "SELECT
-    SUM(a.amazon_total * r.exchange_rate) AS 'Miscellaneous'
-FROM
-    amazon_date_range_report a
-        LEFT JOIN
-    exchange_rates r ON a.report_date = r.quoted_date
-        AND a.currency = r.base_currency
-WHERE
-    a.report_date = '{$reportDate}'
-        AND a.supplier = '{$clientCode}'
-        AND a.`type` IN ('FBA Customer Return Fee','Adjustment','other')
-        AND a.active = 1";
-
-        $isCrafter ? $sql .= " AND a.account = '{$supplierName}'" : $sql .= " AND a.account != '{$supplierName}'";
-
-        return DB::select($sql);
-    }
-
     public function listView(Request $request)
     {
         $data['clientCode'] = $request->input('client_code') ?? null;
@@ -274,26 +270,22 @@ WHERE
             return back()->with('message', 'failed to download');
         }
 
-        $format = '%s.xlsx';
-
-        $docFileName = sprintf(
-            $format,
+        $fileName = sprintf(
+            '%s.zip',
             $this->invoices->where('doc_storage_token', $token)->value('doc_file_name')
         );
 
         $headers = [
-            'Content-Type' => 'application/xlsx',
-            'Content-Disposition' => 'attachment; filename="' . $docFileName . '"',
+            'Content-Type' => 'application/zip',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
         ];
 
-        return \Response::make(Storage::disk('s3')->get($token), 200, $headers);
+        return \Response::make(
+            Storage::disk('s3')->get("invoices/{$token}.zip"), 
+            200, 
+            $headers
+        );
 
-//        return (new InvoiceExport)->download($fileName, \Maatwebsite\Excel\Excel::XLSX);//working fine
-
-//        dd(Excel::store(new InvoiceExport('S53A', '2021-08-01'), $fileName, 's3', \Maatwebsite\Excel\Excel::XLSX));
-
-//        (new InvoiceExport)->queue($fileName);
-//        return back()->withSuccess('Export started!');
     }
 
     public function issueView(Request $request)
@@ -334,16 +326,11 @@ WHERE
             $query = $this->billingStatements->select(
                 'id',
                 'client_code',
+                'avolution_commission',
+                'commission_type',
                 'total_sales_orders',
                 'total_sales_amount',
                 'total_expenses',
-                'sales_gp',
-                'avolution_commission',
-                'sales_tax_handling',
-                'sales_credit',
-                'opex_invoice',
-                'fba_storage_fee_invoice',
-                'final_credit',
                 $formattedShipDate
             )->where('active', 1);
 
@@ -360,68 +347,77 @@ WHERE
         return view('invoice/issue', $data);
     }
 
-    public function checkIfReportExist()
+    public function createBill(Request $request): JsonResponse
     {
-        $reportDate = request()->input('report_date');
-        $clientCode = request()->input('client_code');
+        $data = collect($request)->only($this->billingStatementRepository->getTableColumns());
 
-        $formattedDate = date('Ym', strtotime($reportDate));
+        $data->put('report_date', date('Y-m-d', strtotime($data['report_date'])));
+        $data->put('created_at', date('Y-m-d h:i:s'));
+        $data->put('created_by', Auth::id());
+        $data->put('active', 1);
+        $data->put('commission_type', 'manual');
 
-        $formattedReportDate = DB::raw("DATE_FORMAT(report_date,'%Y%m')");
-
-        $hasMonthlyBilling = $this->billingStatements->where("active", 1)
-            ->where($formattedReportDate, $formattedDate)
-            ->where("client_code", $clientCode)
-            ->count();
-
-        if ($hasMonthlyBilling) {
-            return response()->json(['status' => 'failed', 'icon' => 'error']);
+        try {
+            $this->billingStatementRepository->create($data->all());
+        } catch (QueryException $exception) {
+            return response()->json(
+                [
+                    'msg' => $exception->errorInfo,
+                    'status' => 500,
+                ],
+                500
+            );
         }
 
-        return response()->json(['status' => 'success', 'icon' => 'success']);
+        return response()->json(['msg' => 'success', 'status' => 200]);
+    }
+
+    public function reportValidation(): JsonResponse
+    {
+        $res = $this->invoiceService->reportValidation(
+            request()->route('date'),
+            request()->route('clientCode')
+        );
+
+        return response()->json(
+            [
+                'msg' => $res['msg'],
+                'status' => $res['status'],
+            ]
+        );
     }
 
     public function editView(Request $request)
     {
-        $data['clientCode'] = $request->input('client_code') ?? null;
-        $data['report_date'] = $request->input('report_date') ?? null;
-        $data['status'] = $request->input('status') ?? null;
-        $data['lists'] = [];
+        $billingStatementId = $request->billing_statement_id;
+        $data['clientCode'] = $request->client_code ?? null;
+        $data['reportDate'] = $request->report_date ?? null;
+        $data['status'] = $request->status ?? null;
 
-        $data['formattedStartDate'] = date('jS F Y', strtotime($data['report_date']));
-        $data['formattedEndDate'] = date('jS F Y', strtotime(date("Y-m-t", strtotime($data['report_date']))));
-        $data['formattedReportDate'] = date('F Y', strtotime(date("Y-m-t", strtotime($data['report_date']))));
+        $reportDate = Carbon::parse($data['reportDate']);
+
+        $data['formattedStartDate'] = $reportDate->format('jS F Y');
+        $data['formattedEndDate'] = $reportDate->endOfMonth()->format('jS F Y');
+        $data['formattedReportDate'] = $reportDate->endOfMonth()->format('F Y');
         $data['currentDate'] = date("m/d/Y");
         $data['nextMonthDate'] = date("m/d/Y", strtotime('+30 days', strtotime($data['currentDate'])));
 
-        if (count($request->all())) {
-            $query = $this->billingStatements->where('active', 1);
-
-            if ($data['clientCode']) {
-                $query->where('client_code', $data['clientCode']);
-            }
-
-            if ($data['report_date']) {
-                $reportDate = DateTime::createFromFormat("M-Y", $data['report_date']);
-                $formattedReportDate = $reportDate->format('Y-m-01');
-                $query->where('report_date', $formattedReportDate);
-            }
-            $data['lists'] = $query->first();
-        }
+        // TODO: create repo
+        $data['billingStatement'] = $this->billingStatements->find($billingStatementId);
 
 //        Client Contact : customers.contact_person
-        $data['customerInfo'] = $this->customers->select(
-            'contact_person',
-            'company_name',
-            'address1',
-            'address2',
-            'city',
-            'district',
-            'zip',
-            'country'
-        )
+        $data['customerInfo'] = $this->customers
+            ->select(
+                'contact_person',
+                'company_name',
+                'address1',
+                'address2',
+                'city',
+                'district',
+                'zip',
+                'country'
+            )
             ->where('client_code', $data['clientCode'])
-//            ->where('client_code', 'C101A')//TODO need to be modified
             ->first()
             ->toArray();
 
@@ -443,9 +439,77 @@ WHERE
         return view('invoice/edit', $data);
     }
 
-    public function runReport(Request $request)
+    // TODO: add Request
+    public function ajaxExport(Request $request)
     {
-        $this->dispatchNow(new UploadFileToAWS($request->all(), Auth::id(), (bool)$request->route('store')));
+        $data = $request->all();
+
+        $data['report_date'] = Carbon::parse($request->step_report_date)->format('Y-m-d');
+
+        $data['issue_date'] = isset($data['issue_date']) 
+            ? date("Y-m-d", strtotime($data['issue_date'])) 
+            : date("Y-m-d");
+
+        $data['due_date'] = isset($data['due_date']) 
+            ? date("Y-m-d", strtotime($data['due_date'])) 
+            : date('Y-m-d', strtotime('+30 days'));
+
+        $formattedIssueDate = date("ymd", strtotime($data['issue_date']));
+        $formattedSupplier = str_replace(' ', '_', ($data['supplier_name']));
+
+        $data['opex_invoice_no'] = sprintf('INV-%d%s_1', $formattedIssueDate, $formattedSupplier);
+        $data['fba_shipment_invoice_no'] = sprintf('INV-%d%s_FBA', $formattedIssueDate, $formattedSupplier);
+        $data['credit_note_no'] = sprintf('CR-%d%s_1', $formattedIssueDate, $formattedSupplier);
+        $data['created_at'] = date('Y-m-d H:i:s');
+        $data['updated_at'] = date('Y-m-d H:i:s');
+        $data['updated_by'] = Auth::id();
+        $data['created_by'] = Auth::id();
+        $data['active'] = 1;
+        $data['doc_status'] = "processing";
+        $data['doc_file_name'] = sprintf(
+            '%s_invoice_%s%d',
+            $data['client_code'],
+            date("Fy", strtotime($data['report_date'])),
+            date('YmdHis')
+        );
+
+        $data['approved_at'] = null;
+        $data['approved_by'] = null;
+
+        unset($data['_token']);
+        unset($data['step_report_date']);
+
+        $data['doc_storage_token'] = $this->genDocStorageToken();
+
+        $invoice = Invoices::create($data);
+        $invoiceID = $invoice->id;
+
+        $batch = \Bus::batch([
+            [
+                new SetSaveDir($invoiceID),
+                new ExportInvoiceExcel($invoice),
+                new ExportInvoicePDFs($invoice),
+                new CreateZipToS3($invoice),
+            ],
+        ])->then(function (Batch $batch) use ($invoiceID) {
+            (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'active']);
+
+        })->catch(function (Batch $batch, \Throwable $e) use ($invoiceID) {
+            (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'failed']);
+
+        })->finally(function (Batch $batch) {
+            // TODO: 建立排程刪除舊資料(Local)
+        })->dispatch();
+
+    }
+
+    public function genDocStorageToken(): string
+    {
+        return sprintf(
+            '%s_%d',
+            str_shuffle(uniqid()),
+            (int)(microtime(true) * 1000)
+        );
     }
 
     public function getSkuCommissionRate(object $item, float $sellingPrice, float $threshold)
@@ -488,7 +552,7 @@ WHERE
         }
     }
 
-    public function deleteInvoice(Request $request): \Illuminate\Http\JsonResponse
+    public function deleteInvoice(Request $request): JsonResponse
     {
         $id = $request->route('id');
 

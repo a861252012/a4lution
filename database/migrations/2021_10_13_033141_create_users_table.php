@@ -31,7 +31,7 @@ class CreateUsersTable extends Migration
             $table->unsignedInteger('token_validity_period')->default(60);
             $table->timestamp('created_at')->useCurrent()->useCurrentOnUpdate();
             $table->integer('created_by');
-            $table->timestamp('updated_at')->default('0000-00-00 00:00:00 COMMENT '更新時間'');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00');
             $table->integer('updated_by');
         });
     }

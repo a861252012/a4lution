@@ -4,9 +4,8 @@ namespace App\Imports;
 
 use App\Models\BatchJobs;
 use App\Models\LongTermStorageFees;
-use App\Models\BillingStatements;
+use App\Services\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
@@ -19,7 +18,6 @@ use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
-use Maatwebsite\Excel\Imports\HeadingRowFormatter;
 use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
 
 class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading, WithBatchInserts, WithCalculatedFormulas, WithEvents, WithValidation
@@ -35,8 +33,7 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
         $userID,
         $batchID,
         $inputReportDate
-    )
-    {
+    ) {
         $this->userID = $userID;
         $this->batchID = $batchID;
         $this->inputReportDate = $inputReportDate;
@@ -87,7 +84,6 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
         return LongTermStorageFees::where('upload_id', $this->batchID)
             ->where('active', 1)
             ->count();
-//        return $this->rows;
     }
 
     public function chunkSize(): int
@@ -101,20 +97,14 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
             AfterImport::class => function (AfterImport $event) {
                 DB::beginTransaction();
                 try {
-                    $haveInsert = LongTermStorageFees::where('report_date', '=', $this->inputReportDate)
-                        ->where('active', '=', 1)
+                    LongTermStorageFees::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '<', $this->batchID)
-                        ->sharedLock()
-                        ->count();
-                    if ($haveInsert) {
-                        LongTermStorageFees::where('report_date', $this->inputReportDate)
-                            ->where('upload_id', '<', $this->batchID)
-                            ->where('active', '=', 1)
-                            ->lockForUpdate()
-                            ->chunkById(1000, function ($items) {
-                                $items->each->update(['active' => 0]);
-                            }, 'id');
-                    }
+                        ->where('active', '=', 1)
+                        ->cursor()
+                        ->chunk(1000, function ($item) {
+                            $item->update(['active' => 0]);
+                        });
+
                     BatchJobs::where('id', $this->batchID)->update(
                         [
                             'status' => 'completed',
@@ -127,23 +117,37 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
                     DB::rollback();
 
                     \Log::channel('daily_queue_import')
-                        ->info("[QueueFirstMileShipmentFees.errors]" . $e);
+                        ->info("[QueueLongTermStorageFees.errors]" . $e);
                 }
             },
             ImportFailed::class => function (ImportFailed $event) {
-                BatchJobs::where('id', $this->batchID)->update(
-                    [
-                        'status' => 'failed',
-                        'total_count' => $this->getRowCount(),
-                        'exit_message' => $event->getException()
+                DB::beginTransaction();
+                try {
+                    BatchJobs::where('id', $this->batchID)
+                        ->update(
+                            [
+                                'status' => 'failed',
+                                'total_count' => $this->getRowCount(),
+                                'exit_message' => $event->getException(),
+                                'user_error_msg' => (new ImportService)->getUserErrorMsg($event->getException())
+                            ]
+                        );
 
-                    ]
-                );
+                    LongTermStorageFees::where('report_date', $this->inputReportDate)
+                        ->where('upload_id', '=', $this->batchID)
+                        ->where('active', '=', 1)
+                        ->cursor()
+                        ->chunk(1000, function ($item) {
+                            $item->delete();
+                        });
 
-//                foreach ($event->getException()->failures() as $failure) {
-//                    \Log::channel('daily_queue_import')
-//                        ->info("[QueueLongTermStorageFees.errors]" . implode(',', $failure->toArray()));
-//                }
+                    DB::commit();
+                } catch (\Exception $e) {
+                    DB::rollback();
+
+                    \Log::channel('daily_queue_import')
+                        ->info("[QueueLongTermStorageFees.errors]" . $e);
+                }
 
                 foreach ($event->getException() as $failure) {
                     \Log::channel('daily_queue_import')
@@ -203,22 +207,9 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
 
     public function prepareForValidation(array $row): array
     {
-        $row['snapshot_date'] = $row['snapshot_date'] ? $this->transformDate($row['snapshot_date']) : null;
+        $row['snapshot_date'] = $row['snapshot_date'] ? (new ImportService)->transformDate($row['snapshot_date'])
+            : null;
 
         return $row;
-    }
-
-    /**
-     * Transform a date value into a Carbon object.
-     *
-     * @return \Carbon\Carbon|null
-     */
-    public function transformDate($value, $format = 'Y-m-d')
-    {
-        try {
-            return \Carbon\Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value));
-        } catch (\ErrorException $e) {
-            return \Carbon\Carbon::parse($value)->format('Y-m-d H:i:s');
-        }
     }
 }

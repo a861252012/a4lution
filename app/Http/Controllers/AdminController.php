@@ -5,12 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\BillingStatements;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\EmployeeCommission;
+use App\Services\AdminService;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
+    private $adminService;
+
+    public function __construct(
+        AdminService $adminService
+    )
+    {
+        $this->adminService = $adminService;
+    }
 
     public function approvalAdminView()
     {
@@ -46,5 +55,10 @@ class AdminController extends Controller
                 ]
             );
         }
+    }
+
+    public function revokeApprove(Request $request)
+    {
+        return $this->adminService->revokeApprove($request->route('date'));
     }
 }

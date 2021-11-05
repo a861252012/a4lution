@@ -20,7 +20,7 @@ class CreateCustomerRelationsTable extends Migration
             $table->tinyInteger('active');
             $table->timestamp('created_at')->useCurrent()->useCurrentOnUpdate();
             $table->unsignedInteger('created_by');
-            $table->timestamp('updated_at')->default('0000-00-00 00:00:00 COMMENT '更新時間'');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00');
             $table->unsignedInteger('updated_by');
             
             $table->unique(['client_code', 'user_id', 'role_id'], 'client_code_sales_user_name');

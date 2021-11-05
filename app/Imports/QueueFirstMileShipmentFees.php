@@ -4,9 +4,8 @@ namespace App\Imports;
 
 use App\Models\BatchJobs;
 use App\Models\FirstMileShipmentFees;
-use App\Models\BillingStatements;
+use App\Services\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
@@ -20,7 +19,6 @@ use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
-use Maatwebsite\Excel\Reader;
 
 class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading, WithBatchInserts, WithCalculatedFormulas, WithEvents, withValidation
 {
@@ -35,8 +33,7 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
         $userID,
         $batchID,
         $inputReportDate
-    )
-    {
+    ) {
         $this->userID = $userID;
         $this->batchID = $batchID;
         $this->inputReportDate = $inputReportDate;
@@ -88,7 +85,6 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
 
     public function getRowCount(): int
     {
-//        return $this->rows;
         return FirstMileShipmentFees::where('upload_id', $this->batchID)
             ->where('active', 1)
             ->count();
@@ -105,20 +101,14 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
             AfterImport::class => function (AfterImport $event) {
                 DB::beginTransaction();
                 try {
-                    $haveInsert = FirstMileShipmentFees::where('report_date', '=', $this->inputReportDate)
-                        ->where('active', '=', 1)
+                    FirstMileShipmentFees::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '<', $this->batchID)
-                        ->sharedLock()
-                        ->count();
-                    if ($haveInsert) {
-                        FirstMileShipmentFees::where('report_date', $this->inputReportDate)
-                            ->where('upload_id', '<', $this->batchID)
-                            ->where('active', '=', 1)
-                            ->lockForUpdate()
-                            ->chunkById(1000, function ($items) {
-                                $items->each->update(['active' => 0]);
-                            }, 'id');
-                    }
+                        ->where('active', '=', 1)
+                        ->cursor()
+                        ->chunk(1000, function ($item) {
+                            $item->update(['active' => 0]);
+                        });
+
                     BatchJobs::where('id', $this->batchID)->update(
                         [
                             'status' => 'completed',
@@ -135,19 +125,34 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
                 }
             },
             ImportFailed::class => function (ImportFailed $event) {
-                BatchJobs::where('id', $this->batchID)->update(
-                    [
-                        'status' => 'failed',
-                        'total_count' => $this->getRowCount(),
-                        'exit_message' => $event->getException()
-                    ]
-                );
+                DB::beginTransaction();
+                try {
+                    BatchJobs::where('id', $this->batchID)
+                        ->update(
+                            [
+                                'status' => 'failed',
+                                'total_count' => $this->getRowCount(),
+                                'exit_message' => $event->getException(),
+                                'user_error_msg' => (new ImportService)->transformDate($event->getException()),
+                            ]
+                        );
 
-                //TODO need to check if failures() works
-//                foreach ($event->getException()->failures() as $failure) {
-//                    \Log::channel('daily_queue_import')
-//                        ->info("[QueueFirstMileShipmentFees.errors]" . implode(',', $failure->toArray()));
-//                }
+                    FirstMileShipmentFees::where('report_date', $this->inputReportDate)
+                        ->where('upload_id', '=', $this->batchID)
+                        ->where('active', '=', 1)
+                        ->cursor()
+                        ->chunk(1000, function ($item) {
+                            $item->delete();
+                        });
+
+                    DB::commit();
+                } catch (\Exception $e) {
+                    DB::rollback();
+
+                    \Log::channel('daily_queue_import')
+                        ->info("[QueueFirstMileShipmentFees.errors]" . $e);
+                }
+
                 foreach ($event->getException() as $failure) {
                     \Log::channel('daily_queue_import')
                         ->info("[QueueFirstMileShipmentFees.errors]" . $failure);
@@ -158,8 +163,6 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
 
     public function rules(): array
     {
-//        return [];
-
         return [
 //            'client_code' => ['bail', 'nullable', 'string', 'max:50'],
 //            'ids_sku' => ['bail', 'nullable', 'string', 'max:255'],
@@ -217,22 +220,8 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
 
     public function prepareForValidation(array $row): array
     {
-        $row['date'] = $row['date'] ? $this->transformDate($row['date']) : null;
+        $row['date'] = $row['date'] ? (new ImportService)->transformDate($row['date']) : null;
 
         return $row;
-    }
-
-    /**
-     * Transform a date value into a Carbon object.
-     *
-     * @return \Carbon\Carbon|null
-     */
-    public function transformDate($value, $format = 'Y-m-d')
-    {
-        try {
-            return \Carbon\Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value));
-        } catch (\ErrorException $e) {
-            return \Carbon\Carbon::parse($value)->format('Y-m-d H:i:s');
-        }
     }
 }

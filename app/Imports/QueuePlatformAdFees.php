@@ -4,11 +4,9 @@ namespace App\Imports;
 
 use App\Models\PlatformAdFees;
 use App\Models\BatchJobs;
-use App\Models\BillingStatements;
+use App\Services\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\RemembersRowNumber;
@@ -19,10 +17,7 @@ use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
-use Maatwebsite\Excel\Imports\HeadingRowFormatter;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Illuminate\Validation\Rule;
-use \Maatwebsite\Excel\Reader;
 
 class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, WithHeadingRow, WithBatchInserts, WithEvents, WithValidation
 {
@@ -88,7 +83,6 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
         return PlatformAdFees::where('upload_id', $this->batchID)
             ->where('active', 1)
             ->count();
-//        return $this->rows;
     }
 
     public function chunkSize(): int
@@ -102,20 +96,14 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
             AfterImport::class => function (AfterImport $event) {
                 DB::beginTransaction();
                 try {
-                    $haveInsert = PlatformAdFees::where('report_date', '=', $this->inputReportDate)
-                        ->where('active', '=', 1)
+                    PlatformAdFees::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '<', $this->batchID)
-                        ->sharedLock()
-                        ->count();
-                    if ($haveInsert) {
-                        PlatformAdFees::where('report_date', $this->inputReportDate)
-                            ->where('upload_id', '<', $this->batchID)
-                            ->where('active', '=', 1)
-                            ->lockForUpdate()
-                            ->chunkById(1000, function ($items) {
-                                $items->each->update(['active' => 0]);
-                            }, 'id');
-                    }
+                        ->where('active', '=', 1)
+                        ->cursor()
+                        ->chunk(1000, function ($item) {
+                            $item->update(['active' => 0]);
+                        });
+
                     BatchJobs::where('id', $this->batchID)->update(
                         [
                             'status' => 'completed',
@@ -128,23 +116,44 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
                     DB::rollback();
 
                     \Log::channel('daily_queue_import')
-                        ->info("[QueueFirstMileShipmentFees.errors]" . $e);
+                        ->info("[QueuePlatformAdFees.errors]" . $e);
                 }
             },
             ImportFailed::class => function (ImportFailed $event) {
+                DB::beginTransaction();
+                try {
+                    BatchJobs::where('id', $this->batchID)->update(
+                        [
+                            'status' => 'failed',
+                            'total_count' => $this->getRowCount(),
+                            'exit_message' => $event->getException(),
+                            'user_error_msg' => (new ImportService)->getUserErrorMsg($event->getException())
+                        ]
+                    );
 
-                BatchJobs::where('id', $this->batchID)->update(
-                    [
-                        'status' => 'failed',
-                        'total_count' => $this->getRowCount(),
-                        'exit_message' => $event->getException()
+                    PlatformAdFees::where('report_date', $this->inputReportDate)
+                        ->where('active', '=', 1)
+                        ->where('upload_id', '=', $this->batchID)
+                        ->cursor()
+                        ->chunk(1000, function ($item) {
+                            $item->delete();
+                        });
 
-                    ]
-                );
-//                foreach ($event->getException()->failures() as $failure) {
-//                    \Log::channel('daily_queue_import')
-//                        ->info("[QueuePlatformAdFees.errors]" . implode(',', $failure->toArray()));
-//                }
+                    BatchJobs::where('id', $this->batchID)->update(
+                        [
+                            'status' => 'completed',
+                            'total_count' => $this->getRowCount()
+                        ]
+                    );
+
+                    DB::commit();
+                } catch (\Exception $e) {
+                    DB::rollback();
+
+                    \Log::channel('daily_queue_import')
+                        ->info("[QueuePlatformAdFees.errors]" . $e);
+                }
+
                 foreach ($event->getException() as $failure) {
                     \Log::channel('daily_queue_import')
                         ->info("[QueuePlatformAdFees.errors]" . $failure);
@@ -196,5 +205,4 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
 //            '*.exchange_rate' => ['bail', 'nullable', 'numeric', 'max:999999999999'],
 //        ];
     }
-
 }
