@@ -30,7 +30,7 @@ class CreateZipToS3 implements ShouldQueue
 
     public function handle()
     {
-        $saveDir = Storage::disk('invoice-export')->getAdapter()->getPathPrefix();
+        $saveDir = storage_path("invoice-export/{$this->invoice->id}/");
 
         $fileName = $this->invoice->doc_storage_token . '.zip';
 
@@ -45,6 +45,7 @@ class CreateZipToS3 implements ShouldQueue
             $zip->close();
         }
 
+        \Config::set('filesystems.disks.invoice-export.root', storage_path("invoice-export/{$this->invoice->id}"));
         $content = Storage::disk('invoice-export')->get($fileName);
         Storage::disk('s3')->put("invoices/{$fileName}", $content);
     }

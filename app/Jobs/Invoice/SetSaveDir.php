@@ -30,8 +30,5 @@ class SetSaveDir implements ShouldQueue
         // 建立儲存目錄
         $saveDir = storage_path("invoice-export/{$this->invoiceID}/");
         (new Filesystem)->ensureDirectoryExists($saveDir);
-
-        // 更新 disk 默認儲存位置，提供後續 job 使用
-        \Config::set('filesystems.disks.invoice-export.root', $saveDir);
     }
 }
