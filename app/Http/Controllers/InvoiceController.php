@@ -18,6 +18,7 @@ use App\Exports\FBADateExport;
 use App\Exports\InvoiceExport;
 use App\Models\PlatformAdFees;
 use App\Models\RoleAssignment;
+use App\Jobs\Invoice\SetSaveDir;
 use App\Services\InvoiceService;
 use App\Models\BillingStatements;
 use App\Models\CustomerRelations;
@@ -280,7 +281,7 @@ class InvoiceController extends Controller
         ];
 
         return \Response::make(
-            Storage::disk('s3')->get("invoice-export/{$token}.zip"), 
+            Storage::disk('s3')->get("invoices/{$token}.zip"), 
             200, 
             $headers
         );
@@ -483,15 +484,12 @@ class InvoiceController extends Controller
         $invoice = Invoices::create($data);
         $invoiceID = $invoice->id;
 
-        // 設定儲存目錄
-        $saveDir = storage_path("invoice-export/{$invoice->id}/");
-        (new Filesystem)->ensureDirectoryExists($saveDir);
-
         $batch = \Bus::batch([
             [
-                new ExportInvoiceExcel($invoice, $saveDir),
-                new ExportInvoicePDFs($invoice, $saveDir),
-                new CreateZipToS3($invoice, $saveDir),
+                new SetSaveDir($invoiceID),
+                new ExportInvoiceExcel($invoice),
+                new ExportInvoicePDFs($invoice),
+                new CreateZipToS3($invoice),
             ],
         ])->then(function (Batch $batch) use ($invoiceID) {
             (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'active']);

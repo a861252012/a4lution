@@ -2,21 +2,22 @@
 
 namespace App\Exports;
 
+use Throwable;
 use App\Models\Invoices;
-use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
-use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Excel;
 use App\Models\RmaRefundList;
+use Illuminate\Support\Facades\DB;
 use App\Models\AmazonDateRangeReport;
-use Throwable;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 
-class ReturnAndRefundExport implements WithTitle, FromQuery, WithHeadings, withMapping, WithStrictNullComparison
+class ReturnAndRefundExport implements WithTitle, FromCollection, WithHeadings, withMapping, WithStrictNullComparison
 {
     private $reportDate;
     private $clientCode;
@@ -49,7 +50,7 @@ class ReturnAndRefundExport implements WithTitle, FromQuery, WithHeadings, withM
             ->info($exception);
     }
 
-    public function query()
+    public function collection()
     {
         $amzQuery = AmazonDateRangeReport::from('amazon_date_range_report as d')
             ->select(
@@ -146,7 +147,8 @@ class ReturnAndRefundExport implements WithTitle, FromQuery, WithHeadings, withM
             ->where(DB::raw("DATE_FORMAT(a.create_date,'%Y%m')"), $this->reportDate)
             ->where('a.pc_name', $this->clientCode)
             ->where('a.shipping_method', '!=', 'AMAZONFBA')
-            ->unionAll($amzQuery);
+            ->unionAll($amzQuery)
+            ->get();
     }
 
     public function headings(): array
