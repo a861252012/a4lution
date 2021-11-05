@@ -28,7 +28,7 @@ class ExportInvoicePDFs implements ShouldQueue
 
     public function handle()
     {
-        $saveDir = Storage::disk('invoice-export')->getAdapter()->getPathPrefix();
+        $saveDir = storage_path("invoice-export/{$this->invoice->id}/");
 
         $invoice = $this->invoice->load('billingStatement');
 

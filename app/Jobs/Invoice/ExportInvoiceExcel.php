@@ -28,6 +28,8 @@ class ExportInvoiceExcel implements ShouldQueue
 
     public function handle()
     {
+        \Config::set('filesystems.disks.invoice-export.root', storage_path("invoice-export/{$this->invoice->id}"));
+
         \Excel::store(
             new InvoiceExport(
                 $this->invoice->report_date->format('Y-m-d'),
