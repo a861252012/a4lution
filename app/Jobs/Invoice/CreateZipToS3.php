@@ -8,34 +8,35 @@ use App\Models\Invoices;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
+use Symfony\Component\HttpFoundation\Response;
 
 class CreateZipToS3 implements ShouldQueue
 {
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private $invoice;
-    private $saveDir;
 
     public function __construct(
-        Invoices $invoice,
-        string $saveDir
+        Invoices $invoice
     )
     {
         $this->invoice = $invoice;
-        $this->saveDir = $saveDir;
     }
 
     public function handle()
     {
+        $saveDir = Storage::disk('invoice-export')->getAdapter()->getPathPrefix();
+
         $fileName = $this->invoice->doc_storage_token . '.zip';
 
         $zip = new ZipArchive;
-        if ($zip->open($this->saveDir . $fileName, ZipArchive::CREATE) === TRUE) {
-            foreach (\File::files($this->saveDir) as $name) {
+        if ($zip->open($saveDir . $fileName, ZipArchive::CREATE) === TRUE) {
+            foreach (\File::files($saveDir) as $name) {
                 $zip->addFile(
                     $name,
                     basename($name)
@@ -44,8 +45,7 @@ class CreateZipToS3 implements ShouldQueue
             $zip->close();
         }
 
-        // 上傳檔案至 s3
-        $content = \Storage::disk('invoice-export')->get($this->invoice->id . '/' . $fileName);
-        \Storage::disk('s3')->put("invoice-export/{$fileName}", $content);
+        $content = Storage::disk('invoice-export')->get($fileName);
+        Storage::disk('s3')->put("invoices/{$fileName}", $content);
     }
 }

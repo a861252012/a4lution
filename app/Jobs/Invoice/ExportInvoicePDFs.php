@@ -8,6 +8,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use App\Models\FirstMileShipmentFees;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -17,27 +18,26 @@ class ExportInvoicePDFs implements ShouldQueue
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private $invoice;
-    private $saveDir;
 
     public function __construct(
-        Invoices $invoice,
-        string $saveDir
+        Invoices $invoice
     )
     {
         $this->invoice = $invoice;
-        $this->saveDir = $saveDir;
     }
 
     public function handle()
     {
+        $saveDir = Storage::disk('invoice-export')->getAdapter()->getPathPrefix();
+
         $invoice = $this->invoice->load('billingStatement');
 
 
         $pdf = \PDF::loadView('invoice.pdf.creditNote', compact('invoice'))
-            ->save($this->saveDir . 'credit-note.pdf');
+            ->save($saveDir . 'credit-note.pdf');
 
         $pdf = \PDF::loadView('invoice.pdf.opexInvoice', compact('invoice'))
-            ->save($this->saveDir . 'opex-invoice.pdf');
+            ->save($saveDir . 'opex-invoice.pdf');
 
         $firstMileShipmentFees = FirstMileShipmentFees::query()
             ->select(
@@ -53,7 +53,7 @@ class ExportInvoicePDFs implements ShouldQueue
             ->groupBy(['fulfillment_center', 'fba_shipment'])
             ->get();
 
-        $pdf = \PDF::loadView('invoice.pdf.returnHelperInvoice', compact('invoice', 'firstMileShipmentFees'))
-            ->save($this->saveDir . 'return-helper-invoice.pdf');
+        $pdf = \PDF::loadView('invoice.pdf.fbaFirstMileShipmentFee', compact('invoice', 'firstMileShipmentFees'))
+            ->save($saveDir . 'fba-first-mile-shipment-fee.pdf');
     }
 }
