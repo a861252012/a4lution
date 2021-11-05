@@ -12,11 +12,23 @@ class Invoices extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'report_date' => 'date',
+    ];
+
     public function getCreatedAtAttribute(): Carbon
     {
         return Carbon::parse($this->attributes['created_at'])->setTimezone(env('TIME_ZONE_A'));
     }
 
+    ################
+    ## Relations ##
+    ################
+    public function billingStatement()
+    {
+        return $this->belongsTo(BillingStatements::class);
+    }
+    
     /**
      * Scope a query to only include active users.
      *
