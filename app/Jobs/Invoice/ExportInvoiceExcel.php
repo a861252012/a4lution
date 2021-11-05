@@ -20,22 +20,18 @@ class ExportInvoiceExcel implements ShouldQueue
     private $saveDir;
 
     public function __construct(
-        Invoices $invoice,
-        string $saveDir
+        Invoices $invoice
     )
     {
         $this->invoice = $invoice;
-        $this->saveDir = $saveDir;
     }
 
     public function handle()
     {
-        \Config::set('filesystems.disks.invoice-export.root', $this->saveDir);
-
         \Excel::store(
             new InvoiceExport(
+                $this->invoice->report_date->format('Y-m-d'),
                 $this->invoice->client_code,
-                $this->invoice->report_date,
                 $this->invoice->id,
                 $this->invoice->billing_statement_id,
             ),
