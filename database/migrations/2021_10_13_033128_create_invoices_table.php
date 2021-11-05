@@ -35,9 +35,9 @@ class CreateInvoicesTable extends Migration
             $table->boolean('payment_terms')->default(0);
             $table->timestamp('created_at')->useCurrent()->useCurrentOnUpdate();
             $table->unsignedInteger('created_by');
-            $table->timestamp('updated_at')->default('0000-00-00 00:00:00 COMMENT '修改時間'');
+            $table->timestamp('updated_at')->default('0000-00-00 00:00:00');
             $table->integer('updated_by')->default(0);
-            $table->string('doc_status', 50)->default('0 COMMENT 'processing,deleted,active'')->index('doc_status');
+            $table->string('doc_status', 50)->default('0')->index('doc_status');
             $table->string('doc_storage_token', 50)->nullable();
             $table->string('doc_file_name', 100)->nullable();
             $table->tinyInteger('active');
