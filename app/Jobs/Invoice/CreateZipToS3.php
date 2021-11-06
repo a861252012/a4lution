@@ -12,10 +12,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
-use Symfony\Component\HttpFoundation\Response;
 
-class CreateZipToS3 implements ShouldQueue
+class CreateZipToS3 extends BaseInvoiceJob implements ShouldQueue
 {
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -30,10 +28,10 @@ class CreateZipToS3 implements ShouldQueue
 
     public function handle()
     {
-        $saveDir = storage_path("invoice-export/{$this->invoice->id}/");
-
+        $saveDir = $this->getSaveDir($this->invoice->id);
         $fileName = $this->invoice->doc_storage_token . '.zip';
 
+        // 壓縮檔案
         $zip = new ZipArchive;
         if ($zip->open($saveDir . $fileName, ZipArchive::CREATE) === TRUE) {
             foreach (\File::files($saveDir) as $name) {
@@ -45,8 +43,8 @@ class CreateZipToS3 implements ShouldQueue
             $zip->close();
         }
 
-        \Config::set('filesystems.disks.invoice-export.root', storage_path("invoice-export/{$this->invoice->id}"));
-        $content = Storage::disk('invoice-export')->get($fileName);
+        // 上傳至 aws s3
+        $content = Storage::disk('invoice-export')->get("{$this->invoice->id}/{$fileName}");
         Storage::disk('s3')->put("invoices/{$fileName}", $content);
     }
 }

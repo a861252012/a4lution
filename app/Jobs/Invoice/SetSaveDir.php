@@ -2,17 +2,15 @@
 
 namespace App\Jobs\Invoice;
 
-use App\Models\Invoices;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
-use App\Exports\InvoiceExport;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
-class SetSaveDir implements ShouldQueue
+class SetSaveDir extends BaseInvoiceJob implements ShouldQueue
 {
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -28,7 +26,8 @@ class SetSaveDir implements ShouldQueue
     public function handle()
     {
         // 建立儲存目錄
-        $saveDir = storage_path("invoice-export/{$this->invoiceID}/");
-        (new Filesystem)->ensureDirectoryExists($saveDir);
+        (new Filesystem)->ensureDirectoryExists(
+            $this->getSaveDir($this->invoiceID)
+        );
     }
 }
