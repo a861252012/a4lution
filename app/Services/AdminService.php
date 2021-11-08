@@ -73,7 +73,7 @@ class AdminService
             abort_if($updateInvoice === -1, 500);
 
             $idArray = $this->employeeCommissionRepository->getIDByDate(
-                $date,
+                $date
             );
 
             $updateEmployee = $this->employeeCommissionRepository->updateByDate(
@@ -83,12 +83,14 @@ class AdminService
 
             abort_if($updateEmployee === -1, 500);
 
-            $updateEmployeeEntries = $this->employeeCommissionEntriesRepository->updateByEmployeeID(
-                $idArray,
-                $softDeleteParams
-            );
+            if ($idArray) {
+                $updateEmployeeEntries = $this->employeeCommissionEntriesRepository->updateByEmployeeID(
+                    $idArray,
+                    $softDeleteParams
+                );
 
-            abort_if($updateEmployeeEntries === -1, 500);
+                abort_if($updateEmployeeEntries === -1, 500);
+            }
 
             DB::commit();
         } catch (\Exception $e) {
