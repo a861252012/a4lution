@@ -30,13 +30,34 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
         $saveDir = $this->getSaveDir($this->invoice->id);
         $invoice = $this->invoice->load('billingStatement');
 
+        // create credit-note
+        $fileName = sprintf("%s %s Credit Note.pdf",
+            $invoice->client_code,
+            $invoice->credit_note_no,
+        );
         $pdf = \PDF::loadView('invoice.pdf.creditNote', compact('invoice'))
-            ->save($saveDir . 'credit-note.pdf');
+            ->save($saveDir . $fileName);
 
+
+        // create opex-invoice
+        $fileName = sprintf("%s INV-%s%s_1 OPEX Invoice.pdf",
+            $invoice->client_code,
+            $invoice->issue_date->format('ymd'),
+            str_replace(' ', '_', $invoice->supplier_name)
+        );
+        $fileName = sprintf("%s %s OPEX Invoice.pdf",
+            $invoice->client_code,
+            $invoice->opex_invoice_no,
+        );
         $pdf = \PDF::loadView('invoice.pdf.opexInvoice', compact('invoice'))
-            ->save($saveDir . 'opex-invoice.pdf');
+            ->save($saveDir . $fileName);
 
-        // TODO: create Repo
+
+        // create fba-first-mile-shipment-fee.pdf
+        $fileName = sprintf("%s %s&ReturnHelperInvoice.pdf",
+            $invoice->client_code,
+            $invoice->fba_shipment_invoice_no,
+        );
         $firstMileShipmentFees = FirstMileShipmentFees::query()
             ->select(
                 DB::raw("fulfillment_center as 'country'"),
@@ -52,6 +73,6 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
             ->get();
 
         $pdf = \PDF::loadView('invoice.pdf.fbaFirstMileShipmentFee', compact('invoice', 'firstMileShipmentFees'))
-            ->save($saveDir . 'fba-first-mile-shipment-fee.pdf');
+            ->save($saveDir . $fileName);
     }
 }

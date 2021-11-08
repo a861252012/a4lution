@@ -79,7 +79,7 @@ class OpexInvoiceExport implements WithTitle, WithEvents
                 $event->sheet->SetCellValue("E9", $invoice->credit_note_no);
 
                 $event->sheet->SetCellValue("D10", 'Issue Date:');
-                $event->sheet->SetCellValue("E10", date('d-M-y', strtotime($this->reportDate)));
+                $event->sheet->SetCellValue("E10", $invoice->issue_date->format('d-M-y'));
 
                 $formattedStartDate = date('jS M Y', strtotime($this->reportDate));
                 $endOfDate = date("Y-m-t", strtotime($this->reportDate));

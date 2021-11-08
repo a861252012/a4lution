@@ -14,6 +14,7 @@ class Invoices extends Model
 
     protected $casts = [
         'report_date' => 'date',
+        'issue_date' => 'date',
     ];
 
     public function getCreatedAtAttribute(): Carbon

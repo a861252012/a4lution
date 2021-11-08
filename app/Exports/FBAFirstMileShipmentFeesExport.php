@@ -74,7 +74,7 @@ class FBAFirstMileShipmentFeesExport implements WithTitle, WithEvents
                 $event->sheet->SetCellValue("E9", $invoice->fba_shipment_invoice_no);
 
                 $event->sheet->SetCellValue("D10", 'Issue Date:');
-                $event->sheet->SetCellValue("E10", date('d-M-y', strtotime($invoice->issue_date)));
+                $event->sheet->SetCellValue("E10", $invoice->issue_date->format('d-M-y'));
 
                 $event->sheet->SetCellValue("D11", 'Payment Terms:');
                 $event->sheet->SetCellValue("E11", $invoice->payment_terms);

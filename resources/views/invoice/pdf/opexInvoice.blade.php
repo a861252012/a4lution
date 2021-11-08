@@ -127,7 +127,7 @@
             <tr>
                 <td class="col col-1">{{ $invoice->client_contact }}</td>
                 <td class="col col-2">Issue Date:</td>
-                <td class="col col-3">{{ $invoice->report_date->format('d-M-y') }}</td>
+                <td class="col col-3">{{ $invoice->issue_date->format('d-M-y') }}</td>
             </tr>
             <tr>
                 <td class="col col-1">{{ $invoice->client_company }}</td>
