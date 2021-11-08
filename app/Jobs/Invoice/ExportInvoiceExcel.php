@@ -34,10 +34,12 @@ class ExportInvoiceExcel extends BaseInvoiceJob implements ShouldQueue
                 $this->invoice->id,
                 $this->invoice->billing_statement_id,
             ),
+            // [資料夾(id)/檔案名稱]
             sprintf(
-                "%s/%s.xlsx", 
-                $this->invoice->id ,
-                $this->invoice->doc_file_name
+                "%s/%s_AVO format_sales report %s.xlsx", 
+                $this->invoice->id,
+                $this->invoice->supplier_name,
+                $this->invoice->report_date->format('M Y'),
             ),
             'invoice-export',
             \Maatwebsite\Excel\Excel::XLSX

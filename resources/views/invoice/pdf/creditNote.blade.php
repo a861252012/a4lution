@@ -108,7 +108,7 @@
             <tr>
                 <td class="col col-1">{{ $invoice->client_contact }}</td>
                 <td class="col col-2">Issue Date:</td>
-                <td class="col col-3">{{ $invoice->report_date->format('d-M-y') }}</td>
+                <td class="col col-3">{{ $invoice->issue_date->format('d-M-y') }}</td>
             </tr>
             <tr>
                 <td class="col col-1">{{ $invoice->client_company }}</td>
@@ -159,14 +159,14 @@
                             $invoice->report_date->format('jS M Y'), 
                             $invoice->report_date->endOfMonth()->format('jS M Y')); }}
                     </td>
-                    <td class="col col-3">HKD  {{ number_format($invoice->billingStatement->a4_account_refund_and_resend, 2) }}</td>
+                    <td class="col col-3">-HKD  {{ number_format($invoice->billingStatement->a4_account_refund_and_resend, 2) }}</td>
                 </tr>
             </tbody>
             <tfoot>
                 <tr>
                     <td class="col col-1 total">Total</td>
                     <td class="col col-2"></td>
-                    <td class="col col-3">HKD {{ number_format((float)$invoice->billingStatement->a4_account_refund_and_resend + (float)$invoice->billingStatement->total_sales_amount, 2) }}
+                    <td class="col col-3">HKD {{ number_format((float) -$invoice->billingStatement->a4_account_refund_and_resend + (float) $invoice->billingStatement->total_sales_amount, 2) }}
                     </td>
                 </tr>
             </tfoot>
