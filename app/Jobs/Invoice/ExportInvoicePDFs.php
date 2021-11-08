@@ -8,12 +8,11 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use App\Models\FirstMileShipmentFees;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
-class ExportInvoicePDFs implements ShouldQueue
+class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
 {
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -28,10 +27,8 @@ class ExportInvoicePDFs implements ShouldQueue
 
     public function handle()
     {
-        $saveDir = storage_path("invoice-export/{$this->invoice->id}/");
-
+        $saveDir = $this->getSaveDir($this->invoice->id);
         $invoice = $this->invoice->load('billingStatement');
-
 
         $pdf = \PDF::loadView('invoice.pdf.creditNote', compact('invoice'))
             ->save($saveDir . 'credit-note.pdf');
@@ -39,6 +36,7 @@ class ExportInvoicePDFs implements ShouldQueue
         $pdf = \PDF::loadView('invoice.pdf.opexInvoice', compact('invoice'))
             ->save($saveDir . 'opex-invoice.pdf');
 
+        // TODO: create Repo
         $firstMileShipmentFees = FirstMileShipmentFees::query()
             ->select(
                 DB::raw("fulfillment_center as 'country'"),
