@@ -45,7 +45,7 @@
                                     <div class="form-group">
                                         <label class="form-control-label" for="search_report_date">Report Date</label>
                                         <input class="form-control" name="report_date" id="search_report_date"
-                                               type="text" placeholder="REPORT DATE" value="{{$report_date ?? ''}}">
+                                            type="text" placeholder="REPORT DATE" value="{{$report_date ?? ''}}">
                                     </div>
                                 </div>
 
@@ -75,7 +75,7 @@
                                     <div class="form-group">
                                         <a id="create_sales_btn" href="#inline_content">
                                             <div class="form-control btn btn-success" type="button"
-                                                 style="margin-top: 6px;">Create Sales Summary
+                                                style="margin-top: 6px;">Create Sales Summary
                                             </div>
                                         </a>
                                     </div>
@@ -114,7 +114,8 @@
                                     <td class="total_expenses">{{ $item->total_expenses ?? '' }}</td>
                                     <td>
                                         <button class="btn btn-primary issue_btn btn-sm" type="button"
-                                        @if($item->commission_type === "manual") {{ 'disabled' }} @endif>
+                                            billing-statement-id="{{ $item->id }}"
+                                            @if($item->commission_type === "manual") {{ 'disabled' }} @endif>
                                             <span class="btn-inner--text">ISSUE INVOICE</span>
                                         </button>
                                         <button class="btn btn-danger delete_btn btn-sm" type="button">
@@ -647,6 +648,7 @@
                         data['report_date'] = $(this).parent().parent().find('[class="report_date"]').text();
                         data['client_code'] = $(this).parent().parent().find('[class="client_code"]').text();
                         data['_token'] = $('meta[name="csrf-token"]').attr('content');
+                        data['billing_statement_id'] = $(this).attr('billing-statement-id');
 
 
                         $.colorbox({
@@ -660,6 +662,7 @@
                                 _token: data['_token'],
                                 report_date: data['report_date'],
                                 client_code: data['client_code'],
+                                billing_statement_id: data['billing_statement_id'],
                             },
                             onComplete: function () {
                                 //binding jquery.steps plugin
@@ -677,7 +680,7 @@
 
                                 // prepare Options Object
                                 let options = {
-                                    url: '/invoice/runReport/1',
+                                    url: '/ajax/invoice/export',
                                     responseType: 'blob', // important
                                     type: 'POST',
                                     success: function (res) {
@@ -816,11 +819,20 @@
                     });
 
                     $.ajax({
-                        url: origin + '/invoice/runReport/0',
+                        url: origin + '/ajax/billing-statements',
                         type: 'post',
-                        data: {step_report_date: reportDate, client_code: clientCode},
+                        data: {
+                            report_date: reportDate, 
+                            client_code: clientCode
+                        },
                         success: function (res) {
                             console.log(res);
+                            swal({
+                                text: "Generate Summary Complete!",
+                                icon: "success",
+                                button: "OK",
+                            });
+                            location.reload();
                         }
                     });
                 }
