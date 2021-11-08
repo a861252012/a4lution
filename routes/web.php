@@ -19,6 +19,7 @@ Route::get('dashboard', 'HomeController@index')->name('home');
 Route::get('pricing', 'PageController@pricing')->name('page.pricing');
 Route::get('lock', 'PageController@lock')->name('page.lock');
 
+Route::get('/test', 'TestController@test');
 
 Route::group(['middleware' => 'auth'], function () {
     Route::resource('category', 'CategoryController', ['except' => ['show']]);
