@@ -23,8 +23,7 @@ class AdminService
         InvoicesRepository                  $invoicesRepository,
         EmployeeCommissionRepository        $employeeCommissionRepository,
         EmployeeCommissionEntriesRepository $employeeCommissionEntriesRepository
-    )
-    {
+    ) {
         $this->billingStatementRepository = $billingStatementRepository;
         $this->invoicesRepository = $invoicesRepository;
         $this->employeeCommissionRepository = $employeeCommissionRepository;
@@ -52,7 +51,6 @@ class AdminService
 
         DB::beginTransaction();
         try {
-
             $updateBilling = $this->billingStatementRepository->updateByDate(
                 $date,
                 $softDeleteParams
@@ -74,6 +72,10 @@ class AdminService
 
             abort_if($updateInvoice === -1, 500);
 
+            $idArray = $this->employeeCommissionRepository->getIDByDate(
+                $date,
+            );
+
             $updateEmployee = $this->employeeCommissionRepository->updateByDate(
                 $date,
                 $softDeleteParams
@@ -81,8 +83,8 @@ class AdminService
 
             abort_if($updateEmployee === -1, 500);
 
-            $updateEmployeeEntries = $this->employeeCommissionEntriesRepository->updateByDate(
-                $date,
+            $updateEmployeeEntries = $this->employeeCommissionEntriesRepository->updateByEmployeeID(
+                $idArray,
                 $softDeleteParams
             );
 
@@ -97,7 +99,8 @@ class AdminService
                 [
                     'status' => 500,
                     'msg' => 'Error'
-                ], 500
+                ],
+                500
             );
         }
 

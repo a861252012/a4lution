@@ -31,4 +31,17 @@ class EmployeeCommissionEntriesRepository
             return -1;
         }
     }
+
+    public function updateByEmployeeID(array $id, array $data): int
+    {
+        try {
+            return $this->employeeCommissionEntries
+                ->active()
+                ->whereIn('employee_commissions_id', $id)
+                ->update($data);
+        } catch (\Exception $e) {
+            Log::error("EmployeeCommissionEntries update error: {$e}");
+            return -1;
+        }
+    }
 }
