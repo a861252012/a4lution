@@ -1,0 +1,19 @@
+/*===== FONT-SIZE =====*/
+._fz-1 {
+    font-size: 0.65rem;
+}
+._fz-2 {
+    font-size: 1.15rem;
+}
+._fz-3 {
+    font-size: 1.65rem;
+}
+
+._table thead th {
+    text-transform: none;
+}
+
+._btn {
+    padding: 0;
+    white-space: normal;
+}

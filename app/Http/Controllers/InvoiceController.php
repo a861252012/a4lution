@@ -341,7 +341,7 @@ class InvoiceController extends Controller
             if ($data['report_date']) {
                 $query->where('report_date', date('Y-m-01', strtotime($data['report_date'])));
             }
-            $data['lists'] = $query->paginate(100);
+            $data['lists'] = $query->paginate();
         }
 
         return view('invoice/issue', $data);
