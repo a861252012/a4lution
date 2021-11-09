@@ -13,6 +13,10 @@
     text-transform: none;
 }
 
+._table td {
+    font-size: 0.65rem;
+}
+
 ._btn {
     padding: 0;
     white-space: normal;
