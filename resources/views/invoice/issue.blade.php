@@ -18,7 +18,7 @@
         <!-- Card -->
         <div class="card">
             <!-- Card header -->
-            <div class="card-header">
+            <div class="card-header py-2">
                 <input type="hidden" id="csrf_token" name="_token" value="{{ csrf_token() }}">
 
                 <form method="GET" action="/invoice/issue" role="form" class="form">
