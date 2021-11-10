@@ -311,7 +311,7 @@
                     {{-- Button --}}
                     <div class="row justify-content-center align-items-center">
                         <div class="col-3">
-                            <button class="btn btn-primary _fz-1" type="submit" id="inline_submit">RUN REPORT</button>
+                            <button class="btn btn-primary _fz-1" type="submit" id="inline_submit">Run Report</button>
                         </div>
                         <div class="col-3">
                             <button class="btn btn-primary _fz-1" type="button" id="cancel_btn">Cancel</button>
