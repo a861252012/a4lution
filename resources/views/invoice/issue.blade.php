@@ -652,8 +652,8 @@
                             iframe: false,
                             // preloading: false,
                             href: origin + '/invoice/edit',
-                            width: "80%",
-                            height: "80%",
+                            width: "70%",
+                            height: "70%",
                             returnFocus: false,
                             data: {
                                 _token: data['_token'],
