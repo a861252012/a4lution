@@ -13,7 +13,7 @@
     text-transform: none;
 }
 
-._table td {
+._table td, ._table th {
     font-size: 0.65rem;
 }
 

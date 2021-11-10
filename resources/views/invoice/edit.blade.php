@@ -27,7 +27,7 @@
         </ul>
 
         {{--  DATE --}}
-        <div class="step-content">
+        <div class="step-content _fz-1">
             <div class="step-tab-panel" data-step="step1">
                 <div class="row">
                     <div class="col">
@@ -40,10 +40,11 @@
                     </div>
                 </div>
 
-                <hr>
+                <hr class="my-2">
+
                 <div class="row">
                     <div class="col-4">
-                        <h2>Sales OverView</h2>
+                        <strong>Sales OverView</strong>
                         <table class="ml-4">
                             <tr>
                                 <td class='w-75'>Total Sales Orders</td>
@@ -63,7 +64,7 @@
                             </tr>
                         </table>
 
-                        <h2>Summary</h2>
+                        <strong>Summary</strong>
                         <table class="ml-4">
                             <tr>
                                 <td class='w-75'>Avolution Commission</td>
@@ -93,7 +94,7 @@
                     </div>
 
                     <div class="col-8">
-                        <table class="table table-striped table-bordered">
+                        <table class="table _table table-striped table-bordered">
                             <thead>
                                 <tr>
                                     <th scope="col"></th>
@@ -104,7 +105,7 @@
 
                             <tbody>
                                 <tr>
-                                    <th scope="row" style="font-size: 1rem;"><strong>Expenses Breakdown</strong></th>
+                                    <th scope="row"><strong>Expenses Breakdown</strong></th>
                                     <td></td>
                                     <td></td>
                                 </tr>
@@ -164,12 +165,12 @@
                                 </tr>
                                 {{-- MARKETING FEE --}}
                                 <tr>
-                                    <th scope="row" style="font-size: 1rem;"><strong>MARKETING FEE</strong></th>
+                                    <th scope="row"><strong>Marketing Fee</strong></th>
                                     <td></td>
                                     <td></td>
                                 </tr>
                                 <tr class="">
-                                    <th scope="row">-ADVERTISEMENT</th>
+                                    <th scope="row">-Advertisement</th>
                                     <td class="text-right">
                                         ${{ number_format($billingStatement->a4_account_advertisement) ?: '-' }}
                                     </td>
@@ -178,7 +179,7 @@
                                     </td>
                                 </tr>
                                 <tr class="">
-                                    <th scope="row">-MARKETING AND PROMOTION</th>
+                                    <th scope="row">-Marketing And Promotion</th>
                                     <td class="text-right">
                                         ${{ number_format($billingStatement->a4_account_marketing_and_promotion) ?: '-' }}
                                     </td>
@@ -205,21 +206,21 @@
 
                     <div class="row">
                         <div class="col-3 form-group">
-                            <label class="form-control-label" for="step_report_date">REPORT DATE</label>
-                            <input class="form-control" name="step_report_date" id="step_report_date"
+                            <label class="form-control-label _fz-1" for="step_report_date">Report Date</label>
+                            <input class="form-control _fz-1" name="step_report_date" id="step_report_date"
                                 placeholder="step_report_date"
                                 type="text" value="{{$formattedReportDate}}" readonly>
                         </div>
 
                         <div class="col-3 form-group">
-                            <label class="form-control-label" for="issue_date">ISSUE DATE</label>
-                            <input class="form-control" name="issue_date" id="issue_date" placeholder="issue_date"
+                            <label class="form-control-label _fz-1" for="issue_date">Issue Date</label>
+                            <input class="form-control _fz-1" name="issue_date" id="issue_date" placeholder="issue_date"
                                 type="text" value="{{$currentDate}}">
                         </div>
 
                         <div class="col-4 form-group">
-                            <label class="form-control-label" for="client_contact">CLIENT CONTACT</label>
-                            <input class="form-control" name="client_contact" id="client_contact"
+                            <label class="form-control-label _fz-1" for="client_contact">Client Contact</label>
+                            <input class="form-control _fz-1" name="client_contact" id="client_contact"
                                 placeholder="client_contact"
                                 type="text" value="{{$customerInfo['contact_person']}}">
                         </div>
@@ -227,20 +228,20 @@
 
                     <div class="row">
                         <div class="col-3 form-group">
-                            <label class="form-control-label" for="client_code">CLIENT CODE</label>
-                            <input class="form-control" name="client_code" id="client_code" placeholder="client_code"
+                            <label class="form-control-label _fz-1" for="client_code">Client Code</label>
+                            <input class="form-control _fz-1" name="client_code" id="client_code" placeholder="client_code"
                                 type="text" value="{{$clientCode ?? ''}}" readonly>
                         </div>
 
                         <div class="col-3 form-group">
-                            <label class="form-control-label" for="due_date">DUE DATE</label>
-                            <input class="form-control" name="due_date" id="due_date" placeholder="due_date"
+                            <label class="form-control-label _fz-1" for="due_date">Due Date</label>
+                            <input class="form-control _fz-1" name="due_date" id="due_date" placeholder="due_date"
                                 type="text" value="{{$nextMonthDate}}">
                         </div>
 
                         <div class="col-4 form-group">
-                            <label class="form-control-label" for="client_company">COMPANY CONTACT</label>
-                            <input class="form-control" name="client_company" id="client_company"
+                            <label class="form-control-label _fz-1" for="client_company">Company Contact</label>
+                            <input class="form-control _fz-1" name="client_company" id="client_company"
                                 placeholder="client_company" type="text"
                                 value="{{$customerInfo['company_name']}}">
                         </div>
@@ -248,29 +249,29 @@
 
                     <div class="row">
                         <div class="col-3 form-group">
-                            <label class="form-control-label" for="supplier_name">SUPPLIER NAME</label>
-                            <input class="form-control" name="supplier_name" id="supplier_name"
+                            <label class="form-control-label _fz-1" for="supplier_name">Supplier Name</label>
+                            <input class="form-control _fz-1" name="supplier_name" id="supplier_name"
                                 placeholder="supplier_name"
                                 type="text" value="{{$supplierName ?? ''}}" readonly>
                         </div>
 
                         <div class="col-3 form-group">
-                            <label class="form-control-label" for="payment_terms">PAYMENT TERMS (# days net)</label>
-                            <input class="form-control" name="payment_terms" id="payment_terms"
+                            <label class="form-control-label _fz-1" for="payment_terms">Payment Terms (# days net)</label>
+                            <input class="form-control _fz-1" name="payment_terms" id="payment_terms"
                                 placeholder="payment_terms"
                                 type="text" value="10">
                         </div>
 
                         <div class="col-3 form-group">
-                            <label class="form-control-label" for="client_address1">STREET 1 CONTACT</label>
-                            <input class="form-control" name="client_address1" id="client_address1"
+                            <label class="form-control-label _fz-1" for="client_address1">Street 1 Contact</label>
+                            <input class="form-control _fz-1" name="client_address1" id="client_address1"
                                 placeholder="client_address1" type="text"
                                 value="{{$customerInfo['address1']}}">
                         </div>
 
                         <div class="col-3 form-group">
-                            <label class="form-control-label" for="client_address2">STREET 2 CONTACT</label>
-                            <input class="form-control" name="client_address2" id="client_address2"
+                            <label class="form-control-label _fz-1" for="client_address2">Street 2 Contact</label>
+                            <input class="form-control _fz-1" name="client_address2" id="client_address2"
                                 placeholder="client_address2" type="text"
                                 value="{{$customerInfo['address2']}}">
                         </div>
@@ -279,30 +280,30 @@
 
                     <div class="row">
                         <div class="col-3 offset-6 form-group">
-                            <label class="form-control-label" for="client_city">CITY</label>
-                            <input class="form-control" name="client_city" id="client_city" placeholder="client_city"
+                            <label class="form-control-label _fz-1" for="client_city">City</label>
+                            <input class="form-control _fz-1" name="client_city" id="client_city" placeholder="client_city"
                                 type="text" value="{{$customerInfo['city']}}">
                         </div>
 
                         <div class="col-2 form-group">
-                            <label class="form-control-label"
-                                for="client_district">DISTRICT</label>
-                            <input class="form-control" name="client_district" id="client_district"
+                            <label class="form-control-label _fz-1"
+                                for="client_district">District</label>
+                            <input class="form-control _fz-1" name="client_district" id="client_district"
                                 placeholder="client_district" type="text" value="{{$customerInfo['district']}}">
                         </div>
 
                         <div class="col-1 form-group">
-                            <label class="form-control-label" for="client_zip">ZIP</label>
-                            <input class="form-control" name="client_zip" id="client_zip" placeholder="client_zip"
+                            <label class="form-control-label _fz-1" for="client_zip">Zip</label>
+                            <input class="form-control _fz-1" name="client_zip" id="client_zip" placeholder="client_zip"
                                 type="text" value="{{$customerInfo['zip']}}">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-3 offset-6 form-group">
-                            <label class="form-control-label"
-                                for="client_country">COUNTRY</label>
-                            <input class="form-control" name="client_country" id="client_country"
+                            <label class="form-control-label _fz-1"
+                                for="client_country">Country</label>
+                            <input class="form-control _fz-1" name="client_country" id="client_country"
                                 placeholder="client_country" type="text" value="{{$customerInfo['country']}}">
                         </div>
                     </div>
@@ -310,10 +311,10 @@
                     {{-- Button --}}
                     <div class="row justify-content-center align-items-center">
                         <div class="col-3">
-                            <button class="btn btn-primary" type="submit" id="inline_submit">RUN REPORT</button>
+                            <button class="btn btn-primary _fz-1" type="submit" id="inline_submit">RUN REPORT</button>
                         </div>
                         <div class="col-3">
-                            <button class="btn btn-primary" type="button" id="cancel_btn">Cancel</button>
+                            <button class="btn btn-primary _fz-1" type="button" id="cancel_btn">Cancel</button>
                         </div>
                     </div>
 
