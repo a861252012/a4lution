@@ -263,14 +263,14 @@
                         </div>
 
                         <div class="col-3 form-group">
-                            <label class="form-control-label _fz-1" for="client_address1">Street 1 Contact</label>
+                            <label class="form-control-label _fz-1" for="client_address1">Street 1</label>
                             <input class="form-control _fz-1" name="client_address1" id="client_address1"
                                 placeholder="client_address1" type="text"
                                 value="{{$customerInfo['address1']}}">
                         </div>
 
                         <div class="col-3 form-group">
-                            <label class="form-control-label _fz-1" for="client_address2">Street 2 Contact</label>
+                            <label class="form-control-label _fz-1" for="client_address2">Street 2</label>
                             <input class="form-control _fz-1" name="client_address2" id="client_address2"
                                 placeholder="client_address2" type="text"
                                 value="{{$customerInfo['address2']}}">
