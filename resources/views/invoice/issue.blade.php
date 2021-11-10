@@ -667,12 +667,11 @@
                                     doneClass: "",
                                 });
 
-                                $("button#edit_btn").unbind("click");
                                 $("button#inline_submit").unbind("click");
 
                                 $('#cancel_btn').click(function () {
-                                    console.log('x');
-                                    $.colorbox.close();
+                                    $('#cboxOverlay').remove();
+                                    $('#colorbox').remove();
                                 });
 
                                 // prepare Options Object
@@ -680,6 +679,11 @@
                                     url: '/ajax/invoice/export',
                                     responseType: 'blob', // important
                                     type: 'POST',
+                                    beforeSend: function (e) {
+                                        $('#cboxOverlay').remove();
+                                        $('#colorbox').remove();
+                                        $.colorbox.close();
+                                    },
                                     success: function (res) {
                                         let msg = "Your file(s) are being processed.";
                                         msg += "Please check back later.";
@@ -688,16 +692,10 @@
                                         swal({
                                             text: msg,
                                             icon: 'success',
-                                        })
-                                            .then(function (isConfirm) {
-                                                if (isConfirm) {
-                                                    $('#cboxOverlay').remove();
-                                                    $('#colorbox').remove();
-                                                    $.colorbox.close();
-                                                }
-                                            });
+                                        });
 
-                                    }, error: function (e) {
+                                    },
+                                    error: function (e) {
                                         swal({
                                             icon: "error",
                                             text: e
