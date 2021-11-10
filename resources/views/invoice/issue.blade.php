@@ -860,7 +860,6 @@
         @endpush
 
         @push('css')
-            <link type="text/css" href="{{ asset('css/a4lution.css') }}" rel="stylesheet">
             <style>
                 input[class="decoration"] {
                     outline: 0;
