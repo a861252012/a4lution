@@ -1,10 +1,3 @@
-{{--@extends('layouts.app', [--}}
-{{--    'title' => __('User Profile'),--}}
-{{--    'navClass' => 'bg-default',--}}
-{{--    'parentSection' => 'laravel',--}}
-{{--    'elementName' => 'profile'--}}
-{{--])--}}
-
 @extends('layouts.app', [
     'parentSection' => 'fee',
     'elementName' => 'amz-date-range'
@@ -17,143 +10,129 @@
                 {{ __('FEE') }}
             @endslot
             <li class="breadcrumb-item"><a href="{{ route('page.index', 'components') }}">{{ __('FEE') }}</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{ __('AMZDATERANGE') }}</li>
+            <li class="breadcrumb-item active" aria-current="page">{{ __('AMZ DATE RANGE') }}</li>
         @endcomponent
     @endcomponent
 
-    {{--@section('content')--}}
-    {{--    @include('forms.header')--}}
-
-    {{--    <div class="container-fluid mt--6">--}}
-    <div class="wrapper wrapper-content animated">
+    <div class="wrapper wrapper-content">
         <!-- Table -->
-        <div class="row">
-            <div class="col">
-                <div class="card">
-                    <!-- Card header -->
-                    <div class="card-header">
-                        {{--                        <h3 class="mb-0">Datatable</h3>--}}
-                        {{--                        <div class="row input-daterange datepicker align-items-center">--}}
-                        <div>
-                            <form method="GET" action="/fee/amzdaterange" role="form" class="form">
+        <div class="card">
+            <!-- Card header -->
+            <div class="card-header py-2">
+                <form method="GET" action="/fee/amzdaterange" role="form" class="form">
+                    <div class="row">
 
-                                <div class="row">
-
-                                    {{-- REPORT DATE --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="report_date">REPORT DATE</label>
-                                            <input class="form-control" name="report_date" id="report_date" type="text"
-                                                   placeholder="report date" value="{{$data['reportDate']}}" readonly>
-                                        </div>
-                                    </div>
-
-                                    {{-- ORDER ID --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="order_id">ORDER ID</label>
-                                            <input class="form-control" name="order_id" id="order_id"
-                                                   value="{{$data['orderID']}}" placeholder="ORDER ID" type="text">
-                                        </div>
-                                    </div>
-
-                                    {{-- SKU --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="sku">SKU</label>
-                                            <input class="form-control" name="sku" id="sku" placeholder="SKU"
-                                                   value="{{$data['sku']}}" type="text">
-                                        </div>
-                                    </div>
-
-                                    {{-- SUPPLIER --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="supplier">SUPPLIER</label>
-                                            <input class="form-control" name="supplier" id="supplier"
-                                                   placeholder="SUPPLIER" value="{{$data['supplier']}}" type="text">
-                                        </div>
-                                    </div>
-
-                                    {{-- SEARCH --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <label class="form-control-label" for="submit_btn"></label>
-                                        <div class="form-group">
-                                            <button class="form-control btn btn-primary" id="submit_btn" type="submit"
-                                                    style="margin-top: 6px;">SEARCH
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </form>
+                        {{-- REPORT DATE --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="report_date">Report Date</label>
+                                <input class="form-control _fz-1" name="report_date" id="report_date" type="text"
+                                       placeholder="Report Date" value="{{$data['reportDate']}}" readonly>
+                            </div>
                         </div>
-                    </div>
 
-                    {{-- data table --}}
-                    <div class="table-responsive py-4">
-                        <table class="table table-flush">
-                            <thead class="thead-light">
-                            <tr>
-                                <th>REPORT DATE</th>
-                                <th>ACCOUNT</th>
-                                <th>ORDER ID</th>
-                                <th>SKU</th>
-                                <th>SUPPLIER</th>
-                                <th>QUANTITY</th>
-                                <th>CURRENCY</th>
-                                <th>PRODUCT SALES</th>
-                                <th>SHIPPING CREDITS</th>
-                                <th>GIFT WRAP CREDITS</th>
-                                <th>PROMOTIONAL REBATES</th>
-                                <th>COST OF POINT</th>
-                                <th>TAX</th>
-                                <th>SELLING FEES</th>
-                                <th>FBA FEES</th>
-                                <th>OTHER TRAN</th>
-                                <th>OTHER</th>
-                                <th>AMAZON TOTAL</th>
-                            </tr>
-                            </thead>
+                        {{-- ORDER ID --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="order_id">Order ID</label>
+                                <input class="form-control _fz-1" name="order_id" id="order_id"
+                                       value="{{$data['orderID']}}" placeholder="Order ID" type="text">
+                            </div>
+                        </div>
 
-                            <tbody>
-                            @foreach ($data['lists'] as $item)
-                                <tr>
-                                    <td>{{ $item->report_date }}</td>
-                                    <td>{{ $item->account }}</td>
-                                    <td>{{ $item->order_id }}</td>
-                                    <td>{{ $item->sku }}</td>
-                                    <td>{{ $item->supplier }}</td>
-                                    <td>{{ $item->quantity }}</td>
-                                    <td>{{ $item->currency }}</td>
-                                    <td>{{ $item->product_sales }}</td>
-                                    <td>{{ $item->shipping_credits }}</td>
-                                    <td>{{ $item->gift_wrap_credits }}</td>
-                                    <td>{{ $item->promotional_rebates }}</td>
-                                    <td>{{ $item->cost_of_point }}</td>
-                                    <td>{{ $item->tax }}</td>
-                                    <td>{{ $item->selling_fees }}</td>
-                                    <td>{{ $item->fba_fees }}</td>
-                                    <td>{{ $item->other_transaction_fees }}</td>
-                                    <td>{{ $item->other }}</td>
-                                    <td>{{ $item->amazon_total }}</td>
-                                </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
+                        {{-- SKU --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="sku">Sku</label>
+                                <input class="form-control _fz-1" name="sku" id="sku" placeholder="Sku"
+                                       value="{{$data['sku']}}" type="text">
+                            </div>
+                        </div>
 
-                        {{-- Pagination --}}
-                        <div class="d-flex justify-content-center" style='margin-top: 20px;'>
-                            {!! $data['lists']->links() !!}
+                        {{-- SUPPLIER --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="supplier">Supplier</label>
+                                <input class="form-control _fz-1" name="supplier" id="supplier"
+                                       placeholder="Supplier" value="{{$data['supplier']}}" type="text">
+                            </div>
+                        </div>
+
+                        {{-- SEARCH --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <label class="form-control-label" for="submit_btn"></label>
+                            <div class="form-group mb-0">
+                                <button class="form-control btn btn-primary _btn _fz-1" id="submit_btn" type="submit"
+                                        style="margin-top: 6px;">Search
+                                </button>
+                            </div>
                         </div>
 
                     </div>
-
-                </div>
+                </form>
             </div>
+
+            {{-- data table --}}
+            <div class="table-responsive">
+                <table class="table table-sm _table">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>Report Date</th>
+                        <th>Account</th>
+                        <th>Order ID</th>
+                        <th>Sku</th>
+                        <th>Supplier</th>
+                        <th>Quantitiy</th>
+                        <th>Currency</th>
+                        <th>Product Sales</th>
+                        <th>Shipping Credits</th>
+                        <th>Gift Wrap Credits</th>
+                        <th>Promotional Rebates</th>
+                        <th>Cost Of Point</th>
+                        <th>Tax</th>
+                        <th>Selling Fees</th>
+                        <th>Fba Fees</th>
+                        <th>Other Tran</th>
+                        <th>Other</th>
+                        <th>Amazon Total</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    @foreach ($data['lists'] as $item)
+                        <tr>
+                            <td>{{ $item->report_date }}</td>
+                            <td>{{ $item->account }}</td>
+                            <td>{{ $item->order_id }}</td>
+                            <td>{{ $item->sku }}</td>
+                            <td>{{ $item->supplier }}</td>
+                            <td>{{ $item->quantity }}</td>
+                            <td>{{ $item->currency }}</td>
+                            <td>{{ $item->product_sales }}</td>
+                            <td>{{ $item->shipping_credits }}</td>
+                            <td>{{ $item->gift_wrap_credits }}</td>
+                            <td>{{ $item->promotional_rebates }}</td>
+                            <td>{{ $item->cost_of_point }}</td>
+                            <td>{{ $item->tax }}</td>
+                            <td>{{ $item->selling_fees }}</td>
+                            <td>{{ $item->fba_fees }}</td>
+                            <td>{{ $item->other_transaction_fees }}</td>
+                            <td>{{ $item->other }}</td>
+                            <td>{{ $item->amazon_total }}</td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+
+                {{-- Pagination --}}
+                @if($data['lists'] && $data['lists']->lastPage() > 1)
+                    <div class="d-flex justify-content-center" style='margin-top: 20px;'>
+                        {{ $data['lists']->appends($_GET)->links() }}
+                    </div>
+                @endif
+            </div>
+
         </div>
-        <!-- Footer -->
-        {{--        @include('layouts.footers.auth')--}}
     </div>
 @endsection
 
@@ -163,9 +142,6 @@
 
     <script type="text/javascript">
         $(function () {
-
-            let reportDate = $('#report_date').val();
-
             $('#report_date').datepicker({
                 format: 'yyyy-mm',//日期時間格式
                 viewMode: "months",
@@ -174,8 +150,7 @@
                 autoclose: true
             });
 
-            // $('#report_date').datepicker('update', new Date());
-            $('#report_date').datepicker('update', reportDate);
+            $('#report_date').datepicker('update', $('#report_date').val());
         });
     </script>
 @endpush
