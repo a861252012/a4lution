@@ -312,6 +312,7 @@
                     onComplete: function () {
 
                         $("#cbx_title").text("New Extraordinary Item");
+                        $("#inline_id").text('');
 
                         let _token = $('meta[name="csrf-token"]').attr('content');
 
@@ -445,6 +446,7 @@
                     closeButton: true,
                     onComplete: function () {
                         $("#cbx_title").text("New Extraordinary Item");
+                        $("#inline_id").text('');
 
                         let _token = $('meta[name="csrf-token"]').attr('content');
 
@@ -627,7 +629,7 @@
 
                         $('#inline_report_date').datepicker('update', data.reportDate);
 
-                        $("#inline_id").val(data.id);
+                        $("#inline_id").text(data.id);
                         $("#inline_client_code").val(data.clientCode);
                         $("#inline_currency").val(data.currency);
                         $("#inline_item_name").val(data.itemName);
