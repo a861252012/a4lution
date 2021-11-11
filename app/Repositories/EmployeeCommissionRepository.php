@@ -31,4 +31,23 @@ class EmployeeCommissionRepository
             return -1;
         }
     }
+
+    /**
+     * @param string $date
+     * @return array|null
+     */
+    public function getIDByDate(string $date): ?array
+    {
+        try {
+            return $this->employeeCommission
+                ->active()
+                ->select('id')
+                ->where('report_date', $date)
+                ->pluck('id')
+                ->toArray();
+        } catch (\Exception $e) {
+            Log::error("EmployeeCommission update error: {$e}");
+            return null;
+        }
+    }
 }

@@ -15,130 +15,127 @@
     @endcomponent
 
     <div class="wrapper wrapper-content animated">
-        <!-- Table -->
-        <div class="row">
-            <div class="col">
-                <div class="card">
-                    <!-- Card header -->
-                    <div class="card-header">
-                        <input type="hidden" id="csrf_token" name="_token" value="{{ csrf_token() }}">
+        <!-- Card -->
+        <div class="card">
+            <!-- Card header -->
+            <div class="card-header py-2">
+                <input type="hidden" id="csrf_token" name="_token" value="{{ csrf_token() }}">
 
-                        <form method="GET" action="/invoice/issue" role="form" class="form">
-                            <div class="row">
-                                {{-- CLIENT CODE --}}
-                                <div class="col-2 col-lg-2  col-sm-2">
-                                    <div class="form-group">
-                                        <label class="form-control-label" for="sel_client_code">Client Code</label>
-                                        <select class="form-control" data-toggle="select" name="sel_client_code"
-                                                id="sel_client_code">
-                                            @forelse ($client_code_lists as $item)
-                                                <option value="{{$item}}" @if($sel_client_code == $item) {{ 'selected' }} @endif>{{$item}}</option>
-                                            @empty
-                                                <option value="">{{'NONE'}}</option>
-                                            @endforelse
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {{-- REPORT DATE --}}
-                                <div class="col-2 col-lg-2  col-sm-2">
-                                    <div class="form-group">
-                                        <label class="form-control-label" for="search_report_date">Report Date</label>
-                                        <input class="form-control" name="report_date" id="search_report_date"
-                                               type="text" placeholder="REPORT DATE" value="{{$report_date ?? ''}}">
-                                    </div>
-                                </div>
-
-                                {{-- SEARCH --}}
-                                <div class="col-2 col-lg-2  col-sm-2">
-                                    <label class="form-control-label" for="submit_btn"></label>
-                                    <div class="form-group">
-                                        <button class="form-control btn btn-primary" id="submit_btn" type="submit"
-                                                style="margin-top: 6px;">Search
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {{-- GENERATE SUMMARY --}}
-                                <div class="col-2 col-lg-2  col-sm-2">
-                                    <label class="form-control-label" for="gen_sales_btn"></label>
-                                    <div class="form-group">
-                                        <button class="form-control btn btn-primary" id="gen_sales_btn"
-                                                type="button" style="margin-top: 6px;">Generate Sales Summary
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {{-- CREATE SUMMARY --}}
-                                <div class="col-2 col-lg-2  col-sm-2">
-                                    <label class="form-control-label" for="create_sales_btn"></label>
-                                    <div class="form-group">
-                                        <a id="create_sales_btn" href="#inline_content">
-                                            <div class="form-control btn btn-success" type="button"
-                                                 style="margin-top: 6px;">Create Sales Summary
-                                            </div>
-                                        </a>
-                                    </div>
-                                </div>
-
+                <form method="GET" action="/invoice/issue" role="form" class="form">
+                    <div class="row">
+                        {{-- CLIENT CODE --}}
+                        <div class="col-lg-2  col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="sel_client_code">Client Code</label>
+                                <select class="form-control _fz-1" data-toggle="select" name="sel_client_code"
+                                        id="sel_client_code">
+                                    @forelse ($client_code_lists as $item)
+                                        <option value="{{$item}}" @if($sel_client_code == $item) {{ 'selected' }} @endif>{{$item}}</option>
+                                    @empty
+                                        <option value="">{{'NONE'}}</option>
+                                    @endforelse
+                                </select>
                             </div>
-                        </form>
-                    </div>
-
-                    {{-- data table --}}
-                    <div class="table-responsive py-4">
-                        <table class="table table-flush">
-                            <thead class="thead-light">
-                            <tr>
-                                <th>REPORT DATE</th>
-                                <th>CLIENT CODE</th>
-                                <th>AVOLUTION COMMISSION</th>
-                                <th>COMMISSION TYPE</th>
-                                <th>TOTAL SALES ORDERS</th>
-                                <th>TOTAL SALES AMOUNT</th>
-                                <th>TOTAL EXPENSE</th>
-                                <th>ACTION</th>
-                            </tr>
-                            </thead>
-
-                            <tbody>
-                            @forelse ($lists as $item)
-                                <tr>
-                                    <input type="hidden" name="bill_state_id" value="{{ $item->id }}">
-                                    <td class="report_date">{{ $item->report_date ?? '' }}</td>
-                                    <td class="client_code">{{ $item->client_code ?? '' }}</td>
-                                    <td class="avolution_commission">{{ $item->avolution_commission ?? '' }}</td>
-                                    <td class="commission_type">{{ $item->commission_type ?? '' }}</td>
-                                    <td class="total_sales_orders">{{ $item->total_sales_orders ?? '' }}</td>
-                                    <td class="total_sales_amount">{{ $item->total_sales_amount ?? '' }}</td>
-                                    <td class="total_expenses">{{ $item->total_expenses ?? '' }}</td>
-                                    <td>
-                                        <button class="btn btn-primary issue_btn btn-sm" type="button"
-                                        @if($item->commission_type === "manual") {{ 'disabled' }} @endif>
-                                            <span class="btn-inner--text">ISSUE INVOICE</span>
-                                        </button>
-                                        <button class="btn btn-danger delete_btn btn-sm" type="button">
-                                            <span class="btn-inner--text">DELETE</span>
-                                        </button>
-                                    </td>
-                                </tr>
-                            @empty
-                            @endforelse
-                            </tbody>
-                        </table>
-
-                        {{-- Pagination --}}
-                        <div class="d-flex justify-content-center" style='margin-top: 20px;'>
-                            @if($lists)
-                                {!! $lists->links() !!}
-                            @endif
                         </div>
+
+                        {{-- REPORT DATE --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="search_report_date">Report Date</label>
+                                <input class="form-control _fz-1" name="report_date" id="search_report_date"
+                                    type="text" placeholder="REPORT DATE" value="{{$report_date ?? ''}}">
+                            </div>
+                        </div>
+
+                        {{-- SEARCH --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <label class="form-control-label" for="submit_btn"></label>
+                            <div class="form-group mb-0">
+                                <button class="form-control _fz-1 btn _btn btn-primary" id="submit_btn" type="submit"
+                                        style="margin-top: 6px;">Search
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- GENERATE SUMMARY --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <label class="form-control-label" for="gen_sales_btn"></label>
+                            <div class="form-group mb-0">
+                                <button class="form-control _fz-1 btn _btn btn-primary" id="gen_sales_btn"
+                                        type="button" style="margin-top: 6px;">Create Sales Summary
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- CREATE SUMMARY --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <label class="form-control-label" for="create_sales_btn"></label>
+                            <div class="form-group mb-0">
+                                <a id="create_sales_btn" href="#inline_content">
+                                    <button class="form-control _fz-1 btn _btn btn-success"
+                                        type="button" style="margin-top: 6px;">Generate Sales Summary
+                                    </button>
+                                </a>
+                            </div>
+                        </div>
+
                     </div>
-                </div>
+                </form>
             </div>
+
+            {{-- data table --}}
+            <div class="table-responsive">
+                <table class="table table-flush table-sm _table">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>Report Date</th>
+                        <th>Client Code</th>
+                        <th>Avolution Commission</th>
+                        <th>Commission Type</th>
+                        <th>Total Sales Orders</th>
+                        <th>Total Sales Amount</th>
+                        <th>Total Expense</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    @forelse ($lists as $item)
+                        <tr>
+                            <input type="hidden" name="bill_state_id" value="{{ $item->id }}">
+                            <td class="report_date">{{ $item->report_date ?? '' }}</td>
+                            <td class="client_code">{{ $item->client_code ?? '' }}</td>
+                            <td class="avolution_commission">{{ $item->avolution_commission ?? '' }}</td>
+                            <td class="commission_type">{{ $item->commission_type ?? '' }}</td>
+                            <td class="total_sales_orders">{{ $item->total_sales_orders ?? '' }}</td>
+                            <td class="total_sales_amount">{{ $item->total_sales_amount ?? '' }}</td>
+                            <td class="total_expenses">{{ $item->total_expenses ?? '' }}</td>
+                            <td>
+                                <button class="btn btn-primary issue_btn btn-sm _fz-1" type="button"
+                                    billing-statement-id="{{ $item->id }}"
+                                    @if($item->commission_type === "manual") {{ 'disabled' }} @endif>
+                                    <span class="btn-inner--text">Issue Invoice</span>
+                                </button>
+                                <button class="btn btn-danger delete_btn btn-sm _fz-1" type="button">
+                                    <span class="btn-inner--text">Delete</span>
+                                </button>
+                            </td>
+                        </tr>
+                    @empty
+                    @endforelse
+                    </tbody>
+                </table>
+
+                
+            </div>
+            {{-- Pagination --}}
+            @if($lists && $lists->lastPage() > 1)
+                <div class="d-flex justify-content-center" style='margin-top: 20px;'>
+                    {{ $lists->appends($_GET)->links() }}
+                </div>      
+            @endif
         </div>
-        <!-- Footer -->
-        {{--        @include('layouts.footers.auth')--}}
+        <!-- ./Card -->
     </div>
 
     <!-- colorbox html part start -->
@@ -160,7 +157,7 @@
                 @csrf
                 <div class="row">
                     {{-- CLIENT CODE --}}
-                    <div class="col-2 col-lg-2 col-sm-2 text-right">
+                    <div class="col-lg-2 col-sm-2 text-right">
                         <label class="form-control-label required" for="cbx_client_code">Client Code</label>
                     </div>
 
@@ -178,13 +175,13 @@
                     </div>
 
                     {{-- REPORT DATE --}}
-                    <div class="col-2 col-lg-2  col-sm-2 text-right">
+                    <div class="col-lg-2  col-sm-2 text-right">
                         <label class="form-control-label required" for="inline_report_date">Report Date</label>
                     </div>
 
                     <div class="col-2">
                         <input class="form-control" name="report_date" id="inline_report_date"
-                               type="text" placeholder="REPORT DATE" value="{{$report_date ?? ''}}" required>
+                            type="text" placeholder="REPORT DATE" value="{{$report_date ?? ''}}" required>
                     </div>
                 </div>
 
@@ -206,7 +203,7 @@
                     </div>
                     <div class="col-4">
                         <label>
-                            <input class="decoration" name="total_sales_orders" type="number" min="0" max="9999999999">
+                        <input class="decoration" name="total_sales_orders" type="number" min="0" max="9999999999">
                         </label>
                     </div>
                 </div>
@@ -219,7 +216,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="total_sales_amount" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -232,7 +229,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="total_expenses" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -245,7 +242,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="sales_gp" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -277,13 +274,13 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_logistics_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_logistics_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -294,13 +291,13 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_fba_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_fba_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -311,13 +308,13 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_fba_storage_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_fba_storage_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -328,13 +325,13 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_platform_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_platform_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -345,13 +342,13 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_refund_and_resend" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_refund_and_resend" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -362,13 +359,13 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_miscellaneous" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_miscellaneous" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -388,13 +385,13 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_advertisement" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_advertisement" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -405,15 +402,15 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_marketing_and_promotion" type="number"
-                                   step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                step="0.01"
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_marketing_and_promotion" type="number"
                                    step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -429,7 +426,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="avolution_commission" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99" required>
+                                min="-99999999.99" max="99999999.99" required>
                         </label>
                     </div>
                 </div>
@@ -443,7 +440,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="sales_tax_handling" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -457,7 +454,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="extraordinary_item" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -482,7 +479,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="sales_credit" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -496,7 +493,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="opex_invoice" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -510,7 +507,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="fba_storage_fee_invoice" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -524,7 +521,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="final_credit" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
+                                min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -544,8 +541,9 @@
             </form>
 
         </div>
-        <!-- colorbox html part end -->
-        @endsection
+    </div>
+    <!-- colorbox html part end -->
+@endsection
 
         @push('js')
             <script type="text/javascript">
@@ -647,19 +645,21 @@
                         data['report_date'] = $(this).parent().parent().find('[class="report_date"]').text();
                         data['client_code'] = $(this).parent().parent().find('[class="client_code"]').text();
                         data['_token'] = $('meta[name="csrf-token"]').attr('content');
+                        data['billing_statement_id'] = $(this).attr('billing-statement-id');
 
 
                         $.colorbox({
                             iframe: false,
                             // preloading: false,
                             href: origin + '/invoice/edit',
-                            width: "80%",
-                            height: "80%",
+                            width: "70%",
+                            height: "70%",
                             returnFocus: false,
                             data: {
                                 _token: data['_token'],
                                 report_date: data['report_date'],
                                 client_code: data['client_code'],
+                                billing_statement_id: data['billing_statement_id'],
                             },
                             onComplete: function () {
                                 //binding jquery.steps plugin
@@ -667,19 +667,23 @@
                                     doneClass: "",
                                 });
 
-                                $("button#edit_btn").unbind("click");
                                 $("button#inline_submit").unbind("click");
 
                                 $('#cancel_btn').click(function () {
-                                    console.log('x');
-                                    $.colorbox.close();
+                                    $('#cboxOverlay').remove();
+                                    $('#colorbox').remove();
                                 });
 
                                 // prepare Options Object
                                 let options = {
-                                    url: '/invoice/runReport/1',
+                                    url: '/ajax/invoice/export',
                                     responseType: 'blob', // important
                                     type: 'POST',
+                                    beforeSend: function (e) {
+                                        $('#cboxOverlay').remove();
+                                        $('#colorbox').remove();
+                                        $.colorbox.close();
+                                    },
                                     success: function (res) {
                                         let msg = "Your file(s) are being processed.";
                                         msg += "Please check back later.";
@@ -688,16 +692,10 @@
                                         swal({
                                             text: msg,
                                             icon: 'success',
-                                        })
-                                            .then(function (isConfirm) {
-                                                if (isConfirm) {
-                                                    $('#cboxOverlay').remove();
-                                                    $('#colorbox').remove();
-                                                    $.colorbox.close();
-                                                }
-                                            });
+                                        });
 
-                                    }, error: function (e) {
+                                    },
+                                    error: function (e) {
                                         swal({
                                             icon: "error",
                                             text: e
@@ -816,11 +814,20 @@
                     });
 
                     $.ajax({
-                        url: origin + '/invoice/runReport/0',
+                        url: origin + '/ajax/billing-statements',
                         type: 'post',
-                        data: {step_report_date: reportDate, client_code: clientCode},
+                        data: {
+                            report_date: reportDate, 
+                            client_code: clientCode
+                        },
                         success: function (res) {
                             console.log(res);
+                            swal({
+                                text: "Generate Summary Complete!",
+                                icon: "success",
+                                button: "OK",
+                            });
+                            location.reload();
                         }
                     });
                 }
@@ -853,10 +860,11 @@
         @endpush
 
         @push('css')
+            <link type="text/css" href="{{ asset('css/a4lution.css') }}" rel="stylesheet">
             <style>
                 input[class="decoration"] {
                     outline: 0;
                     border-width: 0 0 2px;
                 }
             </style>
-    @endpush
+        @endpush

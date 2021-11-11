@@ -35,79 +35,80 @@
 
     <!-- dataTables css -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.1/css/jquery.dataTables.css">
-@stack('css')
 
-<!-- Argon CSS -->
+    <!-- Argon CSS -->
     <link type="text/css" href="{{ asset('css') }}/argon.css?v=2.0.0" rel="stylesheet">
     <link type="text/css" href="{{ asset('argon') }}/vendor/colorbox/css/colorbox.css" rel="stylesheet">
 
-{{--    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css"/>--}}
+    @stack('css')
 
-<!-- the fileinput plugin styling CSS file -->
+    {{--    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css"/>--}}
+
+    <!-- the fileinput plugin styling CSS file -->
     {{--    <link href="https://cdn.jsdelivr.net/gh/kartik-v/bootstrap-fileinput@5.2.2/css/fileinput.min.css" media="all"--}}
     {{--          rel="stylesheet" type="text/css"/>--}}
 </head>
 <body class="{{ $class ?? '' }}">
-@auth()
-    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-        @csrf
-    </form>
-    @if (!in_array(request()->route()->getName(), ['welcome', 'page.pricing', 'page.lock']))
-        @include('layouts.navbars.sidebar')
-    @endif
-@endauth
+    @auth()
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+            @csrf
+        </form>
+        @if (!in_array(request()->route()->getName(), ['welcome', 'page.pricing', 'page.lock']))
+            @include('layouts.navbars.sidebar')
+        @endif
+    @endauth
 
-<div class="main-content">
-    @include('layouts.navbars.navbar')
-    @yield('content')
-</div>
+    <div class="main-content">
+        @include('layouts.navbars.navbar')
+        @yield('content')
+    </div>
 
-{{--        @if(!auth()->check() || in_array(request()->route()->getName(), ['welcome', 'page.pricing', 'page.lock']))--}}
-{{--            @include('layouts.footers.guest')--}}
-{{--        @endif--}}
+    {{--        @if(!auth()->check() || in_array(request()->route()->getName(), ['welcome', 'page.pricing', 'page.lock']))--}}
+    {{--            @include('layouts.footers.guest')--}}
+    {{--        @endif--}}
 
-<!-- sweetalert JS -->
-<script src="{{ asset('js') }}/sweetalert.min.js"></script>
+    <!-- sweetalert JS -->
+    <script src="{{ asset('js') }}/sweetalert.min.js"></script>
 
-{{--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>--}}
-<script src="{{ asset('argon') }}/vendor/jquery/dist/jquery-1.9.1.js"></script>
-<script src="{{ asset('argon') }}/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ asset('argon') }}/vendor/js-cookie/js.cookie.js"></script>
-<script src="{{ asset('argon') }}/vendor/jquery.scrollbar/jquery.scrollbar.min.js"></script>
-<script src="{{ asset('argon') }}/vendor/jquery-scroll-lock/dist/jquery-scrollLock.min.js"></script>
-{{--<script src="{{ asset('argon') }}/vendor/lavalamp/js/jquery.lavalamp.min.js"></script>--}}
+    {{--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>--}}
+    <script src="{{ asset('argon') }}/vendor/jquery/dist/jquery-1.9.1.js"></script>
+    <script src="{{ asset('argon') }}/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ asset('argon') }}/vendor/js-cookie/js.cookie.js"></script>
+    <script src="{{ asset('argon') }}/vendor/jquery.scrollbar/jquery.scrollbar.min.js"></script>
+    <script src="{{ asset('argon') }}/vendor/jquery-scroll-lock/dist/jquery-scrollLock.min.js"></script>
+    {{--<script src="{{ asset('argon') }}/vendor/lavalamp/js/jquery.lavalamp.min.js"></script>--}}
 
-<!-- Optional JS -->
-<script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.min.js"></script>
-<script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.extension.js"></script>
+    <!-- Optional JS -->
+    <script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.min.js"></script>
+    <script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.extension.js"></script>
 
-<!-- jquery colorbox JS -->
-<script src="{{ asset('argon') }}/vendor/colorbox/js/jquery.colorbox.js"></script>
+    <!-- jquery colorbox JS -->
+    <script src="{{ asset('argon') }}/vendor/colorbox/js/jquery.colorbox.js"></script>
 
-<!-- Argon JS -->
-<script src="{{ asset('argon') }}/js/argon.js?v=1.0.1"></script>
-<script src="{{ asset('argon') }}/js/demo.min.js"></script>
-<!-- the main fileinput plugin script JS file -->
-{{--<script src="https://cdn.jsdelivr.net/gh/kartik-v/bootstrap-fileinput@5.2.2/js/fileinput.min.js"></script>--}}
+    <!-- Argon JS -->
+    <script src="{{ asset('argon') }}/js/argon.js?v=1.0.1"></script>
+    <script src="{{ asset('argon') }}/js/demo.min.js"></script>
+    <!-- the main fileinput plugin script JS file -->
+    {{--<script src="https://cdn.jsdelivr.net/gh/kartik-v/bootstrap-fileinput@5.2.2/js/fileinput.min.js"></script>--}}
 
-{{--<script src="https://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>--}}
-<script src="{{ asset('argon') }}/js/jquery-ui_1.11.1.js"></script>
-<script src="{{ asset('argon') }}/js/jquery-migrate-1.4.0.js"></script>
-{{--<script src="http://code.jquery.com/jquery-migrate-1.4.0.js"></script>--}}
+    {{--<script src="https://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>--}}
+    <script src="{{ asset('argon') }}/js/jquery-ui_1.11.1.js"></script>
+    <script src="{{ asset('argon') }}/js/jquery-migrate-1.4.0.js"></script>
+    {{--<script src="http://code.jquery.com/jquery-migrate-1.4.0.js"></script>--}}
 
-<!-- jquery.form JS -->
-<script src="{{ asset('argon') }}/js/jquery.form_4.3.0.js"></script>
-{{--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.3.0/jquery.form.min.js"--}}
-{{--        integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4ycVxyn"--}}
-{{--        crossorigin="anonymous"></script>--}}
+    <!-- jquery.form JS -->
+    <script src="{{ asset('argon') }}/js/jquery.form_4.3.0.js"></script>
+    {{--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.3.0/jquery.form.min.js"--}}
+    {{--        integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4ycVxyn"--}}
+    {{--        crossorigin="anonymous"></script>--}}
 
-<script src="{{ asset('argon') }}/vendor/select2/dist/js/select2.min.js"></script>
-<script src="{{ asset('argon') }}/vendor/datatables.net/js/jquery.dataTables.min.js"></script>
-<script src="{{ asset('argon') }}/vendor/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+    <script src="{{ asset('argon') }}/vendor/select2/dist/js/select2.min.js"></script>
+    <script src="{{ asset('argon') }}/vendor/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="{{ asset('argon') }}/vendor/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
 
-<!-- dataTables JS -->
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.1/js/jquery.dataTables.js"></script>
-@stack('js')
+    <!-- dataTables JS -->
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.1/js/jquery.dataTables.js"></script>
+    @stack('js')
 </body>
 </html>
 

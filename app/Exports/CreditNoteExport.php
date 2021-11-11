@@ -82,7 +82,7 @@ class CreditNoteExport implements WithTitle, WithEvents
                 $event->sheet->SetCellValue("E9", $invoice->credit_note_no);
 
                 $event->sheet->SetCellValue("D10", 'Issue Date:');
-                $event->sheet->SetCellValue("E10", date('d-M-y', strtotime($this->reportDate)));
+                $event->sheet->SetCellValue("E10", $invoice->issue_date->format('d-M-y'));
 
                 $event->sheet->SetCellValue("B16", 'Item');
                 $event->sheet->SetCellValue("C16", 'Description');
@@ -113,7 +113,7 @@ class CreditNoteExport implements WithTitle, WithEvents
                 $event->sheet->SetCellValue("C19", $desc);
                 $event->sheet->SetCellValue("F19", "-HKD  {$billing->a4_account_refund_and_resend}");
 
-                $total = (float)$billing->a4_account_refund_and_resend + (float)$billing->total_sales_amount;
+                $total = (float) -$billing->a4_account_refund_and_resend + (float) $billing->total_sales_amount;
                 $event->sheet->SetCellValue("B20", 'Total');
                 $event->sheet->SetCellValue("F20", "HKD  {$total}");
             }
