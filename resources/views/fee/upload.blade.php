@@ -23,10 +23,10 @@
                 <form method="GET" action="/fee/upload" role="form" class="form">
                     <div class="row">
 
-                        {{-- Date --}}
+                        {{-- Created At --}}
                         <div class="col-lg-2 col-md-6 col-sm-6">
                             <div class="form-group mb-0">
-                                <label class="form-control-label _fz-1" for="input_date">Date</label>
+                                <label class="form-control-label _fz-1" for="input_date">Created At</label>
                                 <input class="form-control _fz-1" name="search_date" id="input_date"
                                        placeholder="date" type="text" value="{{ $createdAt }}">
                             </div>
@@ -124,7 +124,7 @@
                 <table class="table table-sm _table" id="datatable-basic">
                     <thead class="thead-light">
                     <tr>
-                        <th>Date</th>
+                        <th>Created At</th>
                         <th>User</th>
                         <th>Report Date</th>
                         <th>Fee Type</th>
