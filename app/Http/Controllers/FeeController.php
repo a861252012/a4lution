@@ -471,7 +471,6 @@ class FeeController extends Controller
                 'e.updated_at',
                 'u.full_name as updated_by'
             )
-            ->where('e.active', 1)
             ->when($data['clientCode'], function ($q, $clientCode) {
                 return $q->where('e.client_code', $clientCode);
             })
@@ -572,9 +571,6 @@ class FeeController extends Controller
             'item_amount'
         );
         $data['report_date'] = Carbon::parse($data['report_date'])->format('Y-m-d');
-        $data['created_by'] = Auth::id();
-        $data['updated_by'] = Auth::id();
-        $data['active'] = 1;
 
         try {
             ExtraordinaryItems::create($data);
@@ -601,7 +597,6 @@ class FeeController extends Controller
     {
         $id = request()->route('id');
         $data = request()->except(['_token', '_method']);
-        $data['updated_by'] = Auth::id();
         $data['report_date'] = Carbon::parse($data['report_date'])->format('Y-m-d');
 
         try {
@@ -639,9 +634,6 @@ class FeeController extends Controller
         );
 
         $data['report_date'] = Carbon::parse($data['report_date'])->format('Y-m-d');
-        $data['created_by'] = Auth::id();
-        $data['updated_by'] = Auth::id();
-        $data['active'] = 1;
 
         try {
             ExtraordinaryItems::create($data);

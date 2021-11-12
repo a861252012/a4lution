@@ -251,8 +251,7 @@ class BillingStatementsService
 
         $billingItems['total_sales_amount'] = $sumOfSalesAmount ? round($sumOfSalesAmount[0]->total_sales_hkd, 2) : 0;
 
-        $fees['extraordinary_item'] = ExtraordinaryItems::where('active', 1)
-            ->where('report_date', $reportDate)
+        $fees['extraordinary_item'] = ExtraordinaryItems::where('report_date', $reportDate)
             ->where('client_code', $clientCode)
             ->groupBy('client_code', 'report_date')
             ->get()
