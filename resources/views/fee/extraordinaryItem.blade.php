@@ -172,7 +172,7 @@
                         <label class="form-control-label" for="inline_report_date">Report Date</label>
                     </div>
                     <div class="col-4 form-group">
-                        <input class="form-control" id="inline_report_date" placeholder="report date" type="text"
+                        <input class="form-control" id="inline_report_date" placeholder="Report Date" type="text"
                                name="report_date" required>
                     </div>
                 </div>
@@ -205,7 +205,7 @@
                         <label class="form-control-label" for="inline_item_name">Item Name</label>
                     </div>
                     <div class="col-4 form-group">
-                        <input class="form-control" id="inline_item_name" placeholder="item name" type="text"
+                        <input class="form-control" id="inline_item_name" placeholder="Item Name" type="text"
                                name="item_name">
                     </div>
                 </div>
@@ -313,6 +313,8 @@
 
                         $("#cbx_title").text("New Extraordinary Item");
                         $("#inline_id").text('');
+                        $("#last_updated_at").text('');
+                        $("#last_updated_by").text('');
 
                         let _token = $('meta[name="csrf-token"]').attr('content');
 
@@ -637,8 +639,8 @@
                         $("#inline_receivable").val(data.receivableAmount);
                         $("#inline_payable").val(data.payableAmount);
                         $("#inline_total").val(data.totalAmount);
-                        $("#last_updated_at").val(data.updatedAt);
-                        $("#last_updated_by").val(data.updatedBy);
+                        $("#last_updated_at").text(data.updatedAt);
+                        $("#last_updated_by").text(data.updatedBy);
                         $("#cbx_title").text("Edit Extraordinary Items");
 
                         //submit

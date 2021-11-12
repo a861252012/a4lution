@@ -2,8 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\orderSkuCostDetails;
-use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Console\Command;
 use App\Repositories\OrdersRepository;
@@ -30,12 +28,6 @@ class OrderDataSync extends Command
 
     private const EB_ACCOUNT = 'IT2';
     private const EB_PWD = 'AbAO@12';
-    private $headers = [
-        "Content-type: text/xml;charset=\"utf-8\"",
-        'Accept: text/xml',
-        'Cache-Control: no-cache',
-        'Pragma: no-cache'
-    ];
 
     private $ordersRepository;
     private $orderProductsRepository;
@@ -53,8 +45,7 @@ class OrderDataSync extends Command
         OrderProductsRepository       $orderProductsRepository,
         OrderSkuCostDetailsRepository $orderSkuCostDetailsRepository,
         AmazonReportListRepository    $amazonReportListRepository
-    )
-    {
+    ) {
         parent::__construct();
         $this->ordersRepository = $ordersRepository;
         $this->orderProductsRepository = $orderProductsRepository;
@@ -68,19 +59,8 @@ class OrderDataSync extends Command
      */
     public function handle()
     {
-//        $i = 1;
-//        while ($i <= 21):
-//            $startDateTime = gmdate('Y-m-d 00:00:00');
-        $startDateTime = '2021-08-31 00:00:00';
-        $endDateTime = '2021-08-31 23:59:59';
-
-//        $startDateTime = new Carbon($startDateTime);
-//        $endDateTime = new Carbon($endDateTime);
-
-//        \Log::channel('daily_order_sync')
-//            ->info("[daily_order_sync.start: ]" . date("Y-m-d H:i:s"))
-//            ->info("[daily_order_sync.startTime]" . $startDateTime)
-//            ->info("[daily_order_sync.endTime]" . $endDateTime);
+        $startDateTime = date("Y-m-d 00:00:00");
+        $endDateTime = date("Y-m-d 23:59:59");
 
         $pageSize = 500;
         $orderCostParamsArr = array();//儲存請求getOrderCostDetailSku的參數.
@@ -286,18 +266,6 @@ class OrderDataSync extends Command
                     unset($tempCostDetailArr);
                 }
             }
-//            foreach (array_chunk($costDetailArray, 10) as $items) {
-//                $insertCostDetail = $this->orderSkuCostDetailsRepository->insertData($items);
-//
-//                if (!$insertCostDetail) {
-//                    \Log::channel('daily_order_sync')
-//                        ->info("[daily_order_sync.insertCostDetail]" . $insertCostDetail);
-//                    DB::rollBack();
-//
-//                    return false;
-//                }
-//            }
-
 
             foreach ($costDetailArray as $items) {
                 $isDuplicated = $this->orderSkuCostDetailsRepository->checkIfSkuDetailDuplicated(
@@ -470,11 +438,8 @@ class OrderDataSync extends Command
         }
         DB::commit();
 
-//        $startDateTime->addDays($i)->toDateTimeString();
-//        $endDateTime->addDays($i)->toDateTimeString();
         \Log::channel('daily_order_sync')
             ->info("[daily_order_sync.endTime]" . date("Y-m-d H:i:s"));
-//        endwhile;
     }
 
     private function genXML(string $paramsJson, string $userName, string $userPass, string $serviceName): string
@@ -520,13 +485,21 @@ EOF;
         ]);
     }
 
-    private function sendERPRequest(string $url, string $serviceName, array $customParam = [], $startDateTime = "", string $endDateTime = "", int $pageSize = 100, int $page = 1): array
-    {
-        if ($customParam) {
-            $jsonParams = json_encode($customParam);
-        } else {
-            $jsonParams = $this->formatParams($startDateTime, $endDateTime, $page, $pageSize);
-        }
+    private function sendERPRequest(
+        string $url,
+        string $serviceName,
+        array  $customParam = [],
+        string $startDateTime = "",
+        string $endDateTime = "",
+        int    $pageSize = 100,
+        int    $page = 1
+    ) {
+        $jsonParams = $customParam ? json_encode($customParam) : $this->formatParams(
+            $startDateTime,
+            $endDateTime,
+            $page,
+            $pageSize
+        );
 
         \Log::channel('daily_order_sync')
             ->info("[daily_order_sync.{$serviceName}.reqJSON]" . $jsonParams);
@@ -595,6 +568,5 @@ EOF;
             return 0;
         }
         return $this->getFloatVal(($principal - $promotionAmount) / $principal);
-//        return $this->getFloatVal(1 - ($promotionAmount / $principal));
     }
 }

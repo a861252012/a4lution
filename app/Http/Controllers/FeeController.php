@@ -451,36 +451,40 @@ class FeeController extends Controller
         $data['clientCode'] = $request->input('client_code') ?? null;
         $data['reportDate'] = $request->input('report_date') ?? null;
 
-        $query = ExtraordinaryItems::query()
+        $data['lists'] = ExtraordinaryItems::from('extraordinary_items as e')
+            ->leftJoin('users as u', function ($join) {
+                $join->on('u.id', '=', 'e.updated_by');
+                $join->where('u.active', 1);
+            })
             ->select(
-                'id',
-                'client_code',
-                'report_date',
-                'item_name',
-                'description',
-                'currency_code',
-                'receivable_amount',
-                'payable_amount',
-                'item_amount',
-                'created_at',
-                'created_by',
-                'updated_at',
-                'updated_by'
+                'e.id',
+                'e.client_code',
+                DB::raw("date_format(e.report_date,'%b-%Y') as report_date"),
+                'e.item_name',
+                'e.description',
+                'e.currency_code',
+                'e.receivable_amount',
+                'e.payable_amount',
+                'e.item_amount',
+                'e.created_at',
+                'e.created_by',
+                'e.updated_at',
+                'u.full_name as updated_by'
             )
-            ->where('active', 1);
-
-        if ($data['clientCode']) {
-            $query->where('client_code', $data['clientCode']);
-        }
-
-        if ($data['reportDate']) {
-            $dateFrom = date('Y-m-d 00:00:00', strtotime($data['reportDate']));
-            $dateTo = date('Y-m-d 23:59:59', strtotime($data['reportDate']));
-
-            $query->whereBetween('report_date', [$dateFrom, $dateTo]);
-        }
-
-        $data['lists'] = $query->orderBy('id', 'desc')
+            ->where('e.active', 1)
+            ->when($data['clientCode'], function ($q, $clientCode) {
+                return $q->where('e.client_code', $clientCode);
+            })
+            ->when($data['reportDate'], function ($q, $reportDate) {
+                return $q->whereBetween(
+                    'e.report_date',
+                    [
+                        Carbon::parse($reportDate)->format('Y-m-d 00:00:00'),
+                        Carbon::parse($reportDate)->format('Y-m-d 23:59:59')
+                    ]
+                );
+            })
+            ->orderBy('e.id', 'desc')
             ->paginate(50);
 
         return view('fee.extraordinaryItem', $data);
@@ -557,8 +561,6 @@ class FeeController extends Controller
 
     public function createExtraordinaryItem(Request $request): JsonResponse
     {
-        $datetime = date('Y-m-d h:i:s');
-        $userID = Auth::id();
         $data = $request->only(
             'report_date',
             'client_code',
@@ -570,14 +572,12 @@ class FeeController extends Controller
             'item_amount'
         );
         $data['report_date'] = Carbon::parse($data['report_date'])->format('Y-m-d');
-        $data['created_at'] = $datetime;
-        $data['created_by'] = $userID;
-        $data['updated_at'] = $datetime;
-        $data['updated_by'] = $userID;
+        $data['created_by'] = Auth::id();
+        $data['updated_by'] = Auth::id();
         $data['active'] = 1;
 
         try {
-            ExtraordinaryItems::insert($data);
+            ExtraordinaryItems::create($data);
 
             return response()->json(
                 [
@@ -627,7 +627,6 @@ class FeeController extends Controller
 
     public function extraordinaryCreate(Request $request): JsonResponse
     {
-        $userID = Auth::id();
         $data = $request->only(
             'report_date',
             'client_code',
@@ -640,14 +639,12 @@ class FeeController extends Controller
         );
 
         $data['report_date'] = Carbon::parse($data['report_date'])->format('Y-m-d');
-        $data['created_at'] = date('Y-m-d h:i:s');
-        $data['created_by'] = $userID;
-        $data['updated_at'] = date('Y-m-d h:i:s');
-        $data['updated_by'] = $userID;
+        $data['created_by'] = Auth::id();
+        $data['updated_by'] = Auth::id();
         $data['active'] = 1;
 
         try {
-            ExtraordinaryItems::insert($data);
+            ExtraordinaryItems::create($data);
 
             return response()->json(
                 [
@@ -670,17 +667,22 @@ class FeeController extends Controller
     public function preValidation(Request $request): JsonResponse
     {
         //check if monthly report exist
-        $formattedDate = date('Ym', strtotime($request->route('date')));
         $hasMonthlyBilling = $this->billingStatements
             ->active()
-            ->where(DB::raw("DATE_FORMAT(report_date,'%Y%m')"), $formattedDate)
+            ->where(
+                DB::raw("DATE_FORMAT(report_date,'%Y%m')"),
+                Carbon::parse($request->route('date'))->format('Ym')
+            )
             ->count();
 
         if ($hasMonthlyBilling) {
+            $formattedDate = Carbon::parse($request->route('date'))->format('Y-m');
+
             return response()->json(
                 [
                     'status' => 403,
-                    'msg' => "The selected report date {$formattedDate} was closed"
+                    'msg' => "The {$formattedDate} sales summary was generated.
+                              Please delete the sales summary and reupload it."
                 ]
             );
         }
