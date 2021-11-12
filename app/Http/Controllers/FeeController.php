@@ -669,9 +669,9 @@ class FeeController extends Controller
         //check if monthly report exist
         $hasMonthlyBilling = $this->billingStatements
             ->active()
-            ->where(
-                DB::raw("DATE_FORMAT(report_date,'%Y%m')"),
-                Carbon::parse($request->route('date'))->format('Ym')
+            ->whereRaw(
+                "DATE_FORMAT(report_date,'%Y%m') = ?",
+                [Carbon::parse($request->route('date'))->format('Ym')]
             )
             ->count();
 
