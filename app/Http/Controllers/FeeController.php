@@ -471,6 +471,8 @@ class FeeController extends Controller
                 'e.updated_at',
                 'u.full_name as updated_by'
             )
+            ->withoutGlobalScope('isActive')
+            ->where('e.active', 1)
             ->when($data['clientCode'], function ($q, $clientCode) {
                 return $q->where('e.client_code', $clientCode);
             })
