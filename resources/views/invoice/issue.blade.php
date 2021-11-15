@@ -8,7 +8,7 @@
             @slot('title')
                 {{ __('INVOICE') }}
             @endslot
-            <li class="breadcrumb-item"><a href="{{ route('page.index', 'components') }}">{{ __('INVOICE') }}</a>
+            <li class="breadcrumb-item"><a href="{{ route('invoice.issue.view') }}">{{ __('INVOICE') }}</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">{{ __('ISSUE') }}</li>
         @endcomponent
@@ -43,7 +43,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="search_report_date">Report Date</label>
                                 <input class="form-control _fz-1" name="report_date" id="search_report_date"
-                                    type="text" placeholder="REPORT DATE" value="{{$report_date ?? ''}}">
+                                       type="text" placeholder="REPORT DATE" value="{{$report_date ?? ''}}">
                             </div>
                         </div>
 
@@ -73,7 +73,7 @@
                             <div class="form-group mb-0">
                                 <a id="create_sales_btn" href="#inline_content">
                                     <button class="form-control _fz-1 btn _btn btn-success"
-                                        type="button" style="margin-top: 6px;">Generate Sales Summary
+                                            type="button" style="margin-top: 6px;">Generate Sales Summary
                                     </button>
                                 </a>
                             </div>
@@ -112,8 +112,8 @@
                             <td class="total_expenses">{{ $item->total_expenses ?? '' }}</td>
                             <td>
                                 <button class="btn btn-primary issue_btn btn-sm _fz-1" type="button"
-                                    billing-statement-id="{{ $item->id }}"
-                                    @if($item->commission_type === "manual") {{ 'disabled' }} @endif>
+                                        billing-statement-id="{{ $item->id }}"
+                                @if($item->commission_type === "manual") {{ 'disabled' }} @endif>
                                     <span class="btn-inner--text">Issue Invoice</span>
                                 </button>
                                 <button class="btn btn-danger delete_btn btn-sm _fz-1" type="button">
@@ -126,13 +126,13 @@
                     </tbody>
                 </table>
 
-                
+
             </div>
             {{-- Pagination --}}
             @if($lists && $lists->lastPage() > 1)
                 <div class="d-flex justify-content-center" style='margin-top: 20px;'>
                     {{ $lists->appends($_GET)->links() }}
-                </div>      
+                </div>
             @endif
         </div>
         <!-- ./Card -->
@@ -181,7 +181,7 @@
 
                     <div class="col-2">
                         <input class="form-control" name="report_date" id="inline_report_date"
-                            type="text" placeholder="REPORT DATE" value="{{$report_date ?? ''}}" required>
+                               type="text" placeholder="REPORT DATE" value="{{$report_date ?? ''}}" required>
                     </div>
                 </div>
 
@@ -203,7 +203,7 @@
                     </div>
                     <div class="col-4">
                         <label>
-                        <input class="decoration" name="total_sales_orders" type="number" min="0" max="9999999999">
+                            <input class="decoration" name="total_sales_orders" type="number" min="0" max="9999999999">
                         </label>
                     </div>
                 </div>
@@ -216,7 +216,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="total_sales_amount" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -229,7 +229,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="total_expenses" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -242,7 +242,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="sales_gp" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -274,13 +274,13 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_logistics_fee" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_logistics_fee" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -291,13 +291,13 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_fba_fee" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_fba_fee" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -308,13 +308,13 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_fba_storage_fee" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_fba_storage_fee" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -325,13 +325,13 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_platform_fee" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_platform_fee" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -342,13 +342,13 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_refund_and_resend" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_refund_and_resend" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -359,13 +359,13 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_miscellaneous" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_miscellaneous" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -385,13 +385,13 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_advertisement" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_advertisement" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -402,15 +402,15 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="a4_account_marketing_and_promotion" type="number"
-                                step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   step="0.01"
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="client_account_marketing_and_promotion" type="number"
                                    step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -426,7 +426,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="avolution_commission" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99" required>
+                                   min="-99999999.99" max="99999999.99" required>
                         </label>
                     </div>
                 </div>
@@ -440,7 +440,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="sales_tax_handling" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -454,7 +454,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="extraordinary_item" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -479,7 +479,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="sales_credit" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -493,7 +493,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="opex_invoice" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -507,7 +507,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="fba_storage_fee_invoice" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -521,7 +521,7 @@
                     <div class="col-4">
                         <label>
                             <input class="decoration" name="final_credit" type="number" step="0.01"
-                                min="-99999999.99" max="99999999.99">
+                                   min="-99999999.99" max="99999999.99">
                         </label>
                     </div>
                 </div>
@@ -545,325 +545,325 @@
     <!-- colorbox html part end -->
 @endsection
 
-        @push('js')
-            <script type="text/javascript">
-                $(function () {
-                    $('#inline_report_date').datepicker({
-                        format: 'yyyy-mm',//日期時間格式
-                        viewMode: "months",
-                        minViewMode: "months",
-                        ignoreReadonly: false,  //禁止使用者輸入 啟用唯讀
-                        autoclose: true
-                    });
+@push('js')
+    <script type="text/javascript">
+        $(function () {
+            $('#inline_report_date').datepicker({
+                format: 'yyyy-mm',//日期時間格式
+                viewMode: "months",
+                minViewMode: "months",
+                ignoreReadonly: false,  //禁止使用者輸入 啟用唯讀
+                autoclose: true
+            });
 
-                    $("#cbx_form").submit(function (e) {
-                        e.preventDefault();
+            $("#cbx_form").submit(function (e) {
+                e.preventDefault();
 
-                        let reportDate = $('#inline_report_date').val();
-                        let clientCode = $('#cbx_client_code').find(":selected").val();
+                let reportDate = $('#inline_report_date').val();
+                let clientCode = $('#cbx_client_code').find(":selected").val();
 
-                        $.ajaxSetup({
-                            headers: {
-                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+
+                let ajaxFormOption = {
+                    type: "post", //提交方式
+                    data: {client_code: clientCode}, //提交方式
+                    url: origin + "/invoice/createBill",
+                    success: function (res) { //提交成功的回撥函式
+                        console.log(res);
+                        console.log('form');
+                        let icon = 'success';
+                        if (res.status !== 200) {
+                            icon = 'error';
+                        }
+                        swal({
+                            icon: icon,
+                            text: res.msg
+                        }).then(function (isConfirm) {
+                            if (isConfirm) {
+                                $.colorbox.close();
                             }
                         });
+                    }, error: function (e) {
+                        console.log('error');
+                        console.log(e);
+                        swal({
+                            icon: 'error',
+                            text: e
+                        });
+                    }
+                };
 
-                        let ajaxFormOption = {
-                            type: "post", //提交方式
-                            data: {client_code: clientCode}, //提交方式
-                            url: origin + "/invoice/createBill",
-                            success: function (res) { //提交成功的回撥函式
-                                console.log(res);
-                                console.log('form');
-                                let icon = 'success';
-                                if (res.status !== 200) {
-                                    icon = 'error';
-                                }
-                                swal({
-                                    icon: icon,
-                                    text: res.msg
-                                }).then(function (isConfirm) {
+                $.ajax({
+                    url: origin + '/invoice/validation/' + reportDate + '/' + clientCode,
+                    type: 'get',
+                    success: function (res) {
+                        if (res.status === 200) {
+                            $("#cbx_form").ajaxSubmit(ajaxFormOption);
+                        } else if (res.status === 202) {
+                            swal({
+                                title: "Are you sure ?",
+                                text: (res.msg),
+                                icon: 'warning',
+                                buttons: true,
+                                buttons: ["No,Cancel Plx!", "Yes,Delete it!"]
+                            })
+                                .then(function (isConfirm) {
                                     if (isConfirm) {
-                                        $.colorbox.close();
+                                        deleteIssue(reportDate);
+                                        $("#cbx_form").ajaxSubmit(ajaxFormOption);
                                     }
                                 });
-                            }, error: function (e) {
-                                console.log('error');
-                                console.log(e);
+                        } else {
+                            swal({
+                                icon: 'warning',
+                                text: res.msg
+                            });
+                            return false;
+                        }
+                    }
+                });
+            });
+
+            $('#cbx_cancel_btn').click(function () {
+                $.colorbox.close();
+            });
+
+            $('#search_report_date').datepicker({
+                format: 'yyyy-mm',//日期時間格式
+                viewMode: "months",
+                minViewMode: "months",
+                ignoreReadonly: false,  //禁止使用者輸入 啟用唯讀
+                autoclose: true
+            });
+
+            $('button.issue_btn').click(function () {
+                let data = [];
+                data['report_date'] = $(this).parent().parent().find('[class="report_date"]').text();
+                data['client_code'] = $(this).parent().parent().find('[class="client_code"]').text();
+                data['_token'] = $('meta[name="csrf-token"]').attr('content');
+                data['billing_statement_id'] = $(this).attr('billing-statement-id');
+
+
+                $.colorbox({
+                    iframe: false,
+                    // preloading: false,
+                    href: origin + '/invoice/edit',
+                    width: "70%",
+                    height: "70%",
+                    returnFocus: false,
+                    data: {
+                        _token: data['_token'],
+                        report_date: data['report_date'],
+                        client_code: data['client_code'],
+                        billing_statement_id: data['billing_statement_id'],
+                    },
+                    onComplete: function () {
+                        //binding jquery.steps plugin
+                        $('#steps-nav').steps({
+                            doneClass: "",
+                        });
+
+                        $("button#inline_submit").unbind("click");
+
+                        $('#cancel_btn').click(function () {
+                            $('#cboxOverlay').remove();
+                            $('#colorbox').remove();
+                        });
+
+                        // prepare Options Object
+                        let options = {
+                            url: '/ajax/invoice/export',
+                            responseType: 'blob', // important
+                            type: 'POST',
+                            beforeSend: function (e) {
+                                $('#cboxOverlay').remove();
+                                $('#colorbox').remove();
+                                $.colorbox.close();
+                            },
+                            success: function (res) {
+                                let msg = "Your file(s) are being processed.";
+                                msg += "Please check back later.";
+                                msg += "Go to your invoice list to get status information for all of your reports";
+
                                 swal({
-                                    icon: 'error',
+                                    text: msg,
+                                    icon: 'success',
+                                });
+
+                            },
+                            error: function (e) {
+                                swal({
+                                    icon: "error",
                                     text: e
                                 });
                             }
                         };
 
-                        $.ajax({
-                            url: origin + '/invoice/validation/' + reportDate + '/' + clientCode,
-                            type: 'get',
-                            success: function (res) {
-                                if (res.status === 200) {
-                                    $("#cbx_form").ajaxSubmit(ajaxFormOption);
-                                } else if (res.status === 202) {
-                                    swal({
-                                        title: "Are you sure ?",
-                                        text: (res.msg),
-                                        icon: 'warning',
-                                        buttons: true,
-                                        buttons: ["No,Cancel Plx!", "Yes,Delete it!"]
-                                    })
-                                        .then(function (isConfirm) {
-                                            if (isConfirm) {
-                                                deleteIssue(reportDate);
-                                                $("#cbx_form").ajaxSubmit(ajaxFormOption);
-                                            }
-                                        });
-                                } else {
-                                    swal({
-                                        icon: 'warning',
-                                        text: res.msg
-                                    });
-                                    return false;
-                                }
-                            }
-                        });
-                    });
-
-                    $('#cbx_cancel_btn').click(function () {
-                        $.colorbox.close();
-                    });
-
-                    $('#search_report_date').datepicker({
-                        format: 'yyyy-mm',//日期時間格式
-                        viewMode: "months",
-                        minViewMode: "months",
-                        ignoreReadonly: false,  //禁止使用者輸入 啟用唯讀
-                        autoclose: true
-                    });
-
-                    $('button.issue_btn').click(function () {
-                        let data = [];
-                        data['report_date'] = $(this).parent().parent().find('[class="report_date"]').text();
-                        data['client_code'] = $(this).parent().parent().find('[class="client_code"]').text();
-                        data['_token'] = $('meta[name="csrf-token"]').attr('content');
-                        data['billing_statement_id'] = $(this).attr('billing-statement-id');
-
-
-                        $.colorbox({
-                            iframe: false,
-                            // preloading: false,
-                            href: origin + '/invoice/edit',
-                            width: "70%",
-                            height: "70%",
-                            returnFocus: false,
-                            data: {
-                                _token: data['_token'],
-                                report_date: data['report_date'],
-                                client_code: data['client_code'],
-                                billing_statement_id: data['billing_statement_id'],
-                            },
-                            onComplete: function () {
-                                //binding jquery.steps plugin
-                                $('#steps-nav').steps({
-                                    doneClass: "",
-                                });
-
-                                $("button#inline_submit").unbind("click");
-
-                                $('#cancel_btn').click(function () {
-                                    $('#cboxOverlay').remove();
-                                    $('#colorbox').remove();
-                                });
-
-                                // prepare Options Object
-                                let options = {
-                                    url: '/ajax/invoice/export',
-                                    responseType: 'blob', // important
-                                    type: 'POST',
-                                    beforeSend: function (e) {
-                                        $('#cboxOverlay').remove();
-                                        $('#colorbox').remove();
-                                        $.colorbox.close();
-                                    },
-                                    success: function (res) {
-                                        let msg = "Your file(s) are being processed.";
-                                        msg += "Please check back later.";
-                                        msg += "Go to your invoice list to get status information for all of your reports";
-
-                                        swal({
-                                            text: msg,
-                                            icon: 'success',
-                                        });
-
-                                    },
-                                    error: function (e) {
-                                        swal({
-                                            icon: "error",
-                                            text: e
-                                        });
-                                    }
-                                };
-
-                                // pass options to ajaxForm
-                                $('#step_form').ajaxForm(options);
-                            }.bind(this)
-                        });
-                    });
-
-                    $('button.delete_btn').click(function () {
-                        let _token = $('meta[name="csrf-token"]').attr('content');
-                        let id = $(this).parent().parent().find('[name="bill_state_id"]').val();
-                        console.log(id);
-
-                        $.ajaxSetup({
-                            headers: {
-                                'X-CSRF-TOKEN': _token
-                            }
-                        });
-
-                        $.ajax({
-                            url: origin + '/invoice/issue/byID/' + id,
-                            type: 'delete',
-                            success: function (res) {
-                                swal({
-                                    icon: res.icon,
-                                    text: res.msg
-                                });
-                            }, error: function (e) {
-                                swal({
-                                    icon: 'error',
-                                    text: e
-                                });
-                            }
-                        });
-                    });
+                        // pass options to ajaxForm
+                        $('#step_form').ajaxForm(options);
+                    }.bind(this)
                 });
+            });
 
-                $('button#gen_sales_btn').click(function () {
-                    let reportDate = $('#search_report_date').val();
-                    let clientCode = $("#sel_client_code option:selected").val();
-                    let _token = $('meta[name="csrf-token"]').attr('content');
+            $('button.delete_btn').click(function () {
+                let _token = $('meta[name="csrf-token"]').attr('content');
+                let id = $(this).parent().parent().find('[name="bill_state_id"]').val();
+                console.log(id);
 
-                    if (!reportDate || !clientCode) {
-                        swal({
-                            icon: "error",
-                            text: "report date and client code can't be empty"
-                        });
-                        return;
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': _token
                     }
-
-                    $.ajaxSetup({
-                        headers: {
-                            'X-CSRF-TOKEN': _token
-                        }
-                    });
-
-                    $.ajax({
-                        url: origin + '/invoice/validation/' + reportDate + '/' + clientCode,
-                        type: 'get',
-                        success: function (res) {
-                            if (res.status === 200) {
-                                swal({
-                                    icon: 'success',
-                                    text: 'processing'
-                                });
-                                ajaxRunBillingStatement();
-
-                            } else if (res.status === 202) {
-                                swal({
-                                    title: "Are you sure ?",
-                                    text: (res.msg),
-                                    icon: 'warning',
-                                    buttons: true,
-                                    buttons: ["No,Cancel Plx!", "Yes,Delete it!"]
-                                })
-                                    .then(function (isConfirm) {
-                                        if (isConfirm) {
-
-                                            swal({
-                                                text: "processing!",
-                                                icon: "success",
-                                                button: "OK",
-                                            });
-
-                                            deleteIssue(reportDate);
-                                            ajaxRunBillingStatement();
-                                        }
-                                    });
-                            } else {
-                                swal({
-                                    icon: 'warning',
-                                    text: res.msg
-                                });
-                                return false;
-                            }
-                        }
-                    });
                 });
 
-                $("#create_sales_btn").colorbox({inline: true, width: "60%", height: "80%", closeButton: true});
+                $.ajax({
+                    url: origin + '/invoice/issue/byID/' + id,
+                    type: 'delete',
+                    success: function (res) {
+                        swal({
+                            icon: res.icon,
+                            text: res.msg
+                        });
+                    }, error: function (e) {
+                        swal({
+                            icon: 'error',
+                            text: e
+                        });
+                    }
+                });
+            });
+        });
 
-                function ajaxRunBillingStatement() {
-                    let reportDate = $('#search_report_date').val();
-                    let clientCode = $("#sel_client_code option:selected").val();
-                    let _token = $('meta[name="csrf-token"]').attr('content');
+        $('button#gen_sales_btn').click(function () {
+            let reportDate = $('#search_report_date').val();
+            let clientCode = $("#sel_client_code option:selected").val();
+            let _token = $('meta[name="csrf-token"]').attr('content');
 
-                    $.ajaxSetup({
-                        headers: {
-                            'X-CSRF-TOKEN': _token
-                        }
-                    });
+            if (!reportDate || !clientCode) {
+                swal({
+                    icon: "error",
+                    text: "report date and client code can't be empty"
+                });
+                return;
+            }
 
-                    $.ajax({
-                        url: origin + '/ajax/billing-statements',
-                        type: 'post',
-                        data: {
-                            report_date: reportDate, 
-                            client_code: clientCode
-                        },
-                        success: function (res) {
-                            console.log(res);
-                            swal({
-                                text: "Generate Summary Complete!",
-                                icon: "success",
-                                button: "OK",
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': _token
+                }
+            });
+
+            $.ajax({
+                url: origin + '/invoice/validation/' + reportDate + '/' + clientCode,
+                type: 'get',
+                success: function (res) {
+                    if (res.status === 200) {
+                        swal({
+                            icon: 'success',
+                            text: 'processing'
+                        });
+                        ajaxRunBillingStatement();
+
+                    } else if (res.status === 202) {
+                        swal({
+                            title: "Are you sure ?",
+                            text: (res.msg),
+                            icon: 'warning',
+                            buttons: true,
+                            buttons: ["No,Cancel Plx!", "Yes,Delete it!"]
+                        })
+                            .then(function (isConfirm) {
+                                if (isConfirm) {
+
+                                    swal({
+                                        text: "processing!",
+                                        icon: "success",
+                                        button: "OK",
+                                    });
+
+                                    deleteIssue(reportDate);
+                                    ajaxRunBillingStatement();
+                                }
                             });
-                            location.reload();
-                        }
+                    } else {
+                        swal({
+                            icon: 'warning',
+                            text: res.msg
+                        });
+                        return false;
+                    }
+                }
+            });
+        });
+
+        $("#create_sales_btn").colorbox({inline: true, width: "60%", height: "80%", closeButton: true});
+
+        function ajaxRunBillingStatement() {
+            let reportDate = $('#search_report_date').val();
+            let clientCode = $("#sel_client_code option:selected").val();
+            let _token = $('meta[name="csrf-token"]').attr('content');
+
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': _token
+                }
+            });
+
+            $.ajax({
+                url: origin + '/ajax/billing-statements',
+                type: 'post',
+                data: {
+                    report_date: reportDate,
+                    client_code: clientCode
+                },
+                success: function (res) {
+                    console.log(res);
+                    swal({
+                        text: "Generate Summary Complete!",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    location.reload();
+                }
+            });
+        }
+
+        function deleteIssue(reportDate) {
+            let _token = $('meta[name="csrf-token"]').attr('content');
+
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': _token
+                }
+            });
+
+            $.ajax({
+                url: origin + '/invoice/issue/byDate/' + reportDate,
+                type: 'delete',
+                success: function (res) {
+                    console.log(res);
+                }, error: function (e) {
+                    console.log(e);
+                    swal({
+                        icon: 'error',
+                        text: e
                     });
                 }
+            });
+        }
 
-                function deleteIssue(reportDate) {
-                    let _token = $('meta[name="csrf-token"]').attr('content');
+    </script>
+@endpush
 
-                    $.ajaxSetup({
-                        headers: {
-                            'X-CSRF-TOKEN': _token
-                        }
-                    });
-
-                    $.ajax({
-                        url: origin + '/invoice/issue/byDate/' + reportDate,
-                        type: 'delete',
-                        success: function (res) {
-                            console.log(res);
-                        }, error: function (e) {
-                            console.log(e);
-                            swal({
-                                icon: 'error',
-                                text: e
-                            });
-                        }
-                    });
-                }
-
-            </script>
-        @endpush
-
-        @push('css')
-            <style>
-                input[class="decoration"] {
-                    outline: 0;
-                    border-width: 0 0 2px;
-                }
-            </style>
-        @endpush
+@push('css')
+    <style>
+        input[class="decoration"] {
+            outline: 0;
+            border-width: 0 0 2px;
+        }
+    </style>
+@endpush

@@ -9,7 +9,7 @@
             @slot('title')
                 {{ __('EMPLOYEE') }}
             @endslot
-            <li class="breadcrumb-item"><a href="{{ route('page.index', 'components') }}">{{ __('EMPLOYEE') }}</a>
+            <li class="breadcrumb-item"><a href="{{ route('employeeCommission.view') }}">{{ __('EMPLOYEE') }}</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">{{ __('COMMISSION PAY') }}</li>
         @endcomponent

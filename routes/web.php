@@ -28,124 +28,77 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('role', 'RoleController', ['except' => ['show', 'destroy']]);
     Route::resource('user', 'UserController', ['except' => ['show']]);
 
-    Route::get('account/profile', ['as' => 'profile.edit', 'uses' => 'ProfileController@edit']);
-    Route::put('account/profile', ['as' => 'profile.update', 'uses' => 'ProfileController@update']);
+    Route::prefix('account')->group(function () {
+        Route::get('/profile', 'ProfileController@edit')->name('profile.edit');
+        Route::put('/profile', 'ProfileController@update')->name('profile.update');
+    });
+
     Route::put('profile/password', ['as' => 'profile.password', 'uses' => 'ProfileController@password']);
 
-    Route::get('fee/upload', ['as' => 'fee.upload', 'uses' => 'FeeController@uploadView']);
-    Route::post('fee/upload/file', ['as' => 'fee.upload.file', 'uses' => 'FeeController@uploadFile']);
-    Route::get('fee/platformads', ['as' => 'fee.platformads', 'uses' => 'FeeController@platformAdsView']);
-    Route::get('fee/amzdaterange', ['as' => 'fee.amzdaterange', 'uses' => 'FeeController@amzDateRangeView']);
-    Route::get('fee/monthlystorage', ['as' => 'fee.monthlystorage', 'uses' => 'FeeController@monthlyStorageView']);
-    Route::get('fee/longtermstorage', ['as' => 'fee.longtermstorage', 'uses' => 'FeeController@longTermStorageView']);
-    Route::get('fee/firstmileshipment', [
-        'as' => 'fee.firstmileshipment',
-        'uses' => 'FeeController@firstMileShipmentView'
-    ]);
-    Route::get('fee/export/{export_type}', ['as' => 'fee.export', 'uses' => 'FeeController@exportSampleFile']);
-    Route::post('fee/preValidation/{date}/{type}', ['as' => 'fee.checkMonthlyReportExist', 'uses' => 'FeeController@preValidation',]);
+    Route::prefix('fee')->group(function () {
+        Route::get('/upload', 'FeeController@uploadView')->name('fee.upload');
+        Route::post('/upload/file', 'FeeController@uploadFile');
+        Route::get('/platformads', 'FeeController@platformAdsView')->name('fee.platformAds');
+        Route::get('/amzdaterange', 'FeeController@amzDateRangeView')->name('fee.amzDateRange.view');
+        Route::get('/monthlystorage', 'FeeController@monthlyStorageView')->name('fee.monthlyStorage.view');
+        Route::get('/longtermstorage', 'FeeController@longTermStorageView')->name('fee.longTermStorage.view');
+        Route::get('/firstmileshipment', 'FeeController@firstMileShipmentView')->name('fee.firstMileShipment.view');
+        Route::get('/export/{export_type}', 'FeeController@exportSampleFile');
+        Route::post('/preValidation/{date}/{type}', 'FeeController@preValidation');
 
-    Route::post('orders/edit', ['as' => 'orders.edit', 'uses' => 'ErpOrdersController@editOrders']);
-    Route::put('orders/orderDetail/{id}', [
-        'as' => 'orders.editOrderDetail',
-        'uses' => 'ErpOrdersController@editOrderDetail'
-    ]);
-    Route::post('orders/checkEditQualification', [
-        'as' => 'orders.checkEditQualification',
-        'uses' => 'ErpOrdersController@checkEditQualification'
-    ]);
-    Route::post('orders/checkRate', ['as' => 'orders.checkRate', 'uses' => 'ErpOrdersController@checkRate']);
+        Route::prefix('extraordinaryitem')->group(function () {
+            Route::get('/', 'FeeController@extraordinaryItem')->name('fee.extraordinaryItem.view');
+            Route::post('/', 'FeeController@createExtraordinaryItem');
+            Route::put('/', 'FeeController@editExtraordinaryItem');
+            Route::delete('/{id?}', 'FeeController@deleteExtraordinaryItem');
+            Route::put('/detail/{id}', 'FeeController@updateExtraordinaryDetail');
+            Route::post('/createItem', 'FeeController@extraordinaryCreate');
+        });
 
-    Route::get('invoice/list', ['as' => 'invoice.list', 'uses' => 'InvoiceController@listView']);
-    Route::get('invoice/issue', ['as' => 'invoice.issue', 'uses' => 'InvoiceController@issueView']);
-    Route::delete('invoice/issue/{type}/{condition}', [
-        'as' => 'invoice.delete',
-        'uses' => 'InvoiceController@deleteIssue']);
-    Route::delete('invoice/{id}', ['as' => 'invoice.deleteByID', 'uses' => 'InvoiceController@deleteInvoice']);
+        Route::get('/clientCodeList', 'FeeController@getClientCodeList');
 
-    Route::get('invoice/download/{token?}', ['as' => 'invoice.download', 'uses' => 'InvoiceController@downloadFile']);
-    Route::get('invoice/validation/{date}/{clientCode}', 'InvoiceController@reportValidation')
-        ->name('invoice.reportValidation');
-    Route::post('invoice/edit', ['as' => 'invoice.edit', 'uses' => 'InvoiceController@editView']);
-    Route::post('invoice/createBill', 'InvoiceController@createBill')->name('invoice.createBill');
+        Route::get('/allCurrency', 'FeeController@getAllCurrency');
+    });
 
-    Route::post('ajax/billing-statements', 'BillingStatementController@ajaxStore')->name('ajax.billing_statement.store');
-    Route::post('ajax/invoice/export', 'InvoiceController@ajaxExport')->name('ajax.invoice.export');
-    
-    Route::get('{page}', ['as' => 'page.index', 'uses' => 'PageController@index']);
+    Route::prefix('orders')->group(function () {
+        Route::post('/edit', 'ErpOrdersController@editOrders');
+        Route::put('/orderDetail/{id}', 'ErpOrdersController@editOrderDetail');
+        Route::post('/checkEditQualification', 'ErpOrdersController@checkEditQualification');
+        Route::post('/checkRate', 'ErpOrdersController@checkRate');
+    });
 
-    Route::get('refund/search', ['as' => 'refund.search', 'uses' => 'ErpOrdersController@refundSearchView']);
-    Route::get('orders/search', ['as' => 'orders.search', 'uses' => 'ErpOrdersController@ordersSearchView']);
+    Route::prefix('invoice')->group(function () {
+        Route::get('/list', 'InvoiceController@listView')->name('invoice.list.view');
+        Route::get('/issue', 'InvoiceController@issueView')->name('invoice.issue.view');
+        Route::delete('/issue/{type}/{condition}', 'InvoiceController@deleteIssue');
+        Route::delete('/{id}', 'InvoiceController@deleteInvoice');
 
-    Route::get('employee/commissionpay', [
-        'as' => 'employee.commissionPay',
-        'uses' => 'EmployeeController@commissionPayView'
-    ]);
+        Route::get('/download/{token?}', 'InvoiceController@downloadFile');
+        Route::get('/validation/{date}/{clientCode}', 'InvoiceController@reportValidation')
+            ->name('invoice.reportValidation');
+        Route::post('/edit', 'InvoiceController@editView');
+        Route::post('/createBill', 'InvoiceController@createBill')->name('invoice.createBill');
+    });
 
-    Route::get('employee/commissionpay/detail/{userID?}/{date?}', [
-        'as' => 'employee.commissionDetail',
-        'uses' => 'EmployeeController@commissionDetail'
-    ]);
+    Route::prefix('ajax')->group(function () {
+        Route::post('/billing-statements', 'BillingStatementController@ajaxStore')
+            ->name('ajax.billing_statement.store');
+        Route::post('/invoice/export', 'InvoiceController@ajaxExport')->name('ajax.invoice.export');
+    });
 
-    Route::get('fee/extraordinaryitem', ['as' => 'fee.extraordinaryitem', 'uses' => 'FeeController@extraordinaryItem']);
+    Route::get('{page}', 'PageController@index')->name('page.index');
 
-    Route::post(
-        'fee/extraordinaryitem',
-        [
-            'as' => 'create.fee.extraordinaryitem',
-            'uses' => 'FeeController@createExtraordinaryItem'
-        ]
-    );
+    Route::get('refund/search', 'ErpOrdersController@refundSearchView')->name('refundOrder.view');
+    Route::get('orders/search', 'ErpOrdersController@ordersSearchView')->name('erpOrder.view');
 
-    Route::put(
-        'fee/extraordinaryitem',
-        [
-            'as' => 'edit.fee.extraordinaryitem',
-            'uses' => 'FeeController@editExtraordinaryItem'
-        ]
-    );
+    Route::prefix('employee')->group(function () {
+        Route::get('/commissionpay', 'EmployeeController@commissionPayView')->name('employeeCommission.view');
+        Route::get('/commissionpay/detail/{userID?}/{date?}', 'EmployeeController@commissionDetail');
+    });
 
-    Route::delete(
-        'fee/extraordinaryitem/{id?}',
-        [
-            'as' => 'delete.extraordinaryitem',
-            'uses' => 'FeeController@deleteExtraordinaryItem'
-        ]
-    );
-
-    Route::put(
-        'fee/extraordinaryitem/detail/{id}',
-        [
-            'as' => 'update.fee.extraordinaryitem.detail',
-            'uses' => 'FeeController@updateExtraordinaryDetail'
-        ]
-    );
-
-    Route::post(
-        'fee/extraordinaryitem/createItem',
-        [
-            'as' => 'fee.extraordinaryitem.createItem',
-            'uses' => 'FeeController@extraordinaryCreate'
-        ]
-    );
-
-    Route::get('fee/clientCodeList', ['as' => 'fee.clientCodeList', 'uses' => 'FeeController@getClientCodeList']);
-
-    Route::get('fee/allCurrency', ['as' => 'fee.allCurrency', 'uses' => 'FeeController@getAllCurrency']);
-
-    Route::get('admin/approvaladmin', ['as' => 'admin.adminView', 'uses' => 'AdminController@approvalAdminView']);
-
-    Route::put(
-        'admin/approvaladmin/batch/{date}',
-        [
-            'as' => 'admin.batchApprove', 'uses' => 'AdminController@batchApprove'
-        ]
-    );
-
-    Route::put(
-        'admin/approvaladmin/revoke/{date}',
-        [
-            'as' => 'admin.RevokeApprove', 'uses' => 'AdminController@revokeApprove'
-        ]
-    );
+    Route::prefix('admin/approvaladmin')->group(function () {
+        Route::get('/', 'AdminController@approvalAdminView')->name('admin.adminView');
+        Route::put('/batch/{date}', 'AdminController@batchApprove');
+        Route::put('/revoke/{date}', 'AdminController@revokeApprove');
+    });
 });

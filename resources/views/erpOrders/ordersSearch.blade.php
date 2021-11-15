@@ -9,7 +9,7 @@
             @slot('title')
                 {{ __('ERP ORDERS') }}
             @endslot
-            <li class="breadcrumb-item"><a href="{{ route('page.index', 'components') }}">{{ __('ERP ORDERS') }}</a>
+            <li class="breadcrumb-item"><a href="{{ route('refundOrder.view') }}">{{ __('ERP ORDERS') }}</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">{{ __('ORDER SEARCH') }}</li>
         @endcomponent

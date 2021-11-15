@@ -9,7 +9,7 @@
             @slot('title')
                 {{ __('ERP ORDERS') }}
             @endslot
-            <li class="breadcrumb-item"><a href="{{ route('page.index', 'components') }}">{{ __('ERP ORDERS') }}</a>
+            <li class="breadcrumb-item"><a href="{{ route('refundOrder.view') }}">{{ __('ERP ORDERS') }}</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">{{ __('REFUND') }}</li>
         @endcomponent
@@ -60,7 +60,7 @@
                                             <input class="form-control" name="shipped_date" id="shipped_date"
                                                    type="text"
                                                    placeholder="SHIPPED DATE" value="{{$data['shipped_date'] ?? ''}}"
-                                                   >
+                                            >
                                         </div>
                                     </div>
 

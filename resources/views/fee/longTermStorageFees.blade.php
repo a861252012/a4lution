@@ -9,7 +9,7 @@
             @slot('title')
                 {{ __('FEE') }}
             @endslot
-            <li class="breadcrumb-item"><a href="{{ route('page.index', 'components') }}">{{ __('FEE') }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('fee.longTermStorage.view') }}">{{ __('FEE') }}</a></li>
             <li class="breadcrumb-item active" aria-current="page">{{ __('LONG TERM STORAGE FEES') }}</li>
         @endcomponent
     @endcomponent
