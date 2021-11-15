@@ -9,7 +9,7 @@
             @slot('title')
                 {{ __('ADMIN') }}
             @endslot
-            <li class="breadcrumb-item"><a href="{{ route('page.index', 'components') }}">{{ __('ADMIN') }}</a>
+            <li class="breadcrumb-item"><a href="{{ route('admin.adminView') }}">{{ __('ADMIN') }}</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">{{ __('APPROVAL ADMIN') }}</li>
         @endcomponent

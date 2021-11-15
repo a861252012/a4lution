@@ -9,7 +9,7 @@
             @slot('title')
                 {{ __('FEE') }}
             @endslot
-            <li class="breadcrumb-item"><a href="{{ route('page.index', 'components') }}">{{ __('FEE') }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('fee.amzDateRange.view') }}">{{ __('FEE') }}</a></li>
             <li class="breadcrumb-item active" aria-current="page">{{ __('AMZ DATE RANGE') }}</li>
         @endcomponent
     @endcomponent

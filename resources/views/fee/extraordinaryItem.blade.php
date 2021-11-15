@@ -9,7 +9,7 @@
             @slot('title')
                 {{ __('EXPENSE CLAIM') }}
             @endslot
-            <li class="breadcrumb-item"><a href="{{ route('page.index', 'components') }}">{{ __('EXPENSE CLAIM') }}</a>
+            <li class="breadcrumb-item"><a href="{{ route('fee.extraordinaryItem.view') }}">{{ __('EXPENSE CLAIM') }}</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">{{ __('EXTRAORDINARY ITEM') }}</li>
         @endcomponent
