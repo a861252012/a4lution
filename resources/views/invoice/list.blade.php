@@ -8,7 +8,7 @@
             @slot('title')
                 {{ __('INVOICE') }}
             @endslot
-            <li class="breadcrumb-item"><a href="{{ route('invoice.list') }}">{{ __('INVOICE') }}</a>
+            <li class="breadcrumb-item"><a href="{{ route('invoice.list.view') }}">{{ __('INVOICE') }}</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">{{ __('LIST') }}</li>
         @endcomponent
