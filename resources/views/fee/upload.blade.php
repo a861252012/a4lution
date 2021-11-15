@@ -10,7 +10,7 @@
                 {{ __('FEE') }}
             @endslot
 
-            <li class="breadcrumb-item"><a href="{{ route('fee.upload') }}">{{ __('FEE') }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('fee.upload,view') }}">{{ __('FEE') }}</a></li>
             <li class="breadcrumb-item active" aria-current="page">{{ __('UPLOAD') }}</li>
         @endcomponent
     @endcomponent

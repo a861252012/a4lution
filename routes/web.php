@@ -36,9 +36,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::put('profile/password', ['as' => 'profile.password', 'uses' => 'ProfileController@password']);
 
     Route::prefix('fee')->group(function () {
-        Route::get('/upload', 'FeeController@uploadView')->name('fee.upload');
+        Route::get('/upload', 'FeeController@uploadView')->name('fee.upload.view');
         Route::post('/upload/file', 'FeeController@uploadFile');
-        Route::get('/platformads', 'FeeController@platformAdsView')->name('fee.platformAds');
+        Route::get('/platformads', 'FeeController@platformAdsView')->name('fee.platformAds.view');
         Route::get('/amzdaterange', 'FeeController@amzDateRangeView')->name('fee.amzDateRange.view');
         Route::get('/monthlystorage', 'FeeController@monthlyStorageView')->name('fee.monthlyStorage.view');
         Route::get('/longtermstorage', 'FeeController@longTermStorageView')->name('fee.longTermStorage.view');
@@ -56,7 +56,6 @@ Route::group(['middleware' => 'auth'], function () {
         });
 
         Route::get('/clientCodeList', 'FeeController@getClientCodeList');
-
         Route::get('/allCurrency', 'FeeController@getAllCurrency');
     });
 
