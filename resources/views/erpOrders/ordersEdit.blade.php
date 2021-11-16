@@ -24,12 +24,11 @@
     <hr>
     <div class="row">
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Package ID:</label>{{$package_id}}
+            <label class="form-control-label" style="font-weight:bold;">Package Id:</label>{{$package_id}}
         </div>
 
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">ERP ORDER
-                ID:</label>{{$erp_order_id}}
+            <label class="form-control-label" style="font-weight:bold;">Erp Order Id:</label>{{$erp_order_id}}
         </div>
 
         <div class="col-4 form-group">
@@ -39,47 +38,45 @@
 
     <div class="row">
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">ACC NICK NAME:</label>{{$acc_nick_name}}
+            <label class="form-control-label" style="font-weight:bold;">Acc Nick Name:</label>{{$acc_nick_name}}
         </div>
 
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">ACC NAME:</label>{{$acc_name}}
+            <label class="form-control-label" style="font-weight:bold;">Acc Name:</label>{{$acc_name}}
         </div>
 
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">SITE:</label>{{$site_id}}
+            <label class="form-control-label" style="font-weight:bold;">Site:</label>{{$site_id}}
         </div>
     </div>
 
     <div class="row">
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">WAREHOUSE:</label>{{$warehouse}}
+            <label class="form-control-label" style="font-weight:bold;">Warehouse:</label>{{$warehouse}}
         </div>
 
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">SHIPPING
-                METHOD:</label>{{$lists['sm_code']}}
+            <label class="form-control-label" style="font-weight:bold;">Shipping Method:</label>{{$lists['sm_code']}}
         </div>
 
         <div class="col-4 form-group">
             <label class="form-control-label"
-                   style="font-weight:bold;">TRACKING:</label>{{$lists['tracking_number']}}
+                   style="font-weight:bold;">Tracking:</label>{{$lists['tracking_number']}}
         </div>
     </div>
 
     <div class="row">
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">AUDIT DATE:</label>{{$lists['add_time']}}
+            <label class="form-control-label" style="font-weight:bold;">Audit Date:</label>{{$lists['add_time']}}
         </div>
 
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">PAID
-                DATE:</label>{{$lists['order_paydate']}}
+            <label class="form-control-label" style="font-weight:bold;">Paid Date:</label>{{$lists['order_paydate']}}
         </div>
 
         <div class="col-4 form-group">
-            <label class="form-control-label inline_shipped_date" style="font-weight:bold;"
-                   data-attr="{{$shipped_date}}">SHIPPED DATE:</label>{{$shipped_date}}
+            <label class="form-control-label inline_shipped_date" style="font-weight:bold;" 
+                data-attr="{{$shipped_date}}">Shipped Date:</label>{{$shipped_date}}
         </div>
     </div>
 
@@ -93,34 +90,33 @@
 
     <div class="row">
         <div class="col-12 form-group">
-            <label class="form-control-label" style="font-weight:bold;">PRODUCT
-                NAME:</label>{{$lists['product_title']}}
+            <label class="form-control-label" style="font-weight:bold;">Product Name:</label>{{$lists['product_title']}}
         </div>
     </div>
 
     <div class="row">
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">PLATFORM SKU:
+            <label class="form-control-label" style="font-weight:bold;">Platform Sku:
             </label>{{$lists['op_platform_sales_sku']}}
         </div>
         <div class="col-4 form-group">
             <label class="form-control-label"
-                   style="font-weight:bold;">ITEM_ID(ASIN):</label>{{$lists['asin_or_item']}}
+                   style="font-weight:bold;">Item Id(ASIN):</label>{{$lists['asin_or_item']}}
         </div>
         <div class="col-4 form-group" id="supplier" data-label="{{$supplier}}">
-            <label class="form-control-label" style="font-weight:bold;">SUPPLIER:</label>{{$supplier}}
+            <label class="form-control-label" style="font-weight:bold;">Supplier:</label>{{$supplier}}
         </div>
     </div>
 
     <div class="row">
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">SKU:</label>{{$sku}}
+            <label class="form-control-label" style="font-weight:bold;">Sku:</label>{{$sku}}
         </div>
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">QTY:</label>{{$lists['quantity']}}
+            <label class="form-control-label" style="font-weight:bold;">Qty:</label>{{$lists['quantity']}}
         </div>
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">PRODUCT WEIGHT:</label>{{$lists['weight']}}
+            <label class="form-control-label" style="font-weight:bold;">Product Weight:</label>{{$lists['weight']}}
         </div>
     </div>
 
@@ -135,33 +131,32 @@
 
     <div class="row">
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">ORDER ORIGINAL
-                CURRENCY:</label>{{$lists['currency_code_org']}}
+            <label class="form-control-label" style="font-weight:bold;">Order Original
+                Ccurrency:</label>{{$lists['currency_code_org']}}
         </div>
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">HKD
-                RATE:</label>{{$exchange_rate[$lists['currency_code_org']]}}
+            <label class="form-control-label" style="font-weight:bold;">HKD Rate:</label>
+            {{$exchange_rate[$lists['currency_code_org']]}}
         </div>
     </div>
 
     <div class="row">
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">ERP ORIGINAL CURRENCY:</label>{{'RMB'}}
+            <label class="form-control-label" style="font-weight:bold;">Erp Original Currency:</label>{{'RMB'}}
         </div>
         <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">HKD
-                RATE:</label>{{$exchange_rate['RMB']}}
+            <label class="form-control-label" style="font-weight:bold;">HKD Rate:</label>
+            {{$exchange_rate['RMB']}}
         </div>
     </div>
 
     <div class="row">
         <div class="col-6 form-group">
-            <label class="form-control-label" style="font-weight:bold;">(AMAZON)PROMOTION METADATA DEFINITION
-                VALUE:</label>
+            <label class="form-control-label" style="font-weight:bold;">(AMAZON)Promotion Metadata Definition Value:</label>
             {{$lists['promotion_amount']}}
         </div>
         <div class="col-6 form-group">
-            <label class="form-control-label" style="font-weight:bold;">PERCENTAGE DISCOUNT:</label>
+            <label class="form-control-label" style="font-weight:bold;">Percentage Discount:</label>
             {{$lists['promotion_discount_rate']}}
         </div>
     </div>

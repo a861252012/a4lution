@@ -15,146 +15,136 @@
         @endcomponent
     @endcomponent
 
-    {{--@section('content')--}}
-    {{--    @include('forms.header')--}}
-
-    {{--    <div class="container-fluid mt--6">--}}
-    <div class="wrapper wrapper-content animated">
+    <div class="wrapper wrapper-content">
         <!-- Table -->
-        <div class="row">
-            <div class="col">
-                <div class="card">
-                    <!-- Card header -->
-                    <div class="card-header">
-                        {{--                        <h3 class="mb-0">Datatable</h3>--}}
-                        {{--                        <div class="row input-daterange datepicker align-items-center">--}}
-                        <div>
-                            <form method="GET" action="/orders/search" role="form" onsubmit="return validateForm()"
-                                  class="form">
-                                <div class="row">
-                                    {{-- ACC NICK NAME --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="acc_nick_name">ACC NICK NAME</label>
-                                            <input class="form-control" name="acc_nick_name" id="acc_nick_name"
-                                                   type="text" placeholder="ACC NICK NAME"
-                                                   value="{{$data['acc_nick_name'] ?? ''}}">
-                                        </div>
-                                    </div>
-
-                                    {{-- ERP ORDER ID --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="erp_order_id">ERP ORDER ID</label>
-                                            <input class="form-control" name="erp_order_id" id="erp_order_id"
-                                                   type="text" placeholder="ERP ORDER ID"
-                                                   value="{{$data['erp_order_id'] ?? ''}}">
-                                        </div>
-                                    </div>
-
-                                    {{-- SHIPPED DATE --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="shipped_date">SHIPPED DATE</label>
-                                            <input class="form-control" name="shipped_date" id="shipped_date"
-                                                   type="text"
-                                                   placeholder="SHIPPED DATE" value="{{$data['shipped_date'] ?? ''}}">
-                                        </div>
-                                    </div>
-
-                                    {{-- PACKAGE ID --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="package_id">PACKAGE ID</label>
-                                            <input class="form-control" name="package_id" id="package_id" type="text"
-                                                   placeholder="PACKAGE ID" value="{{$data['package_id'] ?? ''}}">
-                                        </div>
-                                    </div>
-
-                                    {{-- SKU --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="sku">SKU</label>
-                                            <input class="form-control" name="sku" id="sku" type="text"
-                                                   placeholder="SKU" value="{{$data['sku'] ?? ''}}">
-                                        </div>
-                                    </div>
-
-                                    {{-- SEARCH --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <label class="form-control-label" for="submit_btn"></label>
-                                        <div class="form-group">
-                                            <button class="form-control btn btn-primary" id="submit_btn" type="submit"
-                                                    style="margin-top: 6px;">SEARCH
-                                            </button>
-                                        </div>
-                                    </div>
-
+        <div class="card">
+            <!-- Card header -->
+            <div class="card-header py-2">
+                <div>
+                    <form method="GET" action="/orders/search" role="form" onsubmit="return validateForm()"
+                            class="form">
+                        <div class="row">
+                            {{-- ACC NICK NAME --}}
+                            <div class="col-lg-2 col-md-6 col-sm-6">
+                                <div class="form-group mb-0">
+                                    <label class="form-control-label _fz-1" for="acc_nick_name">Acc Nick Name</label>
+                                    <input class="form-control _fz-1" name="acc_nick_name" id="acc_nick_name"
+                                            type="text" placeholder="ACC NICK NAME"
+                                            value="{{$data['acc_nick_name'] ?? ''}}">
                                 </div>
-                            </form>
+                            </div>
+
+                            {{-- ERP ORDER ID --}}
+                            <div class="col-lg-2 col-md-6 col-sm-6">
+                                <div class="form-group mb-0">
+                                    <label class="form-control-label _fz-1" for="erp_order_id">Erp Order Id</label>
+                                    <input class="form-control _fz-1" name="erp_order_id" id="erp_order_id"
+                                            type="text" placeholder="ERP ORDER ID"
+                                            value="{{$data['erp_order_id'] ?? ''}}">
+                                </div>
+                            </div>
+
+                            {{-- SHIPPED DATE --}}
+                            <div class="col-lg-2 col-md-6 col-sm-6">
+                                <div class="form-group mb-0">
+                                    <label class="form-control-label _fz-1" for="shipped_date">Shipped Date</label>
+                                    <input class="form-control _fz-1" name="shipped_date" id="shipped_date"
+                                            type="text"
+                                            placeholder="SHIPPED DATE" value="{{$data['shipped_date'] ?? ''}}">
+                                </div>
+                            </div>
+
+                            {{-- PACKAGE ID --}}
+                            <div class="col-lg-2 col-md-6 col-sm-6">
+                                <div class="form-group mb-0">
+                                    <label class="form-control-label _fz-1" for="package_id">Package Id</label>
+                                    <input class="form-control _fz-1" name="package_id" id="package_id" type="text"
+                                            placeholder="PACKAGE ID" value="{{$data['package_id'] ?? ''}}">
+                                </div>
+                            </div>
+
+                            {{-- SKU --}}
+                            <div class="col-lg-2 col-md-6 col-sm-6">
+                                <div class="form-group mb-0">
+                                    <label class="form-control-label _fz-1" for="sku">Sku</label>
+                                    <input class="form-control _fz-1" name="sku" id="sku" type="text"
+                                            placeholder="SKU" value="{{$data['sku'] ?? ''}}">
+                                </div>
+                            </div>
+
+                            {{-- SEARCH --}}
+                            <div class="col-lg-2 col-md-6 col-sm-6">
+                                <label class="form-control-label _fz-1" for="submit_btn"></label>
+                                <div class="form-group mb-0">
+                                    <button class="form-control _fz-1 btn btn-primary" id="submit_btn" type="submit"
+                                            style="margin-top: 6px;">SEARCH
+                                    </button>
+                                </div>
+                            </div>
+
                         </div>
-                    </div>
-
-                    {{-- data table --}}
-                    <div class="table-responsive py-4">
-                        <table class="table table-flush">
-                            <thead class="thead-light">
-                            <tr>
-                                <th>DETAILS</th>
-                                <th>PLATFORM</th>
-                                <th>ACC NICK NAME</th>
-                                <th>ACC NAME</th>
-                                <th>SITE</th>
-                                <th>SHIPPED DATE</th>
-                                <th>PACKAGE ID</th>
-                                <th>ERP ORDER ID</th>
-                                <th>SKU</th>
-                                <th>ORDER PRICE</th>
-                                <th>SUPPLIER</th>
-                                <th>WAREHOUSE</th>
-                            </tr>
-                            </thead>
-
-                            <tbody>
-                            @foreach ($data['lists'] as $item)
-                                <tr>
-                                    {{-- edit --}}
-                                    <td>
-                                        <a class="ajax_btn form-control btn">
-                                            <div>
-                                                <i class="ni ni-settings"></i>
-                                            </div>
-                                        </a>
-                                    </td>
-                                    <td class="platform">{{ $item->platform }}</td>
-                                    <td class="acc_nick_name">{{ $item->acc_nick_name }}</td>
-                                    <td class="acc_name">{{ $item->acc_name }}</td>
-                                    <td class="site_id">{{ $item->site_id }}</td>
-                                    <td class="shipped_date">{{ $item->shipped_date }}</td>
-                                    <td class="package_id">{{ $item->package_id }}</td>
-                                    <td class="erp_order_id">{{ $item->erp_order_id }}</td>
-                                    <td class="sku">{{ $item->sku }}</td>
-                                    <td class="order_price">{{ $item->order_price }}</td>
-                                    <td class="supplier">{{ $item->supplier }}</td>
-                                    <td class="warehouse">{{ $item->warehouse }}</td>
-                                    <input class="hidden" type="hidden" value="{{$item->currency_code_org}}">
-                                </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
-
-                        {{-- Pagination --}}
-                        <div class="d-flex justify-content-center" style='margin-top: 20px;'>
-                            {!! $data['lists']->links() !!}
-                        </div>
-
-                    </div>
-
+                    </form>
                 </div>
             </div>
+
+            {{-- data table --}}
+            <div class="table-responsive">
+                <table class="table table-sm _table">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>Details</th>
+                        <th>Platform</th>
+                        <th>Acc Nick Name</th>
+                        <th>Acc Name</th>
+                        <th>Site</th>
+                        <th>Shipped Date</th>
+                        <th>Package Id</th>
+                        <th>Erp Order Id</th>
+                        <th>Sku</th>
+                        <th>Order Price</th>
+                        <th>Supplier</th>
+                        <th>Warehouse</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    @foreach ($data['lists'] as $item)
+                        <tr>
+                            {{-- edit --}}
+                            <td>
+                                <a class="ajax_btn form-control btn">
+                                    <div>
+                                        <i class="ni ni-settings"></i>
+                                    </div>
+                                </a>
+                            </td>
+                            <td class="platform">{{ $item->platform }}</td>
+                            <td class="acc_nick_name">{{ $item->acc_nick_name }}</td>
+                            <td class="acc_name">{{ $item->acc_name }}</td>
+                            <td class="site_id">{{ $item->site_id }}</td>
+                            <td class="shipped_date">{{ $item->shipped_date }}</td>
+                            <td class="package_id">{{ $item->package_id }}</td>
+                            <td class="erp_order_id">{{ $item->erp_order_id }}</td>
+                            <td class="sku">{{ $item->sku }}</td>
+                            <td class="order_price">{{ $item->order_price }}</td>
+                            <td class="supplier">{{ $item->supplier }}</td>
+                            <td class="warehouse">{{ $item->warehouse }}</td>
+                            <input class="hidden" type="hidden" value="{{$item->currency_code_org}}">
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+
+                {{-- Pagination --}}
+                @if($data['lists'] && $data['lists']->lastPage() > 1)
+                    <div class="d-flex justify-content-center" style='margin-top: 20px;'>
+                        {{ $data['lists']->appends($_GET)->links() }}
+                    </div>
+                @endif
+
+            </div>
+
         </div>
-        <!-- Footer -->
-        {{--        @include('layouts.footers.auth')--}}
     </div>
 @endsection
 
