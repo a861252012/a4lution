@@ -10,165 +10,157 @@
                 {{ __('FEE') }}
             @endslot
 
-            <li class="breadcrumb-item"><a href="{{ route('page.index', 'components') }}">{{ __('FEE') }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('fee.upload.view') }}">{{ __('FEE') }}</a></li>
             <li class="breadcrumb-item active" aria-current="page">{{ __('UPLOAD') }}</li>
         @endcomponent
     @endcomponent
 
-
-    {{--@section('content')--}}
-    {{--    @include('forms.header')--}}
-
-    {{--    <div class="container-fluid mt--6">--}}
-    <div class="wrapper wrapper-content animated">
+    <div class="wrapper wrapper-content">
         <!-- Table -->
-        <div class="row">
-            <div class="col">
-                <div class="card">
-                    <!-- Card header -->
-                    <div class="card-header">
-                        <div>
-                            <form method="GET" action="/fee/upload" role="form" class="form">
+        <div class="card">
+            <!-- Card header -->
+            <div class="card-header py-2">
+                <form method="GET" action="/fee/upload" role="form" class="form">
+                    <div class="row">
 
-                                <div class="row">
-                                    <div class="col-2 col-lg-2 col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="input_date">DATE</label>
-                                            <input class="form-control" name="search_date" id="input_date"
-                                                   placeholder="date"
-                                                   type="text" value="{{ $createdAt }}">
-                                        </div>
-                                    </div>
-
-                                    <div class=" col-2 col-lg-2 col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="select_fee_type">FEE TYPE</label>
-                                            <select class="form-control" data-toggle="select" name="fee_type"
-                                                    id="select_fee_type">
-                                                <option value="">all</option>
-                                                <option value="platform_ad_fees"
-                                                @if($feeType == 'platform_ad_fees') {{ 'selected' }} @endif>
-                                                    Platform Advertisement Fee
-                                                </option>
-                                                <option value="amazon_date_range"
-                                                @if($feeType == 'amazon_date_range') {{ 'selected' }} @endif>
-                                                    Amazon Date Range Report
-                                                </option>
-                                                <option value="long_term_storage_fees"
-                                                @if($feeType == 'long_term_storage_fees') {{ 'selected' }} @endif>
-                                                    FBA Long Term Storage Fee
-                                                </option>
-                                                <option value="monthly_storage_fees"
-                                                @if($feeType == 'monthly_storage_fees') {{ 'selected' }} @endif>
-                                                    FBA Monthly Storage Fee
-                                                </option>
-                                                <option value="first_mile_shipment_fees"
-                                                @if($feeType == 'first_mile_shipment_fees') {{ 'selected' }} @endif>
-                                                    First Mile Shipment Fee
-                                                </option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-2 col-lg-2 col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="select_status">STATUS</label>
-                                            <select class="form-control" data-toggle="select" name="status_type"
-                                                    id="select_status">
-                                                <option value="">all</option>
-                                                <option value="completed" @if($status == 'completed') {{ 'selected' }} @endif>
-                                                    Completed
-                                                </option>
-                                                <option value="processing" @if($status == 'processing') {{ 'selected' }} @endif>
-                                                    Processing
-                                                </option>
-                                                <option value="failed" @if($status == 'failed') {{ 'selected' }} @endif>
-                                                    Error
-                                                </option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-2 col-lg-2 col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="report_date">REPORT
-                                                DATE</label>
-                                            <input class="form-control" name="report_date" id="report_date"
-                                                   value="{{$reportDate}}" placeholder="report date" type="text">
-                                        </div>
-                                    </div>
-
-                                    <div class="col-2 col-lg-2 col-sm-2">
-                                        <label class="form-control-label" for="submit_btn"></label>
-                                        <div class="form-group">
-                                            <button class="form-control btn btn-primary" id="submit_btn"
-                                                    type="submit"
-                                                    style="margin-top: 6px;">SEARCH
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-2 col-lg-2 col-sm-2 text-right">
-                                        <label class="form-control-label" for="upload_btn"></label>
-                                        <div class="form-group">
-                                            <a id="upload_btn" class="form-control btn btn-primary"
-                                               href="#inline_content" style="margin-top: 6px;">
-                                                <div>
-                                                    <i class="ni ni-cloud-upload-96"></i>
-                                                    <span>UPLOAD</span>
-                                                </div>
-                                            </a>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </form>
+                        {{-- Created At --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="input_date">Created At</label>
+                                <input class="form-control _fz-1" name="search_date" id="input_date"
+                                       placeholder="date" type="text" value="{{ $createdAt }}">
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="table-responsive py-4">
-                        <table class="table table-flush" id="datatable-basic">
-                            <thead class="thead-light">
-                            <tr>
-                                <th>DATE</th>
-                                <th>USER</th>
-                                <th>Report DATE</th>
-                                <th>FEE TYPE</th>
-                                <th>FILE NAME</th>
-                                <th>STATUS</th>
-                                <th>ERROR MSG</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @foreach ($lists as $item)
-                                <tr>
-                                    <td>{{ $item->created_at }}</td>
-                                    <td>{{ $item->user_name }}</td>
-                                    <td>{{ $item->report_date }}</td>
-                                    <td>{{ $item->fee_type }}</td>
-                                    <td>{{ $item->file_name }}</td>
-                                    <td>{{ $item->status }}</td>
-                                    <td>{{ $item->user_error_msg }}</td>
-                                </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
-
-                        {{-- Pagination --}}
-                        <div class="d-flex justify-content-center" style='margin-top: 20px;'>
-                            {!! $lists->links() !!}
+                        {{-- Fee Type --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="select_fee_type">Fee Type</label>
+                                <select class="form-control _fz-1" data-toggle="select" name="fee_type"
+                                        id="select_fee_type">
+                                    <option value="">all</option>
+                                    <option value="platform_ad_fees"
+                                    @if($feeType == 'platform_ad_fees') {{ 'selected' }} @endif>
+                                        Platform Advertisement Fee
+                                    </option>
+                                    <option value="amazon_date_range"
+                                    @if($feeType == 'amazon_date_range') {{ 'selected' }} @endif>
+                                        Amazon Date Range Report
+                                    </option>
+                                    <option value="long_term_storage_fees"
+                                    @if($feeType == 'long_term_storage_fees') {{ 'selected' }} @endif>
+                                        FBA Long Term Storage Fee
+                                    </option>
+                                    <option value="monthly_storage_fees"
+                                    @if($feeType == 'monthly_storage_fees') {{ 'selected' }} @endif>
+                                        FBA Monthly Storage Fee
+                                    </option>
+                                    <option value="first_mile_shipment_fees"
+                                    @if($feeType == 'first_mile_shipment_fees') {{ 'selected' }} @endif>
+                                        First Mile Shipment Fee
+                                    </option>
+                                </select>
+                            </div>
                         </div>
+
+                        {{-- Status --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="select_status">Status</label>
+                                <select class="form-control _fz-1" data-toggle="select" name="status_type"
+                                        id="select_status">
+                                    <option value="">all</option>
+                                    <option value="completed" @if($status == 'completed') {{ 'selected' }} @endif>
+                                        Completed
+                                    </option>
+                                    <option value="processing" @if($status == 'processing') {{ 'selected' }} @endif>
+                                        Processing
+                                    </option>
+                                    <option value="failed" @if($status == 'failed') {{ 'selected' }} @endif>
+                                        Error
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Report Date --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="report_date">Report Date</label>
+                                <input class="form-control _fz-1" name="report_date" id="report_date"
+                                       value="{{$reportDate}}" placeholder="report date" type="text">
+                            </div>
+                        </div>
+
+                        {{-- Search --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <label class="form-control-label _fz-1" for="submit_btn"></label>
+                            <div class="form-group mb-0">
+                                <button class="form-control btn btn-primary _fz-1 _btn" id="submit_btn"
+                                        type="submit" style="margin-top: 6px;">Search
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Upload --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6 text-right">
+                            <label class="form-control-label _fz-1" for="upload_btn"></label>
+                            <div class="form-group mb-0">
+                                <a id="upload_btn" class="form-control btn btn-primary"
+                                   href="#inline_content" style="margin-top: 6px;">
+                                    <div>
+                                        <i class="ni ni-cloud-upload-96"></i>
+                                        <span class="_fz-1">Upload</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+
                     </div>
-                </div>
+                </form>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm _table" id="datatable-basic">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>Created At</th>
+                        <th>User</th>
+                        <th>Report Date</th>
+                        <th>Fee Type</th>
+                        <th>File Name</th>
+                        <th>Status</th>
+                        <th>Error Msg</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach ($lists as $item)
+                        <tr>
+                            <td>{{ $item->created_at }}</td>
+                            <td>{{ $item->user_name }}</td>
+                            <td>{{ $item->report_date }}</td>
+                            <td>{{ $item->fee_type }}</td>
+                            <td>{{ $item->file_name }}</td>
+                            <td>{{ $item->status }}</td>
+                            <td>{{ $item->user_error_msg }}</td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+
+                {{-- Pagination --}}
+                @if($lists && $lists->lastPage() > 1)
+                    <div class="d-flex justify-content-center" style='margin-top: 20px;'>
+                        {{ $lists->appends($_GET)->links() }}
+                    </div>
+                @endif
+
             </div>
         </div>
-        <!-- Footer -->
-        {{--        @include('layouts.footers.auth')--}}
     </div>
 
     <!-- colorbox html part start -->
     <div style='display:none'>
-        {{--        <div id='inline_content'>--}}
         <div class="container" id='inline_content'>
 
             <!-- Data Import/Platform Ads -->
@@ -188,7 +180,7 @@
                 <!-- REPORT DATE -->
                 <div class="row">
                     <div class="col-3 form-group">
-                        <label class="form-control-label" for="inline_report_date">REPORT DATE</label>
+                        <label class="form-control-label" for="inline_report_date">Report Date</label>
                     </div>
 
                     <div class="col-4 form-group">
@@ -200,7 +192,7 @@
                 <!-- FEE TYPE-->
                 <div class="row">
                     <div class="col-3 form-group">
-                        <label class="form-control-label" for="inline_select_fee_type">FEE TYPE</label>
+                        <label class="form-control-label" for="inline_select_fee_type">Fee Type</label>
                     </div>
                     <div class="col-5 form-group">
                         <select class="form-control" data-toggle="select" name="inline_fee_type"
@@ -244,29 +236,11 @@
 
             </form>
         </div>
-        {{--        </div>--}}
     </div>
     <!-- colorbox html part end -->
 @endsection
 
 @push('js')
-    {{--    <script src="{{ asset('argon') }}/vendor/select2/dist/js/select2.min.js"></script>--}}
-    {{--    <script src="{{ asset('argon') }}/vendor/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>--}}
-
-    {{--    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>--}}
-
-    {{--    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.3.0/jquery.form.min.js"--}}
-    {{--            integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4ycVxyn"--}}
-    {{--            crossorigin="anonymous"></script>--}}
-
-    {{--    <script src="{{ asset('argon') }}/vendor/nouislider/distribute/nouislider.min.js"></script>--}}
-    {{--    <script src="{{ asset('argon') }}/vendor/quill/dist/quill.min.js"></script>--}}
-    {{--    <script src="{{ asset('argon') }}/vendor/dropzone/dist/min/dropzone.min.js"></script>--}}
-    {{--    <script src="{{ asset('argon') }}/vendor/bootstrap-tagsinput/dist/bootstrap-tagsinput.min.js"></script>--}}
-
-    {{--    <link href="{{asset("vendor/kartik-v/bootstrap-fileinput/css/fileinput.css")}}" rel="stylesheet">--}}
-    {{--    <script src="{{asset("vendor/kartik-v/bootstrap-fileinput/js/fileinput.js")}}"></script>--}}
-
     <script type="text/javascript">
         $(function () {
             let inputDate = $('#input_date').val();

@@ -8,160 +8,136 @@
             @slot('title')
                 {{ __('INVOICE') }}
             @endslot
-            <li class="breadcrumb-item"><a href="{{ route('page.index', 'components') }}">{{ __('INVOICE') }}</a>
+            <li class="breadcrumb-item"><a href="{{ route('invoice.list.view') }}">{{ __('INVOICE') }}</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">{{ __('LIST') }}</li>
         @endcomponent
     @endcomponent
 
-    {{--@section('content')--}}
-    {{--    @include('forms.header')--}}
-
-    {{--    <div class="container-fluid mt--6">--}}
     @if(session()->has('message'))
         <div class="alert alert-success">
             {{ session()->get('message') }}
         </div>
     @endif
-    <div class="wrapper wrapper-content animated">
+    <div class="wrapper wrapper-content">
         <!-- Table -->
-        <div class="row">
-            <div class="col">
-                <div class="card">
-                    <!-- Card header -->
-                    <div class="card-header">
-                        {{--                        <h3 class="mb-0">Datatable</h3>--}}
-                        {{--                        <div class="row input-daterange datepicker align-items-center">--}}
-                        <div>
-                            <form method="GET" action="/invoice/list" role="form" class="form">
-                                <div class="row">
-                                    {{-- CLIENT CODE --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="client_code">CLIENT CODE</label>
-                                            <select class="form-control" data-toggle="select" name="client_code"
-                                                    id="client_code">
-                                                @forelse ($client_code_lists as $item)
-                                                    <option value="{{$item}}" @if($clientCode == $item) {{ 'selected' }} @endif>
-                                                        {{$item}}</option>
-                                                @empty
-                                                    <option value="">{{'NONE'}}</option>
-                                                @endforelse
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {{-- REPORT DATE --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="erp_order_id">REPORT DATE</label>
-                                            <input class="form-control" name="report_date" id="report_date"
-                                                   type="text" placeholder="REPORT DATE"
-                                                   value="{{$reportDate ?? ''}}">
-                                        </div>
-                                    </div>
-
-                                    {{-- STATUS --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="status">STATUS</label>
-                                            <select class="form-control" data-toggle="select" name="status"
-                                                    id="status">
-                                                <option value="">all</option>
-                                                <option value="processing" @if($status == 'processing') {{ 'selected' }} @endif>
-                                                    processing
-                                                </option>
-                                                <option value="deleted" @if($status == 'deleted') {{ 'selected' }} @endif>
-                                                    deleted
-                                                </option>
-                                                <option value="active" @if($status == 'active') {{ 'selected' }} @endif>
-                                                    active
-                                                </option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {{-- FIND --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <label class="form-control-label" for="submit_btn"></label>
-                                        <div class="form-group">
-                                            <button class="form-control btn btn-primary" id="submit_btn" type="submit"
-                                                    style="margin-top: 6px;">FIND
-                                            </button>
-                                        </div>
-                                    </div>
-
+        <div class="card">
+            <!-- Card header -->
+            <div class="card-header py-2">
+                <div>
+                    <form method="GET" action="/invoice/list" role="form" class="form">
+                        <div class="row">
+                            {{-- CLIENT CODE --}}
+                            <div class="col-lg-2 col-md-6 col-sm-6">
+                                <div class="form-group mb-0">
+                                    <label class="form-control-label _fz-1" for="client_code">Client Code</label>
+                                    <select class="form-control _fz-1" data-toggle="select" name="client_code"
+                                            id="client_code">
+                                        @forelse ($client_code_lists as $item)
+                                            <option value="{{$item}}" @if($clientCode == $item) {{ 'selected' }} @endif>
+                                                {{$item}}</option>
+                                        @empty
+                                            <option value="">{{'NONE'}}</option>
+                                        @endforelse
+                                    </select>
                                 </div>
-                            </form>
-                        </div>
-                    </div>
+                            </div>
 
-                    {{-- data table --}}
-                    <div class="table-responsive py-4">
-                        <table class="table table-flush">
-                            <thead class="thead-light">
-                            <tr>
-                                <th>CLIENT CODE</th>
-                                <th>REPORT DATE</th>
-                                <th>INVOICE NO.</th>
-                                <th>FILE NAME</th>
-                                <th>STATUS</th>
-                                <th>CREATED DATE</th>
-                                <th>ACTION</th>
-                            </tr>
-                            </thead>
+                            {{-- REPORT DATE --}}
+                            <div class="col-lg-2 col-md-6 col-sm-6">
+                                <div class="form-group mb-0">
+                                    <label class="form-control-label _fz-1" for="erp_order_id">Report Date</label>
+                                    <input class="form-control _fz-1" name="report_date" id="report_date"
+                                            type="text" placeholder="Report Date"
+                                            value="{{$reportDate ?? ''}}">
+                                </div>
+                            </div>
 
-                            <tbody>
-                            @forelse ($lists as $item)
-                                <td class="platform">{{ $item->client_code ?? '' }}</td>
-                                <td class="acc_nick_name">{{ $item->report_date ?? '' }}</td>
-                                <td class="acc_name">{{ $item->opex_invoice_no ?? '' }}</td>
-                                <td class="file_name">{{ $item->doc_file_name ?? '' }}</td>
-                                <td class="shipped_date">{{ $item->doc_status ?? '' }}</td>
-                                <td class="package_id">{{ $item->created_at ?? '' }}</td>
-                                {{--                                <td>--}}
-                                {{--                                    <button class="btn btn-icon btn-primary download_file"--}}
-                                {{--                                            type="button" @if($item->doc_status !="active") {{ 'disabled' }} @endif>--}}
-                                {{--                                        <span class="btn-inner--icon"><i class="ni ni-cloud-download-95"></i></span>--}}
-                                {{--                                        <span class="btn-inner--text">DOWNLOAD</span>--}}
-                                {{--                                    </button>--}}
-                                {{--                                </td>--}}
+                            {{-- STATUS --}}
+                            <div class="col-lg-2 col-md-6 col-sm-6">
+                                <div class="form-group mb-0">
+                                    <label class="form-control-label _fz-1" for="status">Status</label>
+                                    <select class="form-control _fz-1" data-toggle="select" name="status"
+                                            id="status">
+                                        <option value="">all</option>
+                                        <option value="processing" @if($status == 'processing') {{ 'selected' }} @endif>
+                                            processing
+                                        </option>
+                                        <option value="deleted" @if($status == 'deleted') {{ 'selected' }} @endif>
+                                            deleted
+                                        </option>
+                                        <option value="active" @if($status == 'active') {{ 'selected' }} @endif>
+                                            active
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
 
-                                <td>
-                                    {{--                                    <button class="btn btn-icon btn-primary issue_btn btn-sm download_file"--}}
-                                    {{--                                            type="button" @if($item->doc_status !="active") {{ 'disabled' }} @endif>--}}
-                                    {{--                                        <span class="btn-inner--text">DOWNLOAD</span>--}}
-                                    {{--                                    </button>--}}
-                                    <button class="btn btn-icon btn-primary download_file btn-sm"
-                                            type="button" @if($item->doc_status !="active") {{ 'disabled' }} @endif>
-                                        <span class="btn-inner--icon"><i class="ni ni-cloud-download-95"></i></span>
-                                        <span class="btn-inner--text">DOWNLOAD</span>
+                            {{-- FIND --}}
+                            <div class="col-lg-2 col-md-6 col-sm-6">
+                                <label class="form-control-label _fz-1" for="submit_btn"></label>
+                                <div class="form-group mb-0">
+                                    <button class="form-control _fz-1 btn btn-primary" id="submit_btn" type="submit"
+                                            style="margin-top: 6px;">Find
                                     </button>
-                                    <button class="btn btn-danger delete_btn btn-sm" type="button"
-                                            data-id="{{$item->id}}">
-                                        <span class="btn-inner--text">DELETE</span>
-                                    </button>
-                                </td>
+                                </div>
+                            </div>
 
-                                <input name="file_token" type="hidden" value="{{$item->doc_storage_token ?? ''}}">
-                                </tr>
-                            @empty
-                            @endforelse
-                            </tbody>
-                        </table>
-
-                        {{-- Pagination --}}
-                        <div class="d-flex justify-content-center">
-                            @if($lists)
-                                {!! $lists->links() !!}
-                            @endif
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
+
+            {{-- data table --}}
+            <div class="table-responsive">
+                <table class="table table-sm _table">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>Client Code</th>
+                        <th>Report Date</th>
+                        <th>Invoice No.</th>
+                        <th>File Name</th>
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    @forelse ($lists as $item)
+                        <td class="platform">{{ $item->client_code ?? '' }}</td>
+                        <td class="acc_nick_name">{{ $item->report_date ?? '' }}</td>
+                        <td class="acc_name">{{ $item->opex_invoice_no ?? '' }}</td>
+                        <td class="file_name">{{ $item->doc_file_name ?? '' }}</td>
+                        <td class="shipped_date">{{ $item->doc_status ?? '' }}</td>
+                        <td class="package_id">{{ $item->created_at ?? '' }}</td>
+                        <td>
+                            <button class="btn btn-icon btn-primary download_file btn-sm _fz-1"
+                                    type="button" @if($item->doc_status !="active") {{ 'disabled' }} @endif>
+                                <span class="btn-inner--icon"><i class="ni ni-cloud-download-95"></i></span>
+                                <span class="btn-inner--text">Download</span>
+                            </button>
+                            <button class="btn btn-danger delete_btn btn-sm _fz-1" type="button"
+                                    data-id="{{$item->id}}">
+                                <span class="btn-inner--text">Delete</span>
+                            </button>
+                        </td>
+
+                        <input name="file_token" type="hidden" value="{{$item->doc_storage_token ?? ''}}">
+                        </tr>
+                    @empty
+                    @endforelse
+                    </tbody>
+                </table>
+
+                {{-- Pagination --}}
+                @if($lists && $lists->lastPage() > 1)
+                    <div class="d-flex justify-content-center" style='margin-top: 20px;'>
+                        {{ $lists->appends($_GET)->links() }}
+                    </div>
+                @endif
+            </div>
         </div>
-        <!-- Footer -->
-        {{--        @include('layouts.footers.auth')--}}
     </div>
 @endsection
 

@@ -9,129 +9,118 @@
             @slot('title')
                 {{ __('EMPLOYEE') }}
             @endslot
-            <li class="breadcrumb-item"><a href="{{ route('page.index', 'components') }}">{{ __('EMPLOYEE') }}</a>
+            <li class="breadcrumb-item"><a href="{{ route('employeeCommission.view') }}">{{ __('EMPLOYEE') }}</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">{{ __('COMMISSION PAY') }}</li>
         @endcomponent
     @endcomponent
 
-    {{--@section('content')--}}
-    {{--    @include('forms.header')--}}
-
     {{--    <div class="container-fluid mt--6">--}}
-    <div class="wrapper wrapper-content animated">
+    <div class="wrapper wrapper-content">
         <!-- Table -->
-        <div class="row">
-            <div class="col">
-                <div class="card">
-                    <!-- Card header -->
-                    <div class="card-header">
-                        <div>
-                            <form method="GET" action="/employee/commissionpay" role="form" class="form">
-                                <div class="row">
-                                    {{-- USER NAME --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="user_name">USER NAME</label>
-                                            <input class="form-control" name="user_name" id="user_name"
-                                                   type="text" placeholder="USER NAME"
-                                                   value="{{$user_name ?? ''}}">
-                                        </div>
-                                    </div>
-
-                                    {{-- CLIENT CODE --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="client_code">CLIENT CODE</label>
-                                            <input class="form-control" name="client_code" id="client_code"
-                                                   type="text" placeholder="CLIENT CODE"
-                                                   value="{{$client_code ?? ''}}">
-                                        </div>
-                                    </div>
-
-                                    {{-- REPORT DATE --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="report_date">REPORT DATE</label>
-                                            <input class="form-control" name="report_date" id="report_date"
-                                                   type="text" placeholder="REPORT DATE"
-                                                   value="{{$report_date ?? ''}}">
-                                        </div>
-                                    </div>
-
-                                    {{-- SEARCH --}}
-                                    <div class="col-2 col-lg-2  col-sm-2">
-                                        <label class="form-control-label" for="submit_btn"></label>
-                                        <div class="form-group">
-                                            <button class="form-control btn btn-primary" id="submit_btn" type="submit"
-                                                    style="margin-top: 6px;">SEARCH
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </form>
+        <div class="card">
+            <!-- Card header -->
+            <div class="card-header py-2">
+                <form method="GET" action="/employee/commissionpay" role="form" class="form">
+                    <div class="row">
+                        {{-- USER NAME --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="user_name">User Name</label>
+                                <input class="form-control _fz-1" name="user_name" id="user_name"
+                                       type="text" placeholder="User Name" value="{{$user_name ?? ''}}">
+                            </div>
                         </div>
-                    </div>
 
-                    {{-- data table --}}
-                    <div class="table-responsive py-4">
-                        <table class="table table-flush" id="commission_detail">
-                            <thead class="thead-light">
-                            <tr>
-                                <th></th>
-                                <th>USER NAMES</th>
-                                <th>ROLE</th>
-                                <th>COMPANY</th>
-                                <th>REGIONS</th>
-                                <th>CURRENCY</th>
-                                <th>CUSTOMER QTY</th>
-                                <th>BILLED QTY</th>
-                                <th>REPORT DATE</th>
-                                <th>TOTAL BILLED COMMISSION</th>
-                                <th>EXTRA MONTHLY FEE</th>
-                                <th>EXTRA OPS COMM</th>
-                                <th>TOTAL COMPENSATION</th>
-                            </tr>
-                            </thead>
+                        {{-- CLIENT CODE --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="client_code">Client Code</label>
+                                <input class="form-control _fz-1" name="client_code" id="client_code"
+                                       type="text" placeholder="Client Code" value="{{$client_code ?? ''}}">
+                            </div>
+                        </div>
 
-                            <tbody>
-                            @forelse ($lists as $item)
-                                <tr>
-                                    <td></td>
-                                    <td data-attr="user_name">{{ $item->user_name }}</td>
-                                    <td data-attr="role_name">{{ $item->role_name }}</td>
-                                    <td data-attr="company_type">{{ $item->company_type }}</td>
-                                    <td data-attr="region">{{ $item->region }}</td>
-                                    <td data-attr="currency">{{ $item->currency }}</td>
-                                    <td data-attr="customer_qty">{{ $item->customer_qty }}</td>
-                                    <td data-attr="billed_qty">{{ $item->billed_qty }}</td>
-                                    <td data-attr="report_date">{{ $item->report_date }}</td>
-                                    <td data-attr="total_billed_commissions_amount">
-                                        {{ $item->total_billed_commissions_amount }}
-                                    </td>
-                                    <td data-attr="extra_monthly_fee_amount">{{ $item->extra_monthly_fee }}</td>
-                                    <td data-attr="extra_ops_commission_amount">{{ $item->extra_ops_commission }}</td>
-                                    <td data-attr="total_compensation">{{ $item->total_employee_sharing }}</td>
-                                    <input type="hidden" name="user_id" value="{{ $item->id }}">
-                                </tr>
-                            @empty
-                            @endforelse
-                            </tbody>
+                        {{-- REPORT DATE --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="report_date">Report Date</label>
+                                <input class="form-control _fz-1" name="report_date" id="report_date"
+                                       type="text" placeholder="Report Date" value="{{$report_date ?? ''}}">
+                            </div>
+                        </div>
 
-                        </table>
-
-                        {{-- Pagination --}}
-                        <div class="d-flex justify-content-center">
-                            @if($lists)
-                                {!! $lists->links() !!}
-                            @endif
+                        {{-- SEARCH --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <label class="form-control-label" for="submit_btn"></label>
+                            <div class="form-group mb-0">
+                                <button class="form-control btn _btn btn-primary _fz-1" id="submit_btn" type="submit"
+                                        style="margin-top: 6px;">Search
+                                </button>
+                            </div>
                         </div>
 
                     </div>
-
-                </div>
+                </form>
             </div>
+
+            {{-- data table --}}
+            <div class="table-responsive">
+                <table class="table table-sm _table" id="commission_detail">
+                    <thead class="thead-light">
+                    <tr>
+                        <th></th>
+                        <th>User Names</th>
+                        <th>Role</th>
+                        <th>Company</th>
+                        <th>Regions</th>
+                        <th>Currency</th>
+                        <th>Customer Qty</th>
+                        <th>Billed Qty</th>
+                        <th>Report Date</th>
+                        <th>Total Billed Commission</th>
+                        <th>Extra Monthly Fee</th>
+                        <th>Extra Ops Comm</th>
+                        <th>Total Compensation</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    @forelse ($lists as $item)
+                        <tr>
+                            <td></td>
+                            <td data-attr="user_name">{{ $item->user_name }}</td>
+                            <td data-attr="role_name">{{ $item->role_name }}</td>
+                            <td data-attr="company_type">{{ $item->company_type }}</td>
+                            <td data-attr="region">{{ $item->region }}</td>
+                            <td data-attr="currency">{{ $item->currency }}</td>
+                            <td data-attr="customer_qty">{{ $item->customer_qty }}</td>
+                            <td data-attr="billed_qty">{{ $item->billed_qty }}</td>
+                            <td data-attr="report_date">{{ $item->report_date }}</td>
+                            <td data-attr="total_billed_commissions_amount">
+                                {{ $item->total_billed_commissions_amount }}
+                            </td>
+                            <td data-attr="extra_monthly_fee_amount">{{ $item->extra_monthly_fee }}</td>
+                            <td data-attr="extra_ops_commission_amount">{{ $item->extra_ops_commission }}</td>
+                            <td data-attr="total_compensation">{{ $item->total_employee_sharing }}</td>
+                            <input type="hidden" name="user_id" value="{{ $item->id }}">
+                        </tr>
+                    @empty
+                    @endforelse
+                    </tbody>
+
+                </table>
+
+
+                {{-- Pagination --}}
+                @if($lists && $lists->lastPage() > 1)
+                    <div class="d-flex justify-content-center" style='margin-top: 20px;'>
+                        {{ $lists->appends($_GET)->links() }}
+                    </div>
+                @endif
+
+            </div>
+
         </div>
     </div>
 @endsection
@@ -197,18 +186,18 @@
                             "data": null,
                             "defaultContent": ""
                         },
-                        {"data": "USER NAMES"},
-                        {"data": "ROLE"},
-                        {"data": "COMPANY"},
-                        {"data": "REGIONS"},
-                        {"data": "CURRENCY"},
-                        {"data": "CUSTOMER QTY"},
-                        {"data": "BILLED QTY"},
-                        {"data": "REPORT DATE"},
-                        {"data": "TOTAL BILLED COMMISSION"},
-                        {"data": "EXTRA MONTHLY FEE"},
-                        {"data": "EXTRA OPS COMM"},
-                        {"data": "TOTAL COMPENSATION"}
+                        {"data": "User Names"},
+                        {"data": "Role"},
+                        {"data": "Company"},
+                        {"data": "Regions"},
+                        {"data": "Currency"},
+                        {"data": "Customer Qty"},
+                        {"data": "Billed Qty"},
+                        {"data": "Report Date"},
+                        {"data": "Total Billed Commission"},
+                        {"data": "Extra Monthly Fee"},
+                        {"data": "Extra Ops Comm"},
+                        {"data": "Total Compensation"}
                     ]
                 });
 

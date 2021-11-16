@@ -9,57 +9,48 @@
             @slot('title')
                 {{ __('ADMIN') }}
             @endslot
-            <li class="breadcrumb-item"><a href="{{ route('page.index', 'components') }}">{{ __('ADMIN') }}</a>
+            <li class="breadcrumb-item"><a href="{{ route('admin.adminView') }}">{{ __('ADMIN') }}</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">{{ __('APPROVAL ADMIN') }}</li>
         @endcomponent
     @endcomponent
 
-    {{--@section('content')--}}
-    {{--    @include('forms.header')--}}
-
     <div class="wrapper wrapper-content animated">
         <!-- Table -->
-        <div class="row">
-            <div class="col">
-                <div class="card">
-                    <!-- Card header -->
-                    <div class="card-header">
-                        <div>
-                            <div class="row">
+        <div class="card py-2">
+            <!-- Card header -->
+            <div class="card-header">
+                <div class="row">
 
-                                {{-- REPORT DATE --}}
-                                <div class="col-2 col-lg-2  col-sm-2">
-                                    <div class="form-group">
-                                        <label class="form-control-label" for="report_date">REPORT DATE</label>
-                                        <input class="form-control" name="report_date" id="report_date"
-                                               type="text" placeholder="REPORT DATE" value="{{$report_date ?? ''}}">
-                                    </div>
-                                </div>
-
-                                {{-- BATCH APPROVE --}}
-                                <div class="col-2 col-lg-2 col-sm-2">
-                                    <label class="form-control-label" for="batch_approve_btn"></label>
-                                    <div class="form-group">
-                                        <button class="form-control btn btn-primary" id="batch_approve_btn"
-                                                type="button" style="margin-top: 0.45rem;">BATCH APPROVE
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {{-- REVOKE APPROVAL --}}
-                                <div class="col-2 col-lg-2 col-sm-2">
-                                    <label class="form-control-label" for="revoke_approval_btn"></label>
-                                    <div class="form-group">
-                                        <button class="form-control btn btn-default" id="revoke_approval_btn"
-                                                type="button" style="margin-top: 0.45rem;">REVOKE APPROVAL
-                                        </button>
-                                    </div>
-                                </div>
-
-                            </div>
+                    {{-- REPORT DATE --}}
+                    <div class="col-lg-2 col-md-6 col-sm-6">
+                        <div class="form-group mb-0">
+                            <label class="form-control-label _fz-1" for="report_date">Report Date</label>
+                            <input class="form-control _fz-1" name="report_date" id="report_date"
+                                   type="text" placeholder="Report Date" value="{{$report_date ?? ''}}">
                         </div>
                     </div>
+
+                    {{-- BATCH APPROVE --}}
+                    <div class="col-lg-2 col-md-6 col-sm-6">
+                        <label class="form-control-label" for="batch_approve_btn"></label>
+                        <div class="form-group mb-0">
+                            <button class="form-control btn _btn btn-primary _fz-1" id="batch_approve_btn"
+                                    type="button" style="margin-top: 0.45rem;">Batch Approve
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- REVOKE APPROVAL --}}
+                    <div class="col-lg-2 col-md-6 col-sm-6">
+                        <label class="form-control-label" for="revoke_approval_btn"></label>
+                        <div class="form-group mb-0">
+                            <button class="form-control btn _btn btn-default _fz-1" id="revoke_approval_btn"
+                                    type="button" style="margin-top: 0.45rem;">Revoke Approval
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -85,7 +76,7 @@
                 if (!reportDate) {
                     swal({
                         icon: "error",
-                        text: "report date can't be empty"
+                        text: "Report Date Can't Be Empty"
                     });
                     return;
                 }
@@ -103,12 +94,12 @@
                         if (res.status !== 200) {
                             swal({
                                 icon: 'error',
-                                text: 'ERROR'
+                                text: 'Error'
                             });
                         } else {
                             swal({
                                 icon: 'success',
-                                text: 'UPDATED'
+                                text: 'Updated'
                             });
                         }
                     },
@@ -151,14 +142,14 @@
                         } else {
                             swal({
                                 icon: 'success',
-                                text: 'UPDATED'
+                                text: 'Updated'
                             });
                         }
                     },
                     error: function () {
                         swal({
                             icon: 'error',
-                            text: 'API ERROR'
+                            text: 'Api Error'
                         });
                     }
                 });
