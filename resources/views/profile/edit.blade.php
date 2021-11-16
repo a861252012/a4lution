@@ -31,7 +31,7 @@
                             <div class="pl-lg-4">
                                 <div class="form-group{{ $errors->has('user_name') ? ' has-danger' : '' }}">
                                     <label class="form-control-label"
-                                           for="input-user-name">{{ __('user_name') }}</label>
+                                           for="input-user-name">{{ __('User Name') }}</label>
                                     <input type="text" name="user_name" id="input-user-name"
                                            class="form-control{{ $errors->has('user_name') ? ' is-invalid' : '' }}"
                                            placeholder="{{ __('user_name') }}"
@@ -41,7 +41,7 @@
                                 </div>
                                 <div class="form-group{{ $errors->has('full_name') ? ' has-danger' : '' }}">
                                     <label class="form-control-label"
-                                           for="input-full-name">{{ __('full_name') }}</label>
+                                           for="input-full-name">{{ __('Full Name') }}</label>
                                     <input type="text" name="full_name" id="input-full-name" maxlength="20"
                                            class="form-control{{ $errors->has('full_name') ? ' is-invalid' : '' }}"
                                            placeholder="{{ __('full_name') }}"
@@ -51,7 +51,7 @@
                                 </div>
                                 <div class="form-group{{ $errors->has('company_name') ? ' has-danger' : '' }}">
                                     <label class="form-control-label required"
-                                           for="input-company-name">{{ __('company_name') }}</label>
+                                           for="input-company-name">{{ __('Company Name') }}</label>
                                     <input type="text" name="company_name" id="input-company-name"
                                            class="form-control{{ $errors->has('company_name') ? ' is-invalid' : '' }}"
                                            placeholder="{{ __('company_name') }}" maxlength="30"
@@ -61,7 +61,7 @@
                                 </div>
                                 <div class="form-group{{ $errors->has('address') ? ' has-danger' : '' }}">
                                     <label class="form-control-label required"
-                                           for="input-address">{{ __('address') }}</label>
+                                           for="input-address">{{ __('Address') }}</label>
                                     <input type="text" name="address" id="input-address"
                                            class="form-control{{ $errors->has('address') ? ' is-invalid' : '' }}"
                                            placeholder="{{ __('address') }}" maxlength="40"
@@ -71,7 +71,7 @@
                                 </div>
                                 <div class="form-group{{ $errors->has('phone_number') ? ' has-danger' : '' }}">
                                     <label class="form-control-label required"
-                                           for="input-phone-number">{{ __('phone_number') }}</label>
+                                           for="input-phone-number">{{ __('Phone Number') }}</label>
                                     <input type="tel" name="phone_number" id="input-phone-number" minlength="6"
                                            maxlength="20" pattern="[0-9]+"
                                            class="form-control{{ $errors->has('phone_number') ? ' is-invalid' : '' }}"
@@ -90,7 +90,7 @@
                                     @include('alerts.feedback', ['field' => 'email'])
                                 </div>
                                 <div class="text-center">
-                                    <button type="submit" class="btn btn-success mt-4">{{ __('update') }}</button>
+                                    <button type="submit" class="btn btn-success mt-4">{{ __('Update') }}</button>
                                 </div>
                             </div>
                         </form>
@@ -135,7 +135,7 @@
 
                                 <div class="text-center">
                                     <button type="submit"
-                                            class="btn btn-success mt-4">{{ __('Change password') }}</button>
+                                            class="btn btn-success mt-4">{{ __('Change Password') }}</button>
                                 </div>
                             </div>
                         </form>

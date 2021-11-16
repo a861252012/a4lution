@@ -14,7 +14,7 @@
         @endcomponent
     @endcomponent
 
-    <div class="wrapper wrapper-content animated">
+    <div class="wrapper wrapper-content">
         <!-- Card -->
         <div class="card">
             <!-- Card header -->
@@ -24,7 +24,7 @@
                 <form method="GET" action="/invoice/issue" role="form" class="form">
                     <div class="row">
                         {{-- CLIENT CODE --}}
-                        <div class="col-lg-2  col-md-6 col-sm-6">
+                        <div class="col-lg-2 col-md-6 col-sm-6">
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="sel_client_code">Client Code</label>
                                 <select class="form-control _fz-1" data-toggle="select" name="sel_client_code"
@@ -85,7 +85,7 @@
 
             {{-- data table --}}
             <div class="table-responsive">
-                <table class="table table-flush table-sm _table">
+                <table class="table table-sm _table">
                     <thead class="thead-light">
                     <tr>
                         <th>Report Date</th>
