@@ -18,64 +18,64 @@
     {{--   ORDER SUMMARY  --}}
     <div class="row">
         <div class="col">
-            <div class="text-warning"><strong>ORDER SUMMARY</strong></div>
+            <div class="text-warning"><strong>Order Summary</strong></div>
         </div>
     </div>
-    <hr>
+    <hr class="my-2">
     <div class="row">
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Package Id:</label>{{$package_id}}
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Package Id:</label>{{$package_id}}
         </div>
 
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Erp Order Id:</label>{{$erp_order_id}}
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Erp Order Id:</label>{{$erp_order_id}}
         </div>
 
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Platform:</label>{{$platform}}
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Acc Nick Name:</label>{{$acc_nick_name}}
-        </div>
-
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Acc Name:</label>{{$acc_name}}
-        </div>
-
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Site:</label>{{$site_id}}
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Platform:</label>{{$platform}}
         </div>
     </div>
 
     <div class="row">
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Warehouse:</label>{{$warehouse}}
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Acc Nick Name:</label>{{$acc_nick_name}}
         </div>
 
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Shipping Method:</label>{{$lists['sm_code']}}
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Acc Name:</label>{{$acc_name}}
         </div>
 
-        <div class="col-4 form-group">
-            <label class="form-control-label"
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Site:</label>{{$site_id}}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Warehouse:</label>{{$warehouse}}
+        </div>
+
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Shipping Method:</label>{{$lists['sm_code']}}
+        </div>
+
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1"
                    style="font-weight:bold;">Tracking:</label>{{$lists['tracking_number']}}
         </div>
     </div>
 
     <div class="row">
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Audit Date:</label>{{$lists['add_time']}}
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Audit Date:</label>{{$lists['add_time']}}
         </div>
 
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Paid Date:</label>{{$lists['order_paydate']}}
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Paid Date:</label>{{$lists['order_paydate']}}
         </div>
 
-        <div class="col-4 form-group">
-            <label class="form-control-label inline_shipped_date" style="font-weight:bold;" 
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1 inline_shipped_date" style="font-weight:bold;" 
                 data-attr="{{$shipped_date}}">Shipped Date:</label>{{$shipped_date}}
         </div>
     </div>
@@ -83,40 +83,40 @@
     {{--   PRODUCT DETAILS     --}}
     <div class="row">
         <div class="col">
-            <div class="text-warning"><strong>PRODUCT DETAILS</strong></div>
+            <div class="text-warning"><strong>Product Details</strong></div>
         </div>
     </div>
-    <hr>
+    <hr class="my-2">
 
     <div class="row">
-        <div class="col-12 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Product Name:</label>{{$lists['product_title']}}
+        <div class="col-12 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Product Name:</label>{{$lists['product_title']}}
         </div>
     </div>
 
     <div class="row">
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Platform Sku:
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Platform Sku:
             </label>{{$lists['op_platform_sales_sku']}}
         </div>
-        <div class="col-4 form-group">
-            <label class="form-control-label"
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1"
                    style="font-weight:bold;">Item Id(ASIN):</label>{{$lists['asin_or_item']}}
         </div>
-        <div class="col-4 form-group" id="supplier" data-label="{{$supplier}}">
-            <label class="form-control-label" style="font-weight:bold;">Supplier:</label>{{$supplier}}
+        <div class="col-4 form-group _fz-1" id="supplier" data-label="{{$supplier}}">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Supplier:</label>{{$supplier}}
         </div>
     </div>
 
     <div class="row">
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Sku:</label>{{$sku}}
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Sku:</label>{{$sku}}
         </div>
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Qty:</label>{{$lists['quantity']}}
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Qty:</label>{{$lists['quantity']}}
         </div>
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Product Weight:</label>{{$lists['weight']}}
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Product Weight:</label>{{$lists['weight']}}
         </div>
     </div>
 
@@ -124,56 +124,55 @@
     {{--  PRODUCT PROFIT DETAILS --}}
     <div class="row">
         <div class="col">
-            <div class="text-warning"><strong>PRODUCT PROFIT DETAILS</strong></div>
+            <div class="text-warning"><strong>Product Profit Details</strong></div>
         </div>
     </div>
-    <hr>
+    <hr class="my-2">
 
     <div class="row">
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Order Original
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Order Original
                 Ccurrency:</label>{{$lists['currency_code_org']}}
         </div>
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">HKD Rate:</label>
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">HKD Rate:</label>
             {{$exchange_rate[$lists['currency_code_org']]}}
         </div>
     </div>
 
     <div class="row">
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Erp Original Currency:</label>{{'RMB'}}
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Erp Original Currency:</label>{{'RMB'}}
         </div>
-        <div class="col-4 form-group">
-            <label class="form-control-label" style="font-weight:bold;">HKD Rate:</label>
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">HKD Rate:</label>
             {{$exchange_rate['RMB']}}
         </div>
     </div>
 
     <div class="row">
-        <div class="col-6 form-group">
-            <label class="form-control-label" style="font-weight:bold;">(AMAZON)Promotion Metadata Definition Value:</label>
+        <div class="col-6 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">(AMAZON)Promotion Metadata Definition Value:</label>
             {{$lists['promotion_amount']}}
         </div>
-        <div class="col-6 form-group">
-            <label class="form-control-label" style="font-weight:bold;">Percentage Discount:</label>
+        <div class="col-6 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Percentage Discount:</label>
             {{$lists['promotion_discount_rate']}}
         </div>
     </div>
 
-    <hr>
+    <hr class="my-2">
 
     {{-- EDIT BUTTON --}}
     <div class="row justify-content-center align-items-center">
         <div class="col">
-            {{--                <button class="btn btn-primary" type="button" id="edit_btn" onclick="editOrderDetail()">EDIT</button>--}}
-            <button class="btn btn-primary" type="button" id="edit_btn" data-attr="{{$lists['product_id']}}">EDIT
+            <button class="btn btn-primary _fz-1" type="button" id="edit_btn" data-attr="{{$lists['product_id']}}">Edit
             </button>
         </div>
     </div>
 
     {{-- table --}}
-    <table class="table">
+    <table class="table table-sm _table">
         <thead>
         <tr class="bg-primary">
             <th scope="col"></th>
@@ -187,8 +186,8 @@
         <tbody>
 
         <tr class="table-success">
-            <th scope="row"><strong>ORDER PRICE</strong></th>
-            <td>ORDER PRICE</td>
+            <th scope="row"><strong>Order Price</strong></th>
+            <td>Order Price</td>
             <td></td>
             <td>{{$order_price}}</td>
             <td>{{$lists['order_price_hkd']}}</td>
@@ -196,14 +195,14 @@
 
         {{--  PRODUCT COST  --}}
         <tr class="table-info">
-            <th rowspan="2"><strong>PRODUCT COST</strong></th>
-            <td>PURCHASE SHIPPING FEE</td>
+            <th rowspan="2"><strong>Product Cost</strong></th>
+            <td>Purchase Shipping Fee</td>
             <td>{{$lists['purchase_shipping_fee']}}</td>
             <td></td>
             <td>{{$lists['purchase_shipping_fee_hkd']}}</td>
         </tr>
         <tr class="table-info">
-            <th scope="row">PRODUCT COST</th>
+            <th scope="row">Product Cost</th>
             <td>{{$lists['product_cost']}}</td>
             <td></td>
             <td>{{$lists['product_cost_hkd']}}</td>
@@ -211,8 +210,8 @@
 
         {{-- SKIPPING FEE --}}
         <tr>
-            <th rowspan="3"><strong>SHIPPING FEE</strong></th>
-            <th>FIRST MILE SHIPPING FEE</th>
+            <th rowspan="3"><strong>Shipping Fee</strong></th>
+            <th>First Mile Shipping Fee</th>
             <td></td>
             <td><input type="text" class="editable" name="first_mile_shipping_fee"
                        value="{{$lists['first_mile_shipping_fee']}}"
@@ -220,14 +219,14 @@
             <td>{{$lists['first_mile_shipping_fee_hkd']}}</td>
         </tr>
         <tr>
-            <th scope="row">FIRST MILE TARIFF</th>
+            <th scope="row">First Mile Tariff</th>
             <td></td>
             <td><input type="text" class="editable" name="first_mile_tariff" value="{{$lists['first_mile_tariff']}}"
                        readonly></td>
             <td>{{$lists['first_mile_tariff_hkd']}}</td>
         </tr>
         <tr>
-            <th scope="row">LAST MILE SHIPPING FEE</th>
+            <th scope="row">Last Mile Shipping Fee</th>
             <td></td>
             <td><input type="text" class="editable" name="last_mile_shipping_fee"
                        value="{{$lists['last_mile_shipping_fee']}}"
@@ -237,15 +236,15 @@
 
         {{-- PLATFORM FEE --}}
         <tr class="table-info">
-            <th rowspan="2"><strong>PLATFORM FEE</strong></th>
-            <th>PAYPAL FEE</th>
+            <th rowspan="2"><strong>Platform Fee</strong></th>
+            <th>Paypal Fee</th>
             <td></td>
             <td><input type="text" name="paypal_fee" class="editable" value="{{$lists['paypal_fee']}}"
                        readonly></td>
             <td>{{$lists['paypal_fee_hkd']}}</td>
         </tr>
         <tr class="table-info">
-            <th scope="row">TRANSACTION FEE</th>
+            <th scope="row">Transaction Fee</th>
             <td></td>
             <td><input type="text" name="transaction_fee" class="editable" value="{{$lists['transaction_fee']}}"
                        readonly></td>
@@ -254,8 +253,8 @@
 
         {{-- FBA FEE --}}
         <tr>
-            <th scope="row"><strong>FBA FEE</strong></th>
-            <td>FBA FEE</td>
+            <th scope="row"><strong>Fba Fee</strong></th>
+            <td>Fba Fee</td>
             <td></td>
             <td><input type="text" name="fba_fee" class="editable" value="{{$lists['fba_fee']}}" readonly></td>
             <td>{{$lists['fba_fee_hkd']}}</td>
@@ -263,8 +262,8 @@
 
         {{-- OTHER TRANSACTION FEE --}}
         <tr class="table-info">
-            <th rowspan="4"><strong>OTHER TRANSACTION</strong></th>
-            <td>OTHER TRANSACTION</td>
+            <th rowspan="4"><strong>Other Transaction</strong></th>
+            <td>Other Transaction</td>
             <td></td>
             <td><input type="text" name="other_transaction" class="editable" value="{{$lists['other_transaction']}}"
                        readonly>
@@ -299,7 +298,7 @@
             <th rowspan="row"></th>
             <td></td>
             <td></td>
-            <td><strong>GROSS PROFIT</strong></td>
+            <td><strong>Gross Profit</strong></td>
             <td><strong>{{$lists['gross_profit']}}</strong></td>
         </tr>
         </tbody>
@@ -308,29 +307,29 @@
     {{-- Button --}}
     <div class="row justify-content-center align-items-center">
         <div class="col-3">
-            <button class="btn btn-primary" type="button" id="inline_submit">Submit</button>
+            <button class="btn btn-primary _fz-1" type="button" id="inline_submit">Submit</button>
         </div>
         <div class="col-3">
-            <button class="btn btn-primary" type="button" id="cancel_btn">Cancel</button>
+            <button class="btn btn-primary _fz-1" type="button" id="cancel_btn">Cancel</button>
         </div>
     </div>
 
-    <hr>
+    <hr class="my-2">
     {{-- table --}}
     <div class="row">
         <div class="col">
-            <div class="text-warning"><strong>CHANGE LOG</strong></div>
+            <div class="text-warning"><strong>Change Log</strong></div>
         </div>
     </div>
-    <hr>
-    <table class="table table table-striped">
+    <hr class="my-2">
+    <table class="table table-sm _table table-striped">
         <thead>
         <tr class="bg-primary">
-            <th class="text-white" scope="col"><strong>{{'FIELD NAME'}}</strong></th>
-            <th class="text-white" scope="col"><strong>{{'ORIGINAL VALUE'}}</strong></th>
-            <th class="text-white" scope="col"><strong>{{'NEW VALUE'}}</strong></th>
-            <th class="text-white" scope="col"><strong>{{'DATE'}}</strong></th>
-            <th class="text-white" scope="col"><strong>{{'USER'}}</strong></th>
+            <th class="text-white" scope="col"><strong>{{'Field Name'}}</strong></th>
+            <th class="text-white" scope="col"><strong>{{'Original Value'}}</strong></th>
+            <th class="text-white" scope="col"><strong>{{'New Value'}}</strong></th>
+            <th class="text-white" scope="col"><strong>{{'Date'}}</strong></th>
+            <th class="text-white" scope="col"><strong>{{'User'}}</strong></th>
         </tr>
         </thead>
         <tbody>

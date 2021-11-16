@@ -112,10 +112,8 @@
                         <tr>
                             {{-- edit --}}
                             <td>
-                                <a class="ajax_btn form-control btn">
-                                    <div>
-                                        <i class="ni ni-settings"></i>
-                                    </div>
+                                <a class="ajax_btn btn p-0">
+                                    <i class="ni ni-settings"></i>
                                 </a>
                             </td>
                             <td class="platform">{{ $item->platform }}</td>
