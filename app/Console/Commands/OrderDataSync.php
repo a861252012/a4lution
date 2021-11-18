@@ -6,8 +6,8 @@ use App\Repositories\AmazonReportListRepository;
 use App\Repositories\OrderProductsRepository;
 use App\Repositories\OrderSkuCostDetailsRepository;
 use App\Repositories\OrdersRepository;
+use App\Support\ERPRequester;
 use Carbon\Carbon;
-use GuzzleHttp\Client;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -60,25 +60,31 @@ class OrderDataSync extends Command
      */
     public function handle()
     {
-        $startDateTime = $this->argument('date') ? Carbon::parse($this->argument('date'))
-            ->format('Y-m-d 00:00:00') : now()->subDay()->format('Y-m-d 00:00:00');
+        $startDateTime = $this->argument('date') ? Carbon::parse($this->argument('date'))->startOfDay()
+            : now()->subDay()->startOfDay();
 
-        $endDateTime = $this->argument('date') ? Carbon::parse($this->argument('date'))
-            ->format('Y-m-d 23:59:59') : now()->subDay()->format('Y-m-d 23:59:59');
+        $endDateTime = $this->argument('date') ? Carbon::parse($this->argument('date'))->endOfDay()
+            : now()->subDay()->endOfDay();
 
         $pageSize = 500;
         $orderCostParamsArr = array();//儲存請求getOrderCostDetailSku的參數.
         $orderProductParamsArr = array();//儲存sku和訂單編號以便後續update order_products剩餘欄位.
         $ordersData = array();//儲存要 insert orders 的訂單資訊
         $getAVOSellerID = array();//儲存當日不重複的AVO seller_id
-        $res = $this->sendERPRequest(
+
+        $res = (new ERPRequester)->send(
             config('services.erp.wmsUrl'),
             self::GET_ORDER,
-            [],
-            $startDateTime,
-            $endDateTime,
-            $pageSize
+            [
+                'shipDateFor' => $startDateTime,
+                'shipDateTo' => $endDateTime,
+                "pagination" => [
+                    "page" => 1,
+                    "pageSize" => $pageSize
+                ]
+            ],
         );
+
         $ordersWhiteList = $this->ordersRepository->getTableColumns();
 
         if (!$res['data']) {
@@ -89,12 +95,10 @@ class OrderDataSync extends Command
         foreach ($res['data'] as $v) {
             //逐一透過商品sku取得商品詳細內容
             foreach ($v['productList'] as $productListItem) {
-                $getProductInfo = $this->sendERPRequest(
+                $getProductInfo = (new ERPRequester)->send(
                     config('services.erp.wmsUrl'),
                     self::GET_PRODUCT_BY_SKU,
-                    [
-                        'productSku' => $productListItem['sku']
-                    ]
+                    ['productSku' => $productListItem['sku']]
                 );
 
                 //如果回傳的 procutCategoryName1 是 AVO,則儲存產品資訊到 order_products
@@ -170,20 +174,23 @@ class OrderDataSync extends Command
             sleep(1);//避免請求太頻繁被擋
 
             for ($i = 2; $i <= $totalPage; $i++) {
-                $content = $this->sendERPRequest(
+                $content = (new ERPRequester)->send(
                     config('services.erp.wmsUrl'),
                     self::GET_ORDER,
-                    [],
-                    $startDateTime,
-                    $endDateTime,
-                    $pageSize,
-                    $i
+                    [
+                        'shipDateFor' => $startDateTime,
+                        'shipDateTo' => $endDateTime,
+                        "pagination" => [
+                            "page" => $i,
+                            "pageSize" => $pageSize
+                        ]
+                    ],
                 )['data'];
 
                 foreach ($content as $v) {
                     //如果回傳的procutCategoryName1 是 AVO,則儲存產品資訊到 order_products
                     foreach ($v['productList'] as $productListItem) {
-                        $getProductInfos = $this->sendERPRequest(
+                        $getProductInfos = (new ERPRequester)->send(
                             config('services.erp.wmsUrl'),
                             self::GET_PRODUCT_BY_SKU,
                             ['productSku' => $productListItem['sku']]
@@ -258,11 +265,12 @@ class OrderDataSync extends Command
             $costDetailArray = array();
 
             foreach ($orderCostParamsArr as $v) {
-                $getCostDetail = $this->sendERPRequest(
+                $getCostDetail = (new ERPRequester)->send(
                     config('services.erp.wmsUrl'),
                     self::GET_ORDER_DETAIL,
                     $v
                 );
+
 
                 if ($getCostDetail['data']) {
                     $tempCostDetailArr = array();
@@ -335,7 +343,7 @@ class OrderDataSync extends Command
                     "pageSize" => $pageSize
                 ];
 
-                $amazonReportList = $this->sendERPRequest(
+                $amazonReportList = (new ERPRequester)->send(
                     config('services.erp.ebUrl'),
                     self::AMZ_REPORT,
                     $getAmazonReportParams
@@ -362,7 +370,7 @@ class OrderDataSync extends Command
 
                             //TODO
                             if ($item) {
-                                $amazonReportList = $this->sendERPRequest(
+                                $amazonReportList = (new ERPRequester)->send(
                                     config('services.erp.ebUrl'),
                                     self::AMZ_REPORT,
                                     $getAmazonReportParam
@@ -451,93 +459,6 @@ class OrderDataSync extends Command
 
         Log::channel('daily_order_sync')
             ->info("[daily_order_sync.endTime]" . date("Y-m-d H:i:s"));
-    }
-
-    private function sendERPRequest(
-        string $url,
-        string $serviceName,
-        array  $customParam = [],
-        string $startDateTime = "",
-        string $endDateTime = "",
-        int    $pageSize = 100,
-        int    $page = 1
-    ) {
-        $jsonParams = $customParam ? json_encode($customParam) : $this->formatParams(
-            $startDateTime,
-            $endDateTime,
-            $page,
-            $pageSize
-        );
-
-        Log::channel('daily_order_sync')
-            ->info("[daily_order_sync.{$serviceName}.reqJSON]" . $jsonParams);
-
-        $ebSoapRequest = $this->genXML(
-            $jsonParams,
-            config('services.erp.ebAccount'),
-            config('services.erp.ebPwd'),
-            $serviceName
-        );
-
-        $client = new Client();
-
-        $res = $client->request(
-            'POST',
-            $url,
-            [
-                'body' => $ebSoapRequest
-            ]
-        )->getBody()->getContents();
-
-        $analyzedRes = json_decode($this->analyzeSOAP($res), true);
-
-        Log::channel('daily_order_sync')
-            ->info("[daily_order_sync.{$serviceName}.resJSON]" . json_encode($analyzedRes));
-
-        return $analyzedRes;
-    }
-
-    private function formatParams(string $startDateTime, string $endDateTime, int $page = 1, int $pageSize = 100)
-    {
-        return json_encode([
-            'shipDateFor' => $startDateTime,
-            'shipDateTo' => $endDateTime,
-            "pagination" => [
-                "page" => $page, "pageSize" => $pageSize
-            ]
-        ]);
-    }
-
-    private function genXML(string $paramsJson, string $userName, string $userPass, string $serviceName): string
-    {
-        return <<< EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://www.example.org/Ec/">
-  <SOAP-ENV:Body>
-    <ns1:callService>
-      <paramsJson>$paramsJson</paramsJson>
-      <userName>$userName</userName>
-      <userPass>$userPass</userPass>
-      <service>$serviceName</service>
-    </ns1:callService>
-  </SOAP-ENV:Body>
-</SOAP-ENV:Envelope>
-EOF;
-    }
-
-    private function analyzeSOAP(string $soapForm): string
-    {
-        // converting
-        $soapForm = preg_replace('/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', ' ', $soapForm);
-        $soapForm = str_replace("SOAP-ENV:", "", $soapForm);
-        $soapForm = str_replace("<ns1:callServiceResponse>", "", $soapForm);
-        $soapForm = str_replace("</ns1:callServiceResponse>", "", $soapForm);
-
-        // converting to XML
-        $parser = simplexml_load_string($soapForm);
-
-        // get response
-        return $parser->Body->response->__toString();
     }
 
     public function camelToSnakeCase(string $string): string

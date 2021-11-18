@@ -6,31 +6,25 @@ use GuzzleHttp\Client;
 
 class ERPRequester
 {
-    private const EB_ACCOUNT = 'IT2';
-    private const EB_PWD = 'AbAO@12';
-    
     public function send(
         string $url,
         string $serviceName,
         array  $customParam = []
-    ): array
-    {
+    ): array {
         $ebSoapRequest = $this->genXML(
             json_encode($customParam),
-            self::EB_ACCOUNT,
-            self::EB_PWD,
+            config('services.erp.ebAccount'),
+            config('services.erp.ebPwd'),
             $serviceName
         );
 
-        $client = new Client();
-
-        $res = $client->request(
-                'POST',
-                $url,
-                [
-                    'body' => $ebSoapRequest
-                ]
-            )
+        $res = (new Client())->request(
+            'POST',
+            $url,
+            [
+                'body' => $ebSoapRequest
+            ]
+        )
             ->getBody()
             ->getContents();
 
@@ -62,10 +56,7 @@ class ERPRequester
         $soapForm = str_replace("<ns1:callServiceResponse>", "", $soapForm);
         $soapForm = str_replace("</ns1:callServiceResponse>", "", $soapForm);
 
-        // converting to XML
-        $parser = simplexml_load_string($soapForm);
-
-        // get response
-        return $parser->Body->response->__toString();
+        // converting to XML and get response
+        return simplexml_load_string($soapForm)->Body->response->__toString();
     }
 }
