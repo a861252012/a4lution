@@ -18,6 +18,7 @@ class OrderDataSync extends Command
     private const GET_PRODUCT_BY_SKU = 'getProductBySku';
     private const GET_ORDER_DETAIL = 'getOrderCostDetailSku';
     private const AMZ_REPORT = 'amazonReportList';
+
     /**
      * The name and signature of the console command.
      *
@@ -34,7 +35,7 @@ class OrderDataSync extends Command
     private OrderProductsRepository $orderProductsRepository;
     private OrderSkuCostDetailsRepository $orderSkuCostDetailsRepository;
     private AmazonReportListRepository $amazonReportListRepository;
-
+    private ERPRequester $erpRequest;
 
     /**
      * Create a new command instance.
@@ -45,13 +46,15 @@ class OrderDataSync extends Command
         OrdersRepository              $ordersRepository,
         OrderProductsRepository       $orderProductsRepository,
         OrderSkuCostDetailsRepository $orderSkuCostDetailsRepository,
-        AmazonReportListRepository    $amazonReportListRepository
+        AmazonReportListRepository    $amazonReportListRepository,
+        ERPRequester    $ERPRequest
     ) {
         parent::__construct();
         $this->ordersRepository = $ordersRepository;
         $this->orderProductsRepository = $orderProductsRepository;
         $this->orderSkuCostDetailsRepository = $orderSkuCostDetailsRepository;
         $this->amazonReportListRepository = $amazonReportListRepository;
+        $this->erpRequest = $ERPRequest;
     }
 
     /**
@@ -60,11 +63,11 @@ class OrderDataSync extends Command
      */
     public function handle()
     {
-        $startDateTime = $this->argument('date') ? Carbon::parse($this->argument('date'))->startOfDay()
-            : now()->subDay()->startOfDay();
+        $startDateTime = $this->argument('date') ? Carbon::parse($this->argument('date'))
+            ->startOfDay()->toDateTimeString() : now()->subDay()->startOfDay()->toDateTimeString();
 
-        $endDateTime = $this->argument('date') ? Carbon::parse($this->argument('date'))->endOfDay()
-            : now()->subDay()->endOfDay();
+        $endDateTime = $this->argument('date') ? Carbon::parse($this->argument('date'))
+            ->endOfDay()->toDateTimeString() : now()->subDay()->endOfDay()->toDateTimeString();
 
         $pageSize = 500;
         $orderCostParamsArr = array();//儲存請求getOrderCostDetailSku的參數.
@@ -72,7 +75,7 @@ class OrderDataSync extends Command
         $ordersData = array();//儲存要 insert orders 的訂單資訊
         $getAVOSellerID = array();//儲存當日不重複的AVO seller_id
 
-        $res = (new ERPRequester)->send(
+        $res = $this->erpRequest->send(
             config('services.erp.wmsUrl'),
             self::GET_ORDER,
             [
@@ -95,7 +98,7 @@ class OrderDataSync extends Command
         foreach ($res['data'] as $v) {
             //逐一透過商品sku取得商品詳細內容
             foreach ($v['productList'] as $productListItem) {
-                $getProductInfo = (new ERPRequester)->send(
+                $getProductInfo = $this->erpRequest->send(
                     config('services.erp.wmsUrl'),
                     self::GET_PRODUCT_BY_SKU,
                     ['productSku' => $productListItem['sku']]
@@ -174,7 +177,7 @@ class OrderDataSync extends Command
             sleep(1);//避免請求太頻繁被擋
 
             for ($i = 2; $i <= $totalPage; $i++) {
-                $content = (new ERPRequester)->send(
+                $content = $this->erpRequest->send(
                     config('services.erp.wmsUrl'),
                     self::GET_ORDER,
                     [
@@ -190,7 +193,7 @@ class OrderDataSync extends Command
                 foreach ($content as $v) {
                     //如果回傳的procutCategoryName1 是 AVO,則儲存產品資訊到 order_products
                     foreach ($v['productList'] as $productListItem) {
-                        $getProductInfos = (new ERPRequester)->send(
+                        $getProductInfos = $this->erpRequest->send(
                             config('services.erp.wmsUrl'),
                             self::GET_PRODUCT_BY_SKU,
                             ['productSku' => $productListItem['sku']]
@@ -265,7 +268,7 @@ class OrderDataSync extends Command
             $costDetailArray = array();
 
             foreach ($orderCostParamsArr as $v) {
-                $getCostDetail = (new ERPRequester)->send(
+                $getCostDetail = $this->erpRequest->send(
                     config('services.erp.wmsUrl'),
                     self::GET_ORDER_DETAIL,
                     $v
@@ -343,7 +346,7 @@ class OrderDataSync extends Command
                     "pageSize" => $pageSize
                 ];
 
-                $amazonReportList = (new ERPRequester)->send(
+                $amazonReportList = $this->erpRequest->send(
                     config('services.erp.ebUrl'),
                     self::AMZ_REPORT,
                     $getAmazonReportParams
@@ -370,7 +373,7 @@ class OrderDataSync extends Command
 
                             //TODO
                             if ($item) {
-                                $amazonReportList = (new ERPRequester)->send(
+                                $amazonReportList = $this->erpRequest->send(
                                     config('services.erp.ebUrl'),
                                     self::AMZ_REPORT,
                                     $getAmazonReportParam

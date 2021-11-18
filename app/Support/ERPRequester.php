@@ -6,6 +6,13 @@ use GuzzleHttp\Client;
 
 class ERPRequester
 {
+    private Client $client;
+
+    public function __construct(Client $client)
+    {
+        $this->client = $client;
+    }
+
     public function send(
         string $url,
         string $serviceName,
@@ -18,7 +25,7 @@ class ERPRequester
             $serviceName
         );
 
-        $res = (new Client())->request(
+        $res = $this->client->request(
             'POST',
             $url,
             [
