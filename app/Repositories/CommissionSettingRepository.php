@@ -2,21 +2,21 @@
 
 namespace App\Repositories;
 
-use App\Models\CommissionSettings;
+use App\Models\CommissionSetting;
 use App\Support\LaravelLoggerUtil;
 
 class CommissionSettingRepository extends BaseRepository
 {
     public function __construct()
     {
-        parent::__construct(new CommissionSettings);
+        parent::__construct(new CommissionSetting);
     }
 
     /**
      * @param string $clientCode
-     * @return CommissionSettings|null
+     * @return CommissionSetting|null
      */
-    public function findByClientCode(string $clientCode): ?CommissionSettings
+    public function findByClientCode(string $clientCode): ?CommissionSetting
     {
         try {
             $commissionSetting = $this->model

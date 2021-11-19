@@ -2,8 +2,8 @@
 
 namespace App\Exports;
 
-use App\Models\BillingStatements;
-use App\Models\Invoices;
+use App\Models\BillingStatement;
+use App\Models\Invoice;
 use App\Models\Users;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromArray;
@@ -46,7 +46,7 @@ class CreditNoteExport implements WithTitle, WithEvents
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoices::findOrFail($this->insertInvoiceID);
+        $invoice = Invoice::findOrFail($this->insertInvoiceID);
         $invoice->doc_status = "deleted";
         $invoice->save();
 
@@ -60,9 +60,9 @@ class CreditNoteExport implements WithTitle, WithEvents
         return [
             BeforeSheet::class => function (BeforeSheet $event) {
 
-                $invoice = Invoices::findOrFail($this->insertInvoiceID);
+                $invoice = Invoice::findOrFail($this->insertInvoiceID);
 
-                $billing = BillingStatements::findOrFail($this->insertBillingID);
+                $billing = BillingStatement::findOrFail($this->insertBillingID);
 
                 $event->sheet->SetCellValue("E5", "Credit Note");
                 $event->sheet->SetCellValue("D8", "Details");

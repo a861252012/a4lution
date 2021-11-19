@@ -3,10 +3,9 @@
 
 namespace App\Repositories;
 
-use App\Models\FirstMileShipmentFees;
 use Illuminate\Support\Facades\DB;
 
-class FirstMileShipmentFeesRepository
+class FirstMileShipmentFeeRepository
 {
 
     public function __construct()

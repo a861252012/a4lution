@@ -3,30 +3,29 @@
 namespace App\Services;
 
 use Carbon\Carbon;
-use App\Models\Customers;
 use App\Models\OrderProducts;
 use App\Support\ERPRequester;
-use App\Models\CommissionSettings;
-use App\Models\ExtraordinaryItems;
+use App\Models\CommissionSetting;
+use App\Models\ExtraordinaryItem;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Repositories\OrdersRepository;
 use App\Repositories\CustomerRepository;
-use App\Repositories\ExchangeRatesRepository;
+use App\Repositories\ExchangeRateRepository;
 use App\Repositories\OrderProductsRepository;
 use App\Repositories\AmazonReportListRepository;
-use App\Repositories\BillingStatementsRepository;
+use App\Repositories\BillingStatementRepository;
 use App\Repositories\CommissionSettingRepository;
-use App\Repositories\FirstMileShipmentFeesRepository;
+use App\Repositories\FirstMileShipmentFeeRepository;
 use App\Http\Requests\BillingStatement\AjaxStoreRequest;
 
 class BillingStatementService
 {
-    private $billingStatementsRepo;
+    private $billingStatementRepo;
 
-    public function __construct(BillingStatementsRepository $billingStatementsRepo)
+    public function __construct(BillingStatementRepository $billingStatementRepo)
     {
-        $this->billingStatementsRepo = $billingStatementsRepo;
+        $this->billingStatementRepo = $billingStatementRepo;
     }
 
     // TODO: do all repository
@@ -36,7 +35,7 @@ class BillingStatementService
         $clientCode = $request->client_code;
 
         //4-1 Commission Rate
-        $exchangeRate = (new ExchangeRatesRepository)->getByQuotedDate($reportDate);
+        $exchangeRate = (new ExchangeRateRepository)->getByQuotedDate($reportDate);
         if ($exchangeRate->isEmpty()) {
             Log::error('uploadFileToS3_failed: exchangeRate is empty');
             return;
@@ -44,7 +43,7 @@ class BillingStatementService
 
 
         if (!(new CommissionSettingRepository)->findByClientCode($clientCode)) {
-            Log::error('uploadFileToS3_failed: commissionSettings is empty');
+            Log::error('uploadFileToS3_failed: commissionSetting is empty');
             return;
         }
 
@@ -253,7 +252,7 @@ class BillingStatementService
 
         $billingItems['total_sales_amount'] = $sumOfSalesAmount ? round($sumOfSalesAmount[0]->total_sales_hkd, 2) : 0;
 
-        $fees['extraordinary_item'] = ExtraordinaryItems::where('report_date', $reportDate)
+        $fees['extraordinary_item'] = ExtraordinaryItem::where('report_date', $reportDate)
             ->where('client_code', $clientCode)
             ->groupBy('client_code', 'report_date')
             ->get()
@@ -309,9 +308,9 @@ class BillingStatementService
         $billingItems['created_by'] = Auth::id();
         $billingItems['active'] = 1;
 
-        $firstMileShipmentFeesRepository = new FirstMileShipmentFeesRepository();
+        $firstMileShipmentFeeRepository = new FirstMileShipmentFeeRepository();
 
-        $getFbaStorageFeeInvoices = $firstMileShipmentFeesRepository->getFbaStorageFeeInvoice(
+        $getFbaStorageFeeInvoices = $firstMileShipmentFeeRepository->getFbaStorageFeeInvoice(
             $reportDate,
             $clientCode
         );
@@ -365,7 +364,7 @@ class BillingStatementService
             2
         );
 
-        $this->billingStatementsRepo->create($billingItems);
+        $this->billingStatementRepo->create($billingItems);
     }
 
     public function getSumValue(array $fees, array $keys = []): float
@@ -383,10 +382,10 @@ class BillingStatementService
 
     public function getCommissionRate(string $clientCode, string $reportDate, float $totalSalesAmount)
     {
-        $commissionSettings = new CommissionSettings();
+        $commissionSetting = new CommissionSetting();
         $orderProductRepository = new OrderProductsRepository();
 
-        $settings = $commissionSettings->where('client_code', $clientCode)->first();
+        $settings = $commissionSetting->where('client_code', $clientCode)->first();
 
         if ($settings->is_sku_level_commission === 'T') {
             //check unmatched record
@@ -460,7 +459,7 @@ class BillingStatementService
 
     public function getTieredInfo(string $clientCode, float $totalSalesAmount): array
     {
-        $setting = CommissionSettings::where('client_code', $clientCode)->first();
+        $setting = CommissionSetting::where('client_code', $clientCode)->first();
 
         if (!empty($setting) & $totalSalesAmount >= $setting->tier_1_threshold) {
             $newLevel = 1;

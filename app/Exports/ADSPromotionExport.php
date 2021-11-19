@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\Invoices;
+use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -40,7 +40,7 @@ class ADSPromotionExport implements WithTitle, FromQuery, WithHeadings, withMapp
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoices::findOrFail($this->insertInvoiceID);
+        $invoice = Invoice::findOrFail($this->insertInvoiceID);
         $invoice->doc_status = "deleted";
         $invoice->save();
 

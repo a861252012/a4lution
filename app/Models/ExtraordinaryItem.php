@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
-class ExtraordinaryItems extends Model
+class ExtraordinaryItem extends Model
 {
     protected $table = "extraordinary_items";
 
@@ -19,14 +19,14 @@ class ExtraordinaryItems extends Model
      */
     protected static function booted()
     {
-        static::creating(function ($extraordinaryItems) {
-            $extraordinaryItems->updated_by = Auth::id();
-            $extraordinaryItems->created_by = Auth::id();
-            $extraordinaryItems->active = 1;
+        static::creating(function ($extraordinaryItem) {
+            $extraordinaryItem->updated_by = Auth::id();
+            $extraordinaryItem->created_by = Auth::id();
+            $extraordinaryItem->active = 1;
         });
 
-        static::updating(function ($extraordinaryItems) {
-            $extraordinaryItems->updated_by = Auth::id();
+        static::updating(function ($extraordinaryItem) {
+            $extraordinaryItem->updated_by = Auth::id();
         });
 
         static::addGlobalScope('isActive', function (Builder $builder) {

@@ -2,20 +2,20 @@
 
 namespace App\Repositories;
 
-use App\Models\ExchangeRates;
+use App\Models\ExchangeRate;
 use App\Support\LaravelLoggerUtil;
 use Illuminate\Database\Eloquent\Collection;
 
-class ExchangeRatesRepository extends BaseRepository
+class ExchangeRateRepository extends BaseRepository
 {
     public function __construct()
     {
-        parent::__construct(new ExchangeRates);
+        parent::__construct(new ExchangeRate);
     }
 
     public function getAllCurrency()
     {
-        return ExchangeRates::selectRaw('DISTINCT base_currency')
+        return ExchangeRate::selectRaw('DISTINCT base_currency')
             ->where('active', 1)
             ->pluck('base_currency');
     }

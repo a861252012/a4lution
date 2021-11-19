@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\Models\BatchJobs;
+use App\Models\BatchJob;
 use App\Models\MonthlyStorageFees;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
@@ -118,7 +118,7 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
                             $items->update(['active' => 0]);
                         });
 
-                    BatchJobs::where('id', $this->batchID)->update(
+                    BatchJob::where('id', $this->batchID)->update(
                         [
                             'status' => 'completed',
                             'total_count' => $this->getRowCount()
@@ -135,7 +135,7 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
             ImportFailed::class => function (ImportFailed $event) {
                 DB::beginTransaction();
                 try {
-                    BatchJobs::where('id', $this->batchID)->update(
+                    BatchJob::where('id', $this->batchID)->update(
                         [
                             'status' => 'failed',
                             'total_count' => $this->getRowCount(),

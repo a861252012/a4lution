@@ -5,9 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
-class EmployeeCommissionEntries extends Model
+class BillingStatement extends Model
 {
-    protected $table = "employee_commission_entries";
+    protected $table = "billing_statements";
 
     protected $guarded = ['id'];
 

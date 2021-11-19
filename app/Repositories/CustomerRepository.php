@@ -2,28 +2,28 @@
 
 namespace App\Repositories;
 
-use App\Models\Customers;
+use App\Models\Customer;
 use App\Support\LaravelLoggerUtil;
 
 class CustomerRepository extends BaseRepository
 {
     public function __construct()
     {
-        parent::__construct(new Customers);
+        parent::__construct(new Customer);
     }
 
     public function getAllClientCode()
     {
-        return Customers::select('client_code')
+        return Customer::select('client_code')
             ->where('active', 1)
             ->pluck('client_code');
     }
 
     /**
      * @param string $clientCode
-     * @return Customers|null
+     * @return Customer|null
      */
-    public function findByClientCode(string $clientCode): ?Customers
+    public function findByClientCode(string $clientCode): ?Customer
     {
         try {
             $customer = $this->model

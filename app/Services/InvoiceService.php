@@ -3,20 +3,20 @@
 namespace App\Services;
 
 use App\Repositories\BillingStatementRepository;
-use App\Repositories\InvoicesRepository;
+use App\Repositories\InvoiceRepository;
 use Symfony\Component\HttpFoundation\Response;
 
 class InvoiceService
 {
     private $billingStatementRepository;
-    private $invoicesRepository;
+    private $invoiceRepository;
 
     public function __construct(
         BillingStatementRepository $billingStatementRepository,
-        InvoicesRepository         $invoicesRepository
+        InvoiceRepository         $invoiceRepository
     ) {
         $this->billingStatementRepository = $billingStatementRepository;
-        $this->invoicesRepository = $invoicesRepository;
+        $this->invoiceRepository = $invoiceRepository;
     }
 
     public function reportValidation(string $date, string $clientCode): array
@@ -35,7 +35,7 @@ class InvoiceService
         }
 
         //檢核若已出invoice則提示訊息(需先刪除相關聯的invoices)
-        if ($this->invoicesRepository->checkIfDuplicated($reportDateTime, $clientCode)) {
+        if ($this->invoiceRepository->checkIfDuplicated($reportDateTime, $clientCode)) {
             return [
                 'status' => Response::HTTP_FORBIDDEN,
                 'msg' => 'The record are referenced by other invoice(s), please delete all the references first.',
