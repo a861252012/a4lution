@@ -21,7 +21,8 @@
         "league/flysystem-aws-s3-v3": "^1.0",
         "maatwebsite/excel": "3.1.32",
         "predis/predis": "^1.1",
-        "techlab/smartwizard": "^5.1"
+        "techlab/smartwizard": "^5.1",
+        "ext-json": "*"
     },
     "require-dev": {
         "bennett-treptow/laravel-migration-generator": "^4.0",
