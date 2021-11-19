@@ -4,7 +4,6 @@ namespace App\Repositories;
 
 use App\Models\ExchangeRates;
 use App\Support\LaravelLoggerUtil;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
 
 class ExchangeRatesRepository extends BaseRepository
@@ -21,25 +20,23 @@ class ExchangeRatesRepository extends BaseRepository
             ->pluck('base_currency');
     }
 
-    // TODO: do scope [active=1] in model
-
     /**
      * @param string $date
-     * @return Model[]|Collection
+     * @return ExchangeRate[]|Collection
      */
-    public function getByQuotedDate($date): ?Collection
+    public function getByQuotedDate(string $date): ?Collection
     {
         try {
-            $models = $this->model
+            $exchangeRates = $this->model
                 ->where('quoted_date', $date)
-                ->where('active', 1)
+                ->active()
                 ->get();
 
         } catch (\Throwable $e) {
             LaravelLoggerUtil::loggerException($e);
-            $models = Collection::make();
+            $exchangeRates = Collection::make();
         }
 
-        return $models;
+        return $exchangeRates;
     }
 }

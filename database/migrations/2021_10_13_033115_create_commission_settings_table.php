@@ -6,18 +6,15 @@ use Illuminate\Database\Migrations\Migration;
 
 class CreateCommissionSettingsTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
+    private $tableName = 'commission_settings'; // 傭金設定
+
     public function up()
     {
-        Schema::create('commission_settings', function (Blueprint $table) {
+        Schema::create($this->tableName, function (Blueprint $table) {
             $table->string('client_code', 50)->unique('client_code');
-            $table->char('is_sku_level_commission', 1)->nullable();
-            $table->char('tier', 1)->nullable();
-            $table->decimal('basic_rate', 5, 2)->nullable();
+            $table->char('is_sku_level_commission', 1)->nullable()->comment('是否按SKU計算 (T: 要參照commission_sku_configs)');
+            $table->char('tier', 1)->nullable()->comment('是否按費用級距收費 (T/F)');
+            $table->decimal('basic_rate', 5, 2)->nullable()->comment('基礎參數-commision');
             $table->string('currency', 3)->nullable();
             $table->bigInteger('tier_1_threshold')->nullable();
             $table->bigInteger('tier_2_threshold')->nullable();
@@ -35,7 +32,7 @@ class CreateCommissionSettingsTable extends Migration
             $table->decimal('tier_top_amount', 5, 2)->nullable();
             $table->string('promotion_threshold', 50)->nullable();
             $table->string('tier_promotion', 50)->nullable();
-            $table->char('invoice', 1)->nullable();
+            $table->char('invoice', 1)->nullable()->comment('是否要出invoice');
             $table->boolean('active')->default(0);
             $table->timestamp('created_at')->useCurrent()->useCurrentOnUpdate();
             $table->integer('created_by');
@@ -43,16 +40,13 @@ class CreateCommissionSettingsTable extends Migration
             $table->integer('updated_by');
             
             $table->unique(['client_code', 'tier'], 'client_code_tier_promotion');
+
+            DB::statement("ALTER TABLE `{$this->tableName}` comment '收取客人傭金設定'");
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
-        Schema::dropIfExists('commission_settings');
+        Schema::dropIfExists($this->tableName);
     }
 }
