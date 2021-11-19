@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service;
+namespace App\Services;
 
 use Carbon\Carbon;
 use App\Models\Customers;
@@ -16,8 +16,9 @@ use App\Repositories\OrderProductsRepository;
 use App\Repositories\AmazonReportListRepository;
 use App\Repositories\BillingStatementsRepository;
 use App\Repositories\FirstMileShipmentFeesRepository;
+use App\Http\Requests\BillingStatement\AjaxStoreRequest;
 
-class BillingStatementsService
+class BillingStatementService
 {
     private $billingStatementsRepo;
 
@@ -27,7 +28,7 @@ class BillingStatementsService
     }
 
     // TODO: do all repository
-    public function create($request)
+    public function create(AjaxStoreRequest $request)
     {
         $reportDate = Carbon::parse($request->report_date)->format('Y-m-d');
         $clientCode = $request->client_code;
@@ -51,7 +52,7 @@ class BillingStatementsService
         //getReportFees
         $supplierCode = Customers::where('client_code', $clientCode)->value('supplier_code');
 
-        $getSupplierName = (new ERPRequester)->send(
+        $getSupplierName = app(ERPRequester::class)->send(
             config('services.erp.wmsUrl'),
             'getSupplierInfo',
             ["supplierCode" => $supplierCode]
