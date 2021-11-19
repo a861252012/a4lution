@@ -18,3 +18,4 @@ yarn-error.log
 *.orig
 .vscode/
 
+.php_cs.cache
