@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Log;
 
 class ERPRequester
 {
@@ -18,8 +19,13 @@ class ERPRequester
         string $serviceName,
         array  $customParam = []
     ): array {
+        $jsonParams = json_encode($customParam);
+
+        Log::channel('daily_order_sync')
+            ->info("[daily_order_sync.{$serviceName}.reqJSON]" . $jsonParams);
+
         $ebSoapRequest = $this->genXML(
-            json_encode($customParam),
+            $jsonParams,
             config('services.erp.ebAccount'),
             config('services.erp.ebPwd'),
             $serviceName
@@ -35,7 +41,12 @@ class ERPRequester
             ->getBody()
             ->getContents();
 
-        return json_decode($this->analyzeSOAP($res), true);
+        $analyzedRes = json_decode($this->analyzeSOAP($res), true);
+
+        Log::channel('daily_order_sync')
+            ->info("[daily_order_sync.{$serviceName}.resJSON]" . json_encode($analyzedRes));
+
+        return $analyzedRes;
     }
 
     private function genXML(string $paramsJson, string $userName, string $userPass, string $serviceName): string
