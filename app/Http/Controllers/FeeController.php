@@ -20,7 +20,7 @@ use App\Models\BatchJobs;
 use App\Models\MonthlyStorageFees;
 use App\Models\BillingStatements;
 use App\Models\ExtraordinaryItems;
-use App\Repositories\CustomersRepository;
+use App\Repositories\CustomerRepository;
 use App\Repositories\ExchangeRatesRepository;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -44,7 +44,7 @@ class FeeController extends Controller
     private $longTermStorageFees;
     private $firstMileShipmentFees;
     private $billingStatements;
-    private $customersRepository;
+    private $customerRepository;
     private $exchangeRatesRepository;
 
     public function __construct(
@@ -55,7 +55,7 @@ class FeeController extends Controller
         LongTermStorageFees     $longTermStorageFees,
         FirstMileShipmentFees   $firstMileShipmentFees,
         BillingStatements       $billingStatements,
-        CustomersRepository     $customersRepository,
+        CustomerRepository      $customerRepository,
         ExchangeRatesRepository $exchangeRatesRepository
     ) {
         $this->batchJobs = $batchJobs;
@@ -65,7 +65,7 @@ class FeeController extends Controller
         $this->longTermStorageFees = $longTermStorageFees;
         $this->firstMileShipmentFees = $firstMileShipmentFees;
         $this->billingStatements = $billingStatements;
-        $this->customersRepository = $customersRepository;
+        $this->customerRepository = $customerRepository;
         $this->exchangeRatesRepository = $exchangeRatesRepository;
     }
 
@@ -513,7 +513,7 @@ class FeeController extends Controller
     public function getClientCodeList(): JsonResponse
     {
         try {
-            $data = $this->customersRepository->getAllClientCode();
+            $data = $this->customerRepository->getAllClientCode();
 
             return response()->json(
                 [

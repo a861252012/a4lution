@@ -10,11 +10,22 @@ class ExchangeRates extends Model
 
     protected $primaryKey = null;
 
-//    protected $fillable = ['client_code'];
-
     protected $guarded = [];
 
     public $timestamps = false;
 
     public $incrementing = false;
+
+    ###########
+    ## SCOPE ##
+    ###########
+    public function scopeActive($q, $active = 1)
+    {
+        return $q->where('active', $active);
+    }
+
+    public function scopeInActive($q)
+    {
+        return $q->scopeActive('active', 0);
+    }
 }

@@ -11,10 +11,12 @@ use App\Models\ExtraordinaryItems;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Repositories\OrdersRepository;
+use App\Repositories\CustomerRepository;
 use App\Repositories\ExchangeRatesRepository;
 use App\Repositories\OrderProductsRepository;
 use App\Repositories\AmazonReportListRepository;
 use App\Repositories\BillingStatementsRepository;
+use App\Repositories\CommissionSettingRepository;
 use App\Repositories\FirstMileShipmentFeesRepository;
 use App\Http\Requests\BillingStatement\AjaxStoreRequest;
 
@@ -37,12 +39,11 @@ class BillingStatementService
         $exchangeRate = (new ExchangeRatesRepository)->getByQuotedDate($reportDate);
         if ($exchangeRate->isEmpty()) {
             Log::error('uploadFileToS3_failed: exchangeRate is empty');
+            return;
         }
 
-        $commissionSettings = CommissionSettings::where('client_code', $clientCode)
-            ->exists();
 
-        if (!$commissionSettings) {
+        if ((new CommissionSettingRepository)->findByClientCode($clientCode)) {
             Log::error('uploadFileToS3_failed: commissionSettings is empty');
             return;
         }
@@ -50,7 +51,7 @@ class BillingStatementService
         //4-2 Expenses Breakdown start
 
         //getReportFees
-        $supplierCode = Customers::where('client_code', $clientCode)->value('supplier_code');
+        $supplierCode = (new CustomerRepository)->findByClientCode($clientCode)->supplier_code;
 
         $getSupplierName = app(ERPRequester::class)->send(
             config('services.erp.wmsUrl'),
