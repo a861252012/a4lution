@@ -43,7 +43,7 @@ class BillingStatementService
         }
 
 
-        if ((new CommissionSettingRepository)->findByClientCode($clientCode)) {
+        if (!(new CommissionSettingRepository)->findByClientCode($clientCode)) {
             Log::error('uploadFileToS3_failed: commissionSettings is empty');
             return;
         }

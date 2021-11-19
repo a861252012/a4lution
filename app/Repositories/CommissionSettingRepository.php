@@ -2,7 +2,6 @@
 
 namespace App\Repositories;
 
-use App\Models\ExchangeRates;
 use App\Models\CommissionSettings;
 use App\Support\LaravelLoggerUtil;
 
@@ -15,9 +14,9 @@ class CommissionSettingRepository extends BaseRepository
 
     /**
      * @param string $clientCode
-     * @return ExchangeRates|null
+     * @return CommissionSettings|null
      */
-    public function findByClientCode(string $clientCode): ?ExchangeRates
+    public function findByClientCode(string $clientCode): ?CommissionSettings
     {
         try {
             $commissionSetting = $this->model
