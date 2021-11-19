@@ -3,7 +3,7 @@
 namespace App\Imports;
 
 use App\Models\AmazonDateRangeReport;
-use App\Models\BatchJobs;
+use App\Models\BatchJob;
 use App\Services\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
@@ -118,7 +118,7 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
                             $item->update(['active' => 0]);
                         });
 
-                    BatchJobs::where('id', $this->batchID)->update(
+                    BatchJob::where('id', $this->batchID)->update(
                         [
                             'status' => 'completed',
                             'total_count' => $this->getRowCount()
@@ -136,7 +136,7 @@ class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQue
             ImportFailed::class => function (ImportFailed $event) {
                 DB::beginTransaction();
                 try {
-                    BatchJobs::where('id', $this->batchID)
+                    BatchJob::where('id', $this->batchID)
                         ->update(
                             [
                                 'status' => 'failed',

@@ -5,7 +5,7 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\Exportable;
 
-class FirstMileShipmentFeesExport implements FromArray
+class FirstMileShipmentFeeExport implements FromArray
 {
     use Exportable;
 

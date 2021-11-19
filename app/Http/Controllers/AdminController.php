@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BillingStatements;
+use App\Models\BillingStatement;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Services\AdminService;
@@ -31,7 +31,7 @@ class AdminController extends Controller
         $date = Carbon::parse($request->route('date'))->format('Y-m-01');
 
         try {
-            BillingStatements::where('active', 1)
+            BillingStatement::where('active', 1)
                 ->where('report_date', $date)
                 ->update([
                     'cutoff_time' => Carbon::now()->copy()->toDateTimeString()

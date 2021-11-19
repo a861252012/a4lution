@@ -7,9 +7,9 @@ use Illuminate\Http\Request;
 use App\Models\RmaRefundList;
 use App\Models\Orders;
 use App\Models\OrderProducts;
-use App\Models\ExchangeRates;
+use App\Models\ExchangeRate;
 use App\Models\SystemChangeLogs;
-use App\Models\BillingStatements;
+use App\Models\BillingStatement;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,25 +19,25 @@ class ErpOrdersController extends Controller
 {
     private $rmaRefundList;
     private $orders;
-    private $exchangeRates;
+    private $exchangeRate;
     private $systemChangeLogs;
-    private $billingStatements;
+    private $billingStatement;
     private $orderProducts;
 
     public function __construct(
         RmaRefundList     $rmaRefundList,
         Orders            $orders,
-        ExchangeRates     $exchangeRates,
+        ExchangeRate     $exchangeRate,
         SystemChangeLogs  $systemChangeLogs,
-        BillingStatements $billingStatements,
+        BillingStatement $billingStatement,
         OrderProducts     $orderProducts
     )
     {
         $this->rmaRefundList = $rmaRefundList;
         $this->orders = $orders;
-        $this->exchangeRates = $exchangeRates;
+        $this->exchangeRate = $exchangeRate;
         $this->systemChangeLogs = $systemChangeLogs;
-        $this->billingStatements = $billingStatements;
+        $this->billingStatement = $billingStatement;
         $this->orderProducts = $orderProducts;
     }
 
@@ -237,7 +237,7 @@ class ErpOrdersController extends Controller
 
         $formattedShippedDate = date("Ym", strtotime($data['shipped_date']));
 
-        $data['exchange_rate'] = $this->exchangeRates->select('base_currency', 'exchange_rate')
+        $data['exchange_rate'] = $this->exchangeRate->select('base_currency', 'exchange_rate')
             ->wherein('base_currency', [$data['lists']['currency_code_org'], 'RMB'])
             ->where($formattedQuotedDate, $formattedShippedDate)
             ->pluck('exchange_rate', 'base_currency')
@@ -399,7 +399,7 @@ class ErpOrdersController extends Controller
 
         $formattedReportDate = DB::raw("DATE_FORMAT(report_date,'%Y%m')");
 
-        $hasMonthlyBilling = $this->billingStatements->where("active", 1)
+        $hasMonthlyBilling = $this->billingStatement->where("active", 1)
             ->where($formattedReportDate, $formattedDate)
             ->where("client_code", $supplier)
             ->count();
@@ -429,7 +429,7 @@ class ErpOrdersController extends Controller
 
         $formattedShippedDate = date("Ym", strtotime($shippedDate));
 
-        $exchangeRate = $this->exchangeRates->select('base_currency', 'exchange_rate')
+        $exchangeRate = $this->exchangeRate->select('base_currency', 'exchange_rate')
             ->wherein('base_currency', [$currency, 'RMB'])
             ->where($formattedQuotedDate, $formattedShippedDate)
             ->count();

@@ -2,8 +2,8 @@
 
 namespace App\Imports;
 
-use App\Models\BatchJobs;
-use App\Models\FirstMileShipmentFees;
+use App\Models\BatchJob;
+use App\Models\FirstMileShipmentFee;
 use App\Services\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
@@ -43,7 +43,7 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
     {
         ++$this->rows;
 
-        return new FirstMileShipmentFees([
+        return new FirstMileShipmentFee([
             'client_code' => $row['client_code'],
             'ids_sku' => $row['ids_sku'],
             'title' => $row['title'],
@@ -85,7 +85,7 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
 
     public function getRowCount(): int
     {
-        return FirstMileShipmentFees::where('upload_id', $this->batchID)
+        return FirstMileShipmentFee::where('upload_id', $this->batchID)
             ->where('active', 1)
             ->count();
     }
@@ -101,7 +101,7 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
             AfterImport::class => function (AfterImport $event) {
                 DB::beginTransaction();
                 try {
-                    FirstMileShipmentFees::where('report_date', $this->inputReportDate)
+                    FirstMileShipmentFee::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '<', $this->batchID)
                         ->where('active', '=', 1)
                         ->cursor()
@@ -109,7 +109,7 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
                             $item->update(['active' => 0]);
                         });
 
-                    BatchJobs::where('id', $this->batchID)->update(
+                    BatchJob::where('id', $this->batchID)->update(
                         [
                             'status' => 'completed',
                             'total_count' => $this->getRowCount()
@@ -127,7 +127,7 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
             ImportFailed::class => function (ImportFailed $event) {
                 DB::beginTransaction();
                 try {
-                    BatchJobs::where('id', $this->batchID)
+                    BatchJob::where('id', $this->batchID)
                         ->update(
                             [
                                 'status' => 'failed',
@@ -137,7 +137,7 @@ class QueueFirstMileShipmentFees implements ToModel, WithHeadingRow, ShouldQueue
                             ]
                         );
 
-                    FirstMileShipmentFees::where('report_date', $this->inputReportDate)
+                    FirstMileShipmentFee::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '=', $this->batchID)
                         ->where('active', '=', 1)
                         ->cursor()

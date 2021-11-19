@@ -3,7 +3,7 @@
 namespace App\Imports;
 
 use App\Models\PlatformAdFees;
-use App\Models\BatchJobs;
+use App\Models\BatchJob;
 use App\Services\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
@@ -104,7 +104,7 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
                             $item->update(['active' => 0]);
                         });
 
-                    BatchJobs::where('id', $this->batchID)->update(
+                    BatchJob::where('id', $this->batchID)->update(
                         [
                             'status' => 'completed',
                             'total_count' => $this->getRowCount()
@@ -122,7 +122,7 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
             ImportFailed::class => function (ImportFailed $event) {
                 DB::beginTransaction();
                 try {
-                    BatchJobs::where('id', $this->batchID)->update(
+                    BatchJob::where('id', $this->batchID)->update(
                         [
                             'status' => 'failed',
                             'total_count' => $this->getRowCount(),
@@ -139,7 +139,7 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
                             $item->delete();
                         });
 
-                    BatchJobs::where('id', $this->batchID)->update(
+                    BatchJob::where('id', $this->batchID)->update(
                         [
                             'status' => 'completed',
                             'total_count' => $this->getRowCount()

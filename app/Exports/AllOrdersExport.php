@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\Invoices;
+use App\Models\Invoice;
 use App\Models\Orders;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
@@ -40,7 +40,7 @@ class AllOrdersExport implements WithTitle, FromQuery, WithHeadings, withMapping
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoices::findOrFail($this->insertInvoiceID);
+        $invoice = Invoice::findOrFail($this->insertInvoiceID);
         $invoice->doc_status = "deleted";
         $invoice->save();
 

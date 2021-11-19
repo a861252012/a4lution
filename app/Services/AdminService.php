@@ -2,32 +2,32 @@
 
 namespace App\Services;
 
-use App\Repositories\BillingStatementRepository;
-use App\Repositories\InvoicesRepository;
-use App\Repositories\EmployeeCommissionRepository;
-use App\Repositories\EmployeeCommissionEntriesRepository;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use App\Repositories\InvoiceRepository;
+use App\Repositories\BillingStatementRepository;
+use App\Repositories\EmployeeCommissionRepository;
+use App\Repositories\EmployeeCommissionEntryRepository;
 
 class AdminService
 {
     private $billingStatementRepository;
-    private $invoicesRepository;
+    private $invoiceRepository;
     private $employeeCommissionRepository;
-    private $employeeCommissionEntriesRepository;
+    private $employeeCommissionEntryRepository;
 
     public function __construct(
         BillingStatementRepository          $billingStatementRepository,
-        InvoicesRepository                  $invoicesRepository,
+        InvoiceRepository                  $invoiceRepository,
         EmployeeCommissionRepository        $employeeCommissionRepository,
-        EmployeeCommissionEntriesRepository $employeeCommissionEntriesRepository
+        EmployeeCommissionEntryRepository $employeeCommissionEntryRepository
     ) {
         $this->billingStatementRepository = $billingStatementRepository;
-        $this->invoicesRepository = $invoicesRepository;
+        $this->invoiceRepository = $invoiceRepository;
         $this->employeeCommissionRepository = $employeeCommissionRepository;
-        $this->employeeCommissionEntriesRepository = $employeeCommissionEntriesRepository;
+        $this->employeeCommissionEntryRepository = $employeeCommissionEntryRepository;
     }
 
     public function revokeApprove(string $date)
@@ -65,7 +65,7 @@ class AdminService
                 'doc_status' => 'deleted',
             ];
 
-            $updateInvoice = $this->invoicesRepository->updateByDate(
+            $updateInvoice = $this->invoiceRepository->updateByDate(
                 $date,
                 $invoiceData
             );
@@ -84,7 +84,7 @@ class AdminService
             abort_if($updateEmployee === -1, 500);
 
             if ($idArray) {
-                $updateEmployeeEntries = $this->employeeCommissionEntriesRepository->updateByEmployeeID(
+                $updateEmployeeEntries = $this->employeeCommissionEntryRepository->updateByEmployeeID(
                     $idArray,
                     $softDeleteParams
                 );

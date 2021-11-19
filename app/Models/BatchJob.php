@@ -3,10 +3,9 @@
 
 namespace App\Models;
 
-use App\Models\Users;
 use Illuminate\Database\Eloquent\Model;
 
-class BatchJobs extends Model
+class BatchJob extends Model
 {
     protected $table = "batch_jobs";
 

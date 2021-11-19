@@ -2,9 +2,9 @@
 
 namespace App\Exports;
 
-use App\Models\BillingStatements;
+use App\Models\BillingStatement;
 use App\Models\Users;
-use App\Models\Invoices;
+use App\Models\Invoice;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -49,7 +49,7 @@ class PaymentExport implements WithTitle, WithEvents
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoices::findOrFail($this->insertInvoiceID);
+        $invoice = Invoice::findOrFail($this->insertInvoiceID);
         $invoice->doc_status = "deleted";
         $invoice->save();
 
@@ -75,8 +75,8 @@ class PaymentExport implements WithTitle, WithEvents
         return [
             BeforeSheet::class => function (BeforeSheet $event) {
                 $formattedDate = date('d-M-y', strtotime($this->reportDate));
-                $invoice = Invoices::findOrFail($this->insertInvoiceID);
-                $billing = BillingStatements::findOrFail($this->insertBillingID);
+                $invoice = Invoice::findOrFail($this->insertInvoiceID);
+                $billing = BillingStatement::findOrFail($this->insertBillingID);
 
                 if (!$invoice) {
                     Log::error("can't find invoice by using id: {$this->insertInvoiceID}");

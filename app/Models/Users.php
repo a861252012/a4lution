@@ -43,12 +43,12 @@ class Users extends Authenticatable
 
     public function batchJobs(): HasMany
     {
-        return $this->hasMany('App\Models\BatchJobs', 'user_id', 'id');
+        return $this->hasMany('App\Models\BatchJob', 'user_id', 'id');
     }
 
     public function customerRelations(): HasMany
     {
-        return $this->hasMany('App\Models\CustomerRelations', 'user_id', 'id');
+        return $this->hasMany('App\Models\CustomerRelation', 'user_id', 'id');
     }
 
     /**

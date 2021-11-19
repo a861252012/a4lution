@@ -3,7 +3,7 @@
 namespace App\Exports;
 
 use App\Models\FirstMileShipmentFees;
-use App\Models\Invoices;
+use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\FromQuery;
@@ -41,7 +41,7 @@ class FBAFirstMileShipmentFeesExport implements WithTitle, WithEvents
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoices::findOrFail($this->insertInvoiceID);
+        $invoice = Invoice::findOrFail($this->insertInvoiceID);
         $invoice->doc_status = "deleted";
         $invoice->save();
 
@@ -54,7 +54,7 @@ class FBAFirstMileShipmentFeesExport implements WithTitle, WithEvents
     {
         return [
             BeforeSheet::class => function (BeforeSheet $event) {
-                $invoice = Invoices::findOrFail($this->insertInvoiceID);
+                $invoice = Invoice::findOrFail($this->insertInvoiceID);
 
                 $event->sheet->SetCellValue("E5", "INVOICE");
                 $event->sheet->SetCellValue("D8", "DETAILS");

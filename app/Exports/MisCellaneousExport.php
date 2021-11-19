@@ -3,7 +3,7 @@
 namespace App\Exports;
 
 use App\Models\AmazonDateRangeReport;
-use App\Models\Invoices;
+use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -39,7 +39,7 @@ class MisCellaneousExport implements WithTitle, FromQuery, WithHeadings, withMap
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoices::findOrFail($this->insertInvoiceID);
+        $invoice = Invoice::findOrFail($this->insertInvoiceID);
         $invoice->doc_status = "deleted";
         $invoice->save();
 

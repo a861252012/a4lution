@@ -3,18 +3,18 @@
 namespace App\Console\Commands;
 
 use App\Models\EmployeeCommission;
-use App\Models\EmployeeCommissionEntries;
+use App\Models\EmployeeCommissionEntry;
 use App\Models\EmployeeCommissionRule;
-use App\Models\ExchangeRates;
-use App\Models\Customers;
+use App\Models\ExchangeRate;
+use App\Models\Customer;
 use App\Models\EmployeeMonthlyFeeRule;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\RoleAssignment;
-use App\Models\CustomerRelations;
-use App\Models\BillingStatements;
+use App\Models\CustomerRelation;
+use App\Models\BillingStatement;
 use Illuminate\Support\Facades\Log;
 
 class CalculateCommission extends Command
@@ -36,7 +36,7 @@ class CalculateCommission extends Command
         DB::beginTransaction();
         try {
             //鎖定上個月份的帳
-            BillingStatements::where('report_date', $date)
+            BillingStatement::where('report_date', $date)
                 ->active()
                 ->update(
                     [
@@ -54,7 +54,7 @@ class CalculateCommission extends Command
                     ]
                 );
 
-            EmployeeCommissionEntries::where('report_date', $date)
+            EmployeeCommissionEntry::where('report_date', $date)
                 ->active()
                 ->update(
                     [
@@ -86,7 +86,7 @@ class CalculateCommission extends Command
 
             foreach ($roleAssignment as $item) {
                 //1.找出該員工負責的客人清單
-                $customerListQuery = CustomerRelations::query()
+                $customerListQuery = CustomerRelation::query()
                     ->from('customer_relations as x')
                     ->select(
                         'x.client_code',
@@ -110,14 +110,14 @@ class CalculateCommission extends Command
                 })->toArray();
 
                 //2.計算當月佣金抽成的總額
-                $hKDCommissionSum = (float)BillingStatements::select(DB::raw("SUM(avolution_commission) as 'total'"))
+                $hKDCommissionSum = (float)BillingStatement::select(DB::raw("SUM(avolution_commission) as 'total'"))
                     ->where('active', 1)
                     ->whereNotNull('cutoff_time')
                     ->where('report_date', $date)
                     ->whereIn('client_code', $clientCodeArr)
                     ->value('total');
 
-                $RateOfTWD = (float)ExchangeRates::select('exchange_rate')
+                $RateOfTWD = (float)ExchangeRate::select('exchange_rate')
                     ->where('base_currency', 'TWD')
                     ->where('quoted_date', $date)
                     ->where('active', 1)
@@ -160,7 +160,7 @@ class CalculateCommission extends Command
 
                 //分別計算各個員工負責的客人清單 (計算單件報酬)
                 foreach ($clientCodeArr as $clientCode) {
-                    $customerBilling = BillingStatements::select(
+                    $customerBilling = BillingStatement::select(
                         'id',
                         'report_date',
                         DB::raw("SUM(avolution_commission) as 'total'"),
@@ -171,7 +171,7 @@ class CalculateCommission extends Command
                         ->where('client_code', $clientCode)
                         ->first();
 
-                    $contractLength = Customers::select('contract_date')
+                    $contractLength = Customer::select('contract_date')
                         ->where('active', 1)
                         ->where('client_code', $clientCode)
                         ->value('contract_date');
@@ -201,7 +201,7 @@ class CalculateCommission extends Command
                     );
 
                     if ($item['company_type'] === 'Contin' && $item['role_name'] === 'sales') {
-                        $isCrossSales = CustomerRelations::from('customer_relations as r')
+                        $isCrossSales = CustomerRelation::from('customer_relations as r')
                             ->join('users as u', 'r.user_id', '=', 'u.id')
                             ->where('r.active', 1)
                             ->where('r.user_id', '!=', $userID)
@@ -243,7 +243,7 @@ class CalculateCommission extends Command
                     $employeeEntries['created_by'] = $userID;
                     $employeeEntries['active'] = 1;
 
-                    EmployeeCommissionEntries::insert($employeeEntries);
+                    EmployeeCommissionEntry::insert($employeeEntries);
                 }
             }
 

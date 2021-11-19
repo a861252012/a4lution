@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class FirstMileShipmentFees extends Model
+class FirstMileShipmentFee extends Model
 {
     protected $table = "first_mile_shipment_fees";
 

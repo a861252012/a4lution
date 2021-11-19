@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
-class Invoices extends Model
+class Invoice extends Model
 {
     protected $table = "invoices";
 
@@ -27,7 +27,7 @@ class Invoices extends Model
     ################
     public function billingStatement()
     {
-        return $this->belongsTo(BillingStatements::class);
+        return $this->belongsTo(BillingStatement::class);
     }
     
     /**
