@@ -3,7 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Invoice;
-use App\Models\Orders;
+use App\Models\Order;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -51,7 +51,7 @@ class AllOrdersExport implements WithTitle, FromQuery, WithHeadings, withMapping
 
     public function query()
     {
-        return Orders::query()
+        return Order::query()
             ->select(
                 DB::raw("orders.reference_no AS order_number"),
                 DB::raw("orders.seller_id AS account"),

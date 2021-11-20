@@ -4,14 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Console\Commands\OrderDataSync;
-use App\Repositories\OrderProductsRepository;
+use App\Repositories\OrderProductRepository;
 use Illuminate\Support\Facades\Log;
 
 class TestController extends Controller
 {
     public function test()
     {
-        $orderProductRepository = new OrderProductsRepository();
+        $orderProductRepository = new OrderProductRepository();
 
         dump($orderProductRepository->getSkuAvolutionCommission('S53A', 202108));
         $res = round($orderProductRepository->getSkuAvolutionCommission('S53A', 202108), 2) ?? 0;

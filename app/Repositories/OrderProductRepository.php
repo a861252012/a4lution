@@ -3,12 +3,12 @@
 
 namespace App\Repositories;
 
-use App\Models\OrderProducts;
+use App\Models\OrderProduct;
 use Illuminate\Support\Facades\DB;
 
 //use Illuminate\Support\Facades\Schema;
 
-class OrderProductsRepository
+class OrderProductRepository
 {
     public function __construct()
     {
@@ -17,13 +17,13 @@ class OrderProductsRepository
     public function insertData(array $data)
     {
         return DB::transaction(function () use ($data) {
-            return OrderProducts::insert($data);
+            return OrderProduct::insert($data);
         });
     }
 
     public function updateData(array $data, string $orderCode, string $sku)
     {
-        return OrderProducts::where('order_code', '=', $orderCode)
+        return OrderProduct::where('order_code', '=', $orderCode)
             ->where('sku', '=', $sku)
             ->update($data);
     }
@@ -87,11 +87,6 @@ WHERE
 
         return DB::select($sql);
     }
-
-//    public function getTableColumns()
-//    {
-//        return Schema::getColumnListing($this->orders->getTable());
-//    }
 
     public function getFitOrder(string $supplier, string $shipDate)
     {

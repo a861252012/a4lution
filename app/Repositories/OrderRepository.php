@@ -2,12 +2,12 @@
 
 namespace App\Repositories;
 
-use App\Models\Orders;
+use App\Models\Order;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use phpDocumentor\Reflection\Types\Boolean;
 
-class OrdersRepository
+class OrderRepository
 {
     protected $orders;
 
@@ -18,13 +18,13 @@ class OrdersRepository
     public function insertData(array $data)
     {
         return DB::transaction(function () use ($data) {
-            return Orders::insert($data);
+            return Order::insert($data);
         });
     }
 
     public function getTableColumns()
     {
-        return Schema::getColumnListing((new Orders)->getTable());
+        return Schema::getColumnListing((new Order)->getTable());
     }
 
     //if isCrafter,then get a4 account fees,if not, then get client account fees
