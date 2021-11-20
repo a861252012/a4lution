@@ -4,18 +4,17 @@ namespace App\Http\Controllers;
 
 use DateTime;
 use Carbon\Carbon;
-use App\Models\Roles;
-use App\Models\Orders;
+use App\Models\Role;
+use App\Models\Order;
 use App\Models\Invoice;
 use App\Models\Customer;
 use Illuminate\Bus\Batch;
 use Illuminate\Http\Request;
 use App\Jobs\UploadFileToAWS;
-use App\Models\OrderProducts;
+use App\Models\OrderProduct;
 use App\Models\RmaRefundList;
 use App\Exports\FBADateExport;
 use App\Exports\InvoiceExport;
-use App\Models\PlatformAdFees;
 use App\Models\RoleAssignment;
 use App\Jobs\Invoice\SetSaveDir;
 use App\Services\InvoiceService;
@@ -32,13 +31,13 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Models\AmazonDateRangeReport;
 use App\Models\FirstMileShipmentFee;
 use Illuminate\Filesystem\Filesystem;
-use App\Repositories\OrdersRepository;
+use App\Repositories\OrderRepository;
 use App\Jobs\Invoice\ExportInvoicePDFs;
 use App\Repositories\InvoiceRepository;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Storage;
 use App\Jobs\Invoice\ExportInvoiceExcel;
-use App\Repositories\OrderProductsRepository;
+use App\Repositories\OrderProductRepository;
 use App\Repositories\AmazonReportListRepository;
 use App\Repositories\BillingStatementRepository;
 use App\Repositories\FirstMileShipmentFeeRepository;
@@ -48,7 +47,7 @@ class InvoiceController extends Controller
     private $invoice;
     private $customerRelation;
     private $roleAssignment;
-    private $roles;
+    private $role;
     private $billingStatement;
     private $customer;
     private $orderProductRepository;
@@ -60,13 +59,13 @@ class InvoiceController extends Controller
     private const MANAGER_ROLE_NAME = 'manager';
 
     public function __construct(
-        Invoice                        $invoice,
+        Invoice                         $invoice,
         CustomerRelation                $customerRelation,
         Customer                        $customer,
         RoleAssignment                  $roleAssignment,
-        Roles                           $roles,
+        Role                            $role,
         BillingStatement                $billingStatement,
-        OrderProductsRepository         $orderProductRepository,
+        OrderProductRepository          $orderProductRepository,
         AmazonReportListRepository      $amazonReportListRepository,
         FirstMileShipmentFeeRepository  $firstMileShipmentFeeRepository,
         FirstMileShipmentFee            $firstMileShipmentFee,
@@ -77,7 +76,7 @@ class InvoiceController extends Controller
         $this->invoice = $invoice;
         $this->customerRelation = $customerRelation;
         $this->roleAssignment = $roleAssignment;
-        $this->roles = $roles;
+        $this->role = $role;
         $this->billingStatement = $billingStatement;
         $this->customer = $customer;
         $this->orderProductRepository = $orderProductRepository;
@@ -92,7 +91,7 @@ class InvoiceController extends Controller
     {
         switch ($commissionRate['type']) {
             case 'sku':
-                $orderProductRepository = new OrderProductsRepository();
+                $orderProductRepository = new OrderProductRepository();
 
                 return $orderProductRepository->getSkuAvolutionCommission($clientCode, $shipDate) ?: 0;
             case 'promotion':
@@ -133,7 +132,7 @@ class InvoiceController extends Controller
     public function getCommissionRate(string $clientCode, string $reportDate, float $totalSalesAmount)
     {
         $commissionSetting = new CommissionSetting();
-        $orderProductRepository = new OrderProductsRepository();
+        $orderProductRepository = new OrderProductRepository();
 
         $settings = $commissionSetting->where('client_code', $clientCode)->first();
 
@@ -150,7 +149,7 @@ class InvoiceController extends Controller
             $orders = $orderProductRepository->getFitOrder($clientCode, $reportDate);
             if ($orders) {
                 foreach ($orders as $item) {
-                    $thisOrder = OrderProducts::find($item->id);
+                    $thisOrder = OrderProduct::find($item->id);
 
                     $thisOrder->sku_commission_rate = $this->getSkuCommissionRate(
                         $item,
@@ -202,7 +201,7 @@ class InvoiceController extends Controller
             ->where('active', 1)
             ->pluck('role_id');
 
-        $managerRoleID = $this->roles->select('id')
+        $managerRoleID = $this->role->select('id')
             ->where('role_name', self::MANAGER_ROLE_NAME)
             ->where('active', 1)
             ->pluck('id');
@@ -292,7 +291,7 @@ class InvoiceController extends Controller
             ->where('active', 1)
             ->pluck('role_id');
 
-        $managerRoleID = $this->roles->select('id')
+        $managerRoleID = $this->role->select('id')
             ->where('role_name', self::MANAGER_ROLE_NAME)
             ->where('active', 1)
             ->pluck('id');

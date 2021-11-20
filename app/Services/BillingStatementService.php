@@ -3,16 +3,16 @@
 namespace App\Services;
 
 use Carbon\Carbon;
-use App\Models\OrderProducts;
+use App\Models\OrderProduct;
 use App\Support\ERPRequester;
 use App\Models\CommissionSetting;
 use App\Models\ExtraordinaryItem;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Repositories\OrdersRepository;
+use App\Repositories\OrderRepository;
 use App\Repositories\CustomerRepository;
 use App\Repositories\ExchangeRateRepository;
-use App\Repositories\OrderProductsRepository;
+use App\Repositories\OrderProductRepository;
 use App\Repositories\AmazonReportListRepository;
 use App\Repositories\BillingStatementRepository;
 use App\Repositories\CommissionSettingRepository;
@@ -60,7 +60,7 @@ class BillingStatementService
 
         $supplierName = $getSupplierName['data']['supplierName'] ?? null;
 
-        $orderRepository = new OrdersRepository();
+        $orderRepository = new OrderRepository();
         $clientReportFees = $orderRepository->getReportFees(
             $reportDate,
             $clientCode,
@@ -383,7 +383,7 @@ class BillingStatementService
     public function getCommissionRate(string $clientCode, string $reportDate, float $totalSalesAmount)
     {
         $commissionSetting = new CommissionSetting();
-        $orderProductRepository = new OrderProductsRepository();
+        $orderProductRepository = new OrderProductRepository();
 
         $settings = $commissionSetting->where('client_code', $clientCode)->first();
 
@@ -400,7 +400,7 @@ class BillingStatementService
             $orders = $orderProductRepository->getFitOrder($clientCode, $reportDate);
             if ($orders) {
                 foreach ($orders as $item) {
-                    $thisOrder = OrderProducts::find($item->id);
+                    $thisOrder = OrderProduct::find($item->id);
 
                     $thisOrder->sku_commission_rate = $this->getSkuCommissionRate(
                         $item,
@@ -438,7 +438,7 @@ class BillingStatementService
     {
         switch ($commissionRate['type']) {
             case 'sku':
-                $orderProductRepository = new OrderProductsRepository();
+                $orderProductRepository = new OrderProductRepository();
 
                 return round($orderProductRepository->getSkuAvolutionCommission($clientCode, $shipDate), 2);
             case 'promotion':

@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use DateTime;
 use Illuminate\Http\Request;
 use App\Models\RmaRefundList;
-use App\Models\Orders;
-use App\Models\OrderProducts;
+use App\Models\Order;
+use App\Models\OrderProduct;
 use App\Models\ExchangeRate;
-use App\Models\SystemChangeLogs;
+use App\Models\SystemChangeLog;
 use App\Models\BillingStatement;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,27 +18,27 @@ use Illuminate\Support\Facades\Redirect;
 class ErpOrdersController extends Controller
 {
     private $rmaRefundList;
-    private $orders;
+    private $order;
     private $exchangeRate;
-    private $systemChangeLogs;
+    private $systemChangeLog;
     private $billingStatement;
-    private $orderProducts;
+    private $orderProduct;
 
     public function __construct(
         RmaRefundList     $rmaRefundList,
-        Orders            $orders,
-        ExchangeRate     $exchangeRate,
-        SystemChangeLogs  $systemChangeLogs,
-        BillingStatement $billingStatement,
-        OrderProducts     $orderProducts
+        Order             $order,
+        ExchangeRate      $exchangeRate,
+        SystemChangeLog   $systemChangeLog,
+        BillingStatement  $billingStatement,
+        OrderProduct      $orderProduct
     )
     {
         $this->rmaRefundList = $rmaRefundList;
-        $this->orders = $orders;
+        $this->order = $order;
         $this->exchangeRate = $exchangeRate;
-        $this->systemChangeLogs = $systemChangeLogs;
+        $this->systemChangeLog = $systemChangeLog;
         $this->billingStatement = $billingStatement;
-        $this->orderProducts = $orderProducts;
+        $this->orderProduct = $orderProduct;
     }
 
     public function refundSearchView(Request $request)
@@ -103,7 +103,7 @@ class ErpOrdersController extends Controller
         $formattedShipDate = DB::raw("date_format(o.ship_time,'%Y-%m-%d') as 'shipped_date'");
         $formattedWareHouse = DB::raw("CONCAT(o.warehouse_code,'[',o.warehouse_name,']') AS 'warehouse'");
 
-        $query = $this->orders::from('orders as o')
+        $query = $this->order::from('orders as o')
             ->join('order_products as p', function ($join) {
                 $join->on('p.order_code', '=', 'o.order_code')
                     ->where('p.active', '=', 1);
@@ -172,7 +172,7 @@ class ErpOrdersController extends Controller
         $data['supplier'] = $request->input('supplier') ?? null;
         $data['warehouse'] = $request->input('warehouse') ?? null;
 
-        $query = $this->orders::from('orders as o')
+        $query = $this->order::from('orders as o')
             ->join('order_sku_cost_details as d', 'd.reference_no', '=', 'o.order_code')
             ->join('order_products as p', 'p.order_code', '=', 'o.order_code')
             ->select(
@@ -336,7 +336,7 @@ class ErpOrdersController extends Controller
 
     public function getChangeLog($productID)
     {
-        return $this->systemChangeLogs->from('system_changelogs as s')
+        return $this->systemChangeLog->from('system_changelogs as s')
             ->select(
                 's.field_name',
                 's.original_value',
@@ -360,14 +360,14 @@ class ErpOrdersController extends Controller
         DB::beginTransaction();
         try {
             //get original order_products value
-            $oldValues = $this->orderProducts->selectRaw($modifiedColumn)->find($productID)->toArray();
+            $oldValues = $this->orderProduct->selectRaw($modifiedColumn)->find($productID)->toArray();
             $UpdatedData = array_diff($inputs, $oldValues);
 
             //update order_product
-            $this->orderProducts->where('id', $productID)->update($UpdatedData);
+            $this->orderProduct->where('id', $productID)->update($UpdatedData);
             //record on log
             foreach ($UpdatedData as $k => $v) {
-                $this->systemChangeLogs->insert(
+                $this->systemChangeLog->insert(
                     [
                         'menu_path' => '/orders/edit',
                         'event_type' => 'U',

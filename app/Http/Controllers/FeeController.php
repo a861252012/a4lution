@@ -14,10 +14,10 @@ use App\Exports\MonthlyStorageFeesExport;
 use App\Exports\FirstMileShipmentFeesExport;
 use App\Models\AmazonDateRangeReport;
 use App\Models\FirstMileShipmentFee;
-use App\Models\LongTermStorageFees;
-use App\Models\PlatformAdFees;
+use App\Models\LongTermStorageFee;
+use App\Models\PlatformAdFee;
 use App\Models\BatchJob;
-use App\Models\MonthlyStorageFees;
+use App\Models\MonthlyStorageFee;
 use App\Models\BillingStatement;
 use App\Models\ExtraordinaryItem;
 use App\Repositories\CustomerRepository;
@@ -39,9 +39,9 @@ class FeeController extends Controller
 
     private $batchJob;
     private $amazonDateRangeReport;
-    private $platformAdFees;
-    private $monthlyStorageFees;
-    private $longTermStorageFees;
+    private $platformAdFee;
+    private $monthlyStorageFee;
+    private $longTermStorageFee;
     private $firstMileShipmentFee;
     private $billingStatement;
     private $customerRepository;
@@ -50,19 +50,19 @@ class FeeController extends Controller
     public function __construct(
         BatchJob                $batchJob,
         AmazonDateRangeReport   $amazonDateRangeReport,
-        PlatformAdFees          $platformAdFees,
-        MonthlyStorageFees      $monthlyStorageFees,
-        LongTermStorageFees     $longTermStorageFees,
+        PlatformAdFee           $platformAdFee,
+        MonthlyStorageFee       $monthlyStorageFee,
+        LongTermStorageFee      $longTermStorageFee,
         FirstMileShipmentFee    $firstMileShipmentFee,
         BillingStatement        $billingStatement,
         CustomerRepository      $customerRepository,
-        ExchangeRateRepository $exchangeRateRepository
+        ExchangeRateRepository  $exchangeRateRepository
     ) {
         $this->batchJob = $batchJob;
         $this->amazonDateRangeReport = $amazonDateRangeReport;
-        $this->platformAdFees = $platformAdFees;
-        $this->monthlyStorageFees = $monthlyStorageFees;
-        $this->longTermStorageFees = $longTermStorageFees;
+        $this->platformAdFee = $platformAdFee;
+        $this->monthlyStorageFee = $monthlyStorageFee;
+        $this->longTermStorageFee = $longTermStorageFee;
         $this->firstMileShipmentFee = $firstMileShipmentFee;
         $this->billingStatement = $billingStatement;
         $this->customerRepository = $customerRepository;
@@ -187,7 +187,7 @@ class FeeController extends Controller
         //調整report_date格式
         $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') as report_date");
 
-        $query = $this->platformAdFees->select(
+        $query = $this->platformAdFee->select(
             $formattedReportDate,
             'client_code as supplier',
             'platform',
@@ -287,7 +287,7 @@ class FeeController extends Controller
         //調整report_date格式
         $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') as report_date");
 
-        $query = $this->monthlyStorageFees->select(
+        $query = $this->monthlyStorageFee->select(
             $formattedReportDate,
             'asin',
             'fnsku',
@@ -327,7 +327,7 @@ class FeeController extends Controller
         //調整report_date格式
         $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') as report_date");
 
-        $query = $this->longTermStorageFees->select(
+        $query = $this->longTermStorageFee->select(
             $formattedReportDate,
             'snapshot_date',
             'sku',

@@ -2,15 +2,15 @@
 
 namespace App\Console\Commands;
 
-use App\Repositories\AmazonReportListRepository;
-use App\Repositories\OrderProductsRepository;
-use App\Repositories\OrderSkuCostDetailsRepository;
-use App\Repositories\OrdersRepository;
-use App\Support\ERPRequester;
 use Carbon\Carbon;
+use App\Support\ERPRequester;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Repositories\OrderRepository;
+use App\Repositories\OrderProductRepository;
+use App\Repositories\AmazonReportListRepository;
+use App\Repositories\OrderSkuCostDetailRepository;
 
 class OrderDataSync extends Command
 {
@@ -31,9 +31,9 @@ class OrderDataSync extends Command
      * @var string
      */
     protected $description = 'order_data_sync';
-    private OrdersRepository $ordersRepository;
-    private OrderProductsRepository $orderProductsRepository;
-    private OrderSkuCostDetailsRepository $orderSkuCostDetailsRepository;
+    private OrderRepository $orderRepository;
+    private OrderProductRepository $orderProductRepository;
+    private OrderSkuCostDetailRepository $orderSkuCostDetailRepository;
     private AmazonReportListRepository $amazonReportListRepository;
     private ERPRequester $erpRequest;
 
@@ -43,16 +43,16 @@ class OrderDataSync extends Command
      * @return void
      */
     public function __construct(
-        OrdersRepository              $ordersRepository,
-        OrderProductsRepository       $orderProductsRepository,
-        OrderSkuCostDetailsRepository $orderSkuCostDetailsRepository,
+        OrderRepository               $orderRepository,
+        OrderProductRepository        $orderProductRepository,
+        OrderSkuCostDetailRepository  $orderSkuCostDetailRepository,
         AmazonReportListRepository    $amazonReportListRepository,
         ERPRequester    $ERPRequest
     ) {
         parent::__construct();
-        $this->ordersRepository = $ordersRepository;
-        $this->orderProductsRepository = $orderProductsRepository;
-        $this->orderSkuCostDetailsRepository = $orderSkuCostDetailsRepository;
+        $this->orderRepository = $orderRepository;
+        $this->orderProductRepository = $orderProductRepository;
+        $this->orderSkuCostDetailRepository = $orderSkuCostDetailRepository;
         $this->amazonReportListRepository = $amazonReportListRepository;
         $this->erpRequest = $ERPRequest;
     }
@@ -88,7 +88,7 @@ class OrderDataSync extends Command
             ],
         );
 
-        $ordersWhiteList = $this->ordersRepository->getTableColumns();
+        $ordersWhiteList = $this->orderRepository->getTableColumns();
 
         if (!$res['data']) {
             return false;
@@ -129,7 +129,7 @@ class OrderDataSync extends Command
                     $productSkuArray['supplier'] = $getProductInfo['data'][0]['procutCategoryName2'];
 
                     //TODO
-                    $this->orderProductsRepository->insertData($productSkuArray);
+                    $this->orderProductRepository->insertData($productSkuArray);
 
                     //組建要request 給 getOrderCostDetailSku的參數
                     $orderCostParams = [
@@ -222,7 +222,7 @@ class OrderDataSync extends Command
                             $productSkuArr['supplier_type'] = $getProductInfos['data'][0]['procutCategoryName1'];
                             $productSkuArr['supplier'] = $getProductInfos['data'][0]['procutCategoryName2'];
 
-                            $this->orderProductsRepository->insertData($productSkuArr);
+                            $this->orderProductRepository->insertData($productSkuArr);
 
                             //組建要request 給 getOrderCostDetailSku的參數
                             $orderCostParams = [
@@ -290,7 +290,7 @@ class OrderDataSync extends Command
             }
 
             foreach ($costDetailArray as $items) {
-                $isDuplicated = $this->orderSkuCostDetailsRepository->checkIfSkuDetailDuplicated(
+                $isDuplicated = $this->orderSkuCostDetailRepository->checkIfSkuDetailDuplicated(
                     $items['product_barcode'],
                     $items['reference_no']
                 );
@@ -299,7 +299,7 @@ class OrderDataSync extends Command
                     Log::channel('daily_order_sync')
                         ->info("[daily_order_sync.isDuplicated]" . json_encode($items));
                 } else {
-                    $insertCostDetail = $this->orderSkuCostDetailsRepository->insertData($items);
+                    $insertCostDetail = $this->orderSkuCostDetailRepository->insertData($items);
 
                     if (!$insertCostDetail) {
                         Log::channel('daily_order_sync')
@@ -318,7 +318,7 @@ class OrderDataSync extends Command
 
         //分批insert訂單到orders
         foreach ($ordersData as $item) {
-            $insertOrdersList = $this->ordersRepository->insertData($item);
+            $insertOrdersList = $this->orderRepository->insertData($item);
 
             if (!$insertOrdersList) {
                 Log::channel('daily_order_sync')
@@ -409,9 +409,9 @@ class OrderDataSync extends Command
         //補齊 order_products其餘的欄位
         if (!empty($orderProductParamsArr)) {
             foreach ($orderProductParamsArr as $v) {
-                $item = $this->orderSkuCostDetailsRepository->getSkuDetail($v['order_code'], $v['sku']);
+                $item = $this->orderSkuCostDetailRepository->getSkuDetail($v['order_code'], $v['sku']);
 
-                $countCol = $this->orderProductsRepository->countReportColumns($v['order_code'], $v['sku']);
+                $countCol = $this->orderProductRepository->countReportColumns($v['order_code'], $v['sku']);
 
                 $v['sales_amount'] = 0;
                 $v['fba_fee'] = (float)abs($countCol[0]->fba_fee) ?? 0;
@@ -431,7 +431,7 @@ class OrderDataSync extends Command
                     $v['other_transaction'] = $item['other_fee_org'];
                 }
 
-                $getPromotion = $this->orderProductsRepository->countPromotionAmount(
+                $getPromotion = $this->orderProductRepository->countPromotionAmount(
                     $v['order_code'],
                     $v['sku']
                 );
@@ -446,11 +446,12 @@ class OrderDataSync extends Command
                     (float)$principal
                 );
 
-                $res = $this->orderProductsRepository->updateData($v, $v['order_code'], $v['sku']);
+                $res = $this->orderProductRepository->updateData($v, $v['order_code'], $v['sku']);
 
                 if (!$res) {
                     Log::channel('daily_order_sync')
-                        ->info("[daily_order_sync.updateOrderProduct]" . $res)
+                        // TODO: Mark By Yong 不確定哪個 info 才是正確的
+                        // ->info("[daily_order_sync.updateOrderProduct]" . $res)
                         ->info("[order_code:{$v['order_code']}, sku:{$v['sku']}");
                     DB::rollBack();
 

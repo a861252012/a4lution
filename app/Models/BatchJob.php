@@ -17,6 +17,6 @@ class BatchJob extends Model
 
     public function users()
     {
-        return $this->belongsTo('App\Models\Users', 'id', 'user_id');
+        return $this->belongsTo('App\Models\User', 'id', 'user_id');
     }
 }

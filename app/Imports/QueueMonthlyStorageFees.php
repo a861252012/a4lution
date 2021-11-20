@@ -3,7 +3,7 @@
 namespace App\Imports;
 
 use App\Models\BatchJob;
-use App\Models\MonthlyStorageFees;
+use App\Models\MonthlyStorageFee;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Events\AfterImport;
@@ -43,7 +43,7 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
     {
         ++$this->rows;
 
-        return new MonthlyStorageFees([
+        return new MonthlyStorageFee([
             'account' => $row['account'],
             'asin' => $row['asin'],
             'fnsku' => $row['fnsku'],
@@ -94,7 +94,7 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
 
     public function getRowCount(): int
     {
-        return MonthlyStorageFees::where('upload_id', $this->batchID)
+        return MonthlyStorageFee::where('upload_id', $this->batchID)
             ->where('active', 1)
             ->count();
     }
@@ -110,7 +110,7 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
             AfterImport::class => function (AfterImport $event) {
                 DB::beginTransaction();
                 try {
-                    MonthlyStorageFees::where('report_date', $this->inputReportDate)
+                    MonthlyStorageFee::where('report_date', $this->inputReportDate)
                         ->where('active', '=', 1)
                         ->where('upload_id', '<', $this->batchID)
                         ->cursor()
@@ -144,7 +144,7 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
                         ]
                     );
 
-                    MonthlyStorageFees::where('report_date', $this->inputReportDate)
+                    MonthlyStorageFee::where('report_date', $this->inputReportDate)
                         ->where('active', '=', 1)
                         ->where('upload_id', '=', $this->batchID)
                         ->cursor()

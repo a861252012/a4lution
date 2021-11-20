@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Users;
 use Illuminate\Database\Eloquent\Model;
 
 class EmployeeCommissionRule extends Model

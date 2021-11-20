@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class MonthlyStorageFees extends Model
+class PlatformAdFee extends Model
 {
-    protected $table = "monthly_storage_fees";
+    protected $table = "platform_ad_fees";
+
+//    protected $fillable = ['client_code'];
 
     protected $guarded = ['id'];
 
     public $timestamps = false;
-}
 
+}

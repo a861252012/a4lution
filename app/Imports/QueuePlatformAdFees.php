@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\Models\PlatformAdFees;
+use App\Models\PlatformAdFee;
 use App\Models\BatchJob;
 use App\Services\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -44,7 +44,7 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
     {
         ++$this->rows;
 
-        return new PlatformAdFees([
+        return new PlatformAdFee([
             'client_code' => $row['client_code'],
             'client_type' => $row['client_type'],
             'platform' => $row['platform'],
@@ -80,7 +80,7 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
 
     public function getRowCount(): int
     {
-        return PlatformAdFees::where('upload_id', $this->batchID)
+        return PlatformAdFee::where('upload_id', $this->batchID)
             ->where('active', 1)
             ->count();
     }
@@ -96,7 +96,7 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
             AfterImport::class => function (AfterImport $event) {
                 DB::beginTransaction();
                 try {
-                    PlatformAdFees::where('report_date', $this->inputReportDate)
+                    PlatformAdFee::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '<', $this->batchID)
                         ->where('active', '=', 1)
                         ->cursor()
@@ -131,7 +131,7 @@ class QueuePlatformAdFees implements ToModel, WithChunkReading, ShouldQueue, Wit
                         ]
                     );
 
-                    PlatformAdFees::where('report_date', $this->inputReportDate)
+                    PlatformAdFee::where('report_date', $this->inputReportDate)
                         ->where('active', '=', 1)
                         ->where('upload_id', '=', $this->batchID)
                         ->cursor()

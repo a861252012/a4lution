@@ -3,7 +3,7 @@
 namespace App\Exports;
 
 use App\Models\BillingStatement;
-use App\Models\Users;
+use App\Models\User;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromArray;
@@ -82,7 +82,7 @@ class PaymentExport implements WithTitle, WithEvents
                     Log::error("can't find invoice by using id: {$this->insertInvoiceID}");
                 }
 
-                $user = Users::findOrFail($invoice->created_by);
+                $user = User::findOrFail($invoice->created_by);
 
                 if (!$user) {
                     Log::error("can't find user by using id: {$invoice->created_by}");

@@ -3,7 +3,7 @@
 namespace App\Imports;
 
 use App\Models\BatchJob;
-use App\Models\LongTermStorageFees;
+use App\Models\longTermStorageFee;
 use App\Services\ImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
@@ -43,7 +43,7 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
     {
         ++$this->rows;
 
-        return new LongTermStorageFees([
+        return new longTermStorageFee([
             'account' => $row['account'],
             'snapshot_date' => $row['snapshot_date'],
             'sku' => $row['sku'],
@@ -81,7 +81,7 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
 
     public function getRowCount(): int
     {
-        return LongTermStorageFees::where('upload_id', $this->batchID)
+        return longTermStorageFee::where('upload_id', $this->batchID)
             ->where('active', 1)
             ->count();
     }
@@ -97,7 +97,7 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
             AfterImport::class => function (AfterImport $event) {
                 DB::beginTransaction();
                 try {
-                    LongTermStorageFees::where('report_date', $this->inputReportDate)
+                    longTermStorageFee::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '<', $this->batchID)
                         ->where('active', '=', 1)
                         ->cursor()
@@ -133,7 +133,7 @@ class QueueLongTermStorageFees implements ToModel, WithHeadingRow, ShouldQueue, 
                             ]
                         );
 
-                    LongTermStorageFees::where('report_date', $this->inputReportDate)
+                    longTermStorageFee::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '=', $this->batchID)
                         ->where('active', '=', 1)
                         ->cursor()

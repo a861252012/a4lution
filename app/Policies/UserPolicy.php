@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\Users;
+use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class UserPolicy
@@ -12,10 +12,10 @@ class UserPolicy
     /**
      * Determine whether the user can see the users.
      *
-     * @param Users $user
+     * @param User $user
      * @return boolean
      */
-    public function viewAny(Users $user)
+    public function viewAny(User $user)
     {
         return $user->isAdmin();
     }
@@ -23,10 +23,10 @@ class UserPolicy
     /**
      * Determine whether the authenticate user can create users.
      *
-     * @param Users $user
+     * @param User $user
      * @return boolean
      */
-    public function create(Users $user)
+    public function create(User $user)
     {
         return $user->isAdmin();
     }
@@ -34,11 +34,11 @@ class UserPolicy
     /**
      * Determine whether the authenticate user can update the user.
      *
-     * @param Users $user
-     * @param Users $model
+     * @param User $user
+     * @param User $model
      * @return boolean
      */
-    public function update(Users $user, Users $model)
+    public function update(User $user, User $model)
     {
         if (env('IS_DEMO')){
             return $user->isAdmin() && !in_array($model->id, [1, 2, 3]);
@@ -49,11 +49,11 @@ class UserPolicy
     /**
      * Determine whether the authenticate user can delete the user.
      *
-     * @param Users $user
-     * @param Users $model
+     * @param User $user
+     * @param User $model
      * @return boolean
      */
-    public function delete(Users $user, Users $model) {
+    public function delete(User $user, User $model) {
         if (env('IS_DEMO')){
             return $user->isAdmin() && $user->id != $model->id && !in_array($model->id, [1, 2, 3]);
         }
@@ -63,10 +63,10 @@ class UserPolicy
     /**
      * Determine whether the authenticate user can manage other users.
      *
-     * @param Users $user
+     * @param User $user
      * @return boolean
      */
-    public function manageUsers(Users $user)
+    public function manageUsers(User $user)
     {
         return $user->isAdmin();
     }
@@ -74,10 +74,10 @@ class UserPolicy
     /**
      * Determine whether the authenticate user can manage items and other related entities(tags, categories).
      *
-     * @param Users $user
+     * @param User $user
      * @return boolean
      */
-    public function manageItems(Users $user)
+    public function manageItems(User $user)
     {
         return $user->isAdmin() || $user->isCreator();
     }

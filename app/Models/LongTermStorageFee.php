@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class LongTermStorageFees extends Model
+class LongTermStorageFee extends Model
 {
     protected $table = "long_term_storage_fees";
 

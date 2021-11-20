@@ -12,7 +12,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Excel;
-use App\Models\PlatformAdFees;
+use App\Models\PlatformAdFee;
 use Throwable;
 
 class ADSPromotionExport implements WithTitle, FromQuery, WithHeadings, withMapping, WithStrictNullComparison
@@ -51,7 +51,7 @@ class ADSPromotionExport implements WithTitle, FromQuery, WithHeadings, withMapp
 
     public function query()
     {
-        return PlatformAdFees::query()
+        return PlatformAdFee::query()
             ->select(
                 "platform_ad_fees.platform",
                 "platform_ad_fees.account",
