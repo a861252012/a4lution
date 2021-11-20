@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class PlatformAdFees extends Model
+class PlatformAdFee extends Model
 {
     protected $table = "platform_ad_fees";
 

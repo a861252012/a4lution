@@ -15,7 +15,7 @@ use App\Exports\FirstMileShipmentFeesExport;
 use App\Models\AmazonDateRangeReport;
 use App\Models\FirstMileShipmentFee;
 use App\Models\LongTermStorageFee;
-use App\Models\PlatformAdFees;
+use App\Models\PlatformAdFee;
 use App\Models\BatchJob;
 use App\Models\MonthlyStorageFee;
 use App\Models\BillingStatement;
@@ -39,7 +39,7 @@ class FeeController extends Controller
 
     private $batchJob;
     private $amazonDateRangeReport;
-    private $platformAdFees;
+    private $platformAdFee;
     private $monthlyStorageFee;
     private $longTermStorageFee;
     private $firstMileShipmentFee;
@@ -50,7 +50,7 @@ class FeeController extends Controller
     public function __construct(
         BatchJob                $batchJob,
         AmazonDateRangeReport   $amazonDateRangeReport,
-        PlatformAdFees          $platformAdFees,
+        PlatformAdFee           $platformAdFee,
         MonthlyStorageFee       $monthlyStorageFee,
         LongTermStorageFee      $longTermStorageFee,
         FirstMileShipmentFee    $firstMileShipmentFee,
@@ -60,7 +60,7 @@ class FeeController extends Controller
     ) {
         $this->batchJob = $batchJob;
         $this->amazonDateRangeReport = $amazonDateRangeReport;
-        $this->platformAdFees = $platformAdFees;
+        $this->platformAdFee = $platformAdFee;
         $this->monthlyStorageFee = $monthlyStorageFee;
         $this->longTermStorageFee = $longTermStorageFee;
         $this->firstMileShipmentFee = $firstMileShipmentFee;
@@ -187,7 +187,7 @@ class FeeController extends Controller
         //調整report_date格式
         $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') as report_date");
 
-        $query = $this->platformAdFees->select(
+        $query = $this->platformAdFee->select(
             $formattedReportDate,
             'client_code as supplier',
             'platform',

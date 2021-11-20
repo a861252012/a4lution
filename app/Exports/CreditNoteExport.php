@@ -4,7 +4,7 @@ namespace App\Exports;
 
 use App\Models\BillingStatement;
 use App\Models\Invoice;
-use App\Models\Users;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\Exportable;

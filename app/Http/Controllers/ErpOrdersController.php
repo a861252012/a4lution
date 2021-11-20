@@ -8,7 +8,7 @@ use App\Models\RmaRefundList;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\ExchangeRate;
-use App\Models\SystemChangeLogs;
+use App\Models\SystemChangeLog;
 use App\Models\BillingStatement;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +20,7 @@ class ErpOrdersController extends Controller
     private $rmaRefundList;
     private $order;
     private $exchangeRate;
-    private $systemChangeLogs;
+    private $systemChangeLog;
     private $billingStatement;
     private $orderProduct;
 
@@ -28,7 +28,7 @@ class ErpOrdersController extends Controller
         RmaRefundList     $rmaRefundList,
         Order             $order,
         ExchangeRate      $exchangeRate,
-        SystemChangeLogs  $systemChangeLogs,
+        SystemChangeLog   $systemChangeLog,
         BillingStatement  $billingStatement,
         OrderProduct      $orderProduct
     )
@@ -36,7 +36,7 @@ class ErpOrdersController extends Controller
         $this->rmaRefundList = $rmaRefundList;
         $this->order = $order;
         $this->exchangeRate = $exchangeRate;
-        $this->systemChangeLogs = $systemChangeLogs;
+        $this->systemChangeLog = $systemChangeLog;
         $this->billingStatement = $billingStatement;
         $this->orderProduct = $orderProduct;
     }
@@ -336,7 +336,7 @@ class ErpOrdersController extends Controller
 
     public function getChangeLog($productID)
     {
-        return $this->systemChangeLogs->from('system_changelogs as s')
+        return $this->systemChangeLog->from('system_changelogs as s')
             ->select(
                 's.field_name',
                 's.original_value',
@@ -367,7 +367,7 @@ class ErpOrdersController extends Controller
             $this->orderProduct->where('id', $productID)->update($UpdatedData);
             //record on log
             foreach ($UpdatedData as $k => $v) {
-                $this->systemChangeLogs->insert(
+                $this->systemChangeLog->insert(
                     [
                         'menu_path' => '/orders/edit',
                         'event_type' => 'U',

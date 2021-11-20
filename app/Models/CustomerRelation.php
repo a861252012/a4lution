@@ -16,7 +16,7 @@ class CustomerRelation extends Model
 
     public function users()
     {
-        return $this->hasOne('App\Models\Users', 'id', 'user_id');
+        return $this->hasOne('App\Models\User', 'id', 'user_id');
     }
 }
 

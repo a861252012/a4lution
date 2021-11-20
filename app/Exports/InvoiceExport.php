@@ -3,7 +3,7 @@
 namespace App\Exports;
 
 use Throwable;
-use App\Models\Users;
+use App\Models\User;
 use App\Models\Invoice;
 use Maatwebsite\Excel\Excel;
 use App\Exports\FBADateExport;

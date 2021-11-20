@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use DateTime;
 use Carbon\Carbon;
-use App\Models\Roles;
+use App\Models\Role;
 use App\Models\Order;
 use App\Models\Invoice;
 use App\Models\Customer;
@@ -15,7 +15,6 @@ use App\Models\OrderProduct;
 use App\Models\RmaRefundList;
 use App\Exports\FBADateExport;
 use App\Exports\InvoiceExport;
-use App\Models\PlatformAdFees;
 use App\Models\RoleAssignment;
 use App\Jobs\Invoice\SetSaveDir;
 use App\Services\InvoiceService;
@@ -48,7 +47,7 @@ class InvoiceController extends Controller
     private $invoice;
     private $customerRelation;
     private $roleAssignment;
-    private $roles;
+    private $role;
     private $billingStatement;
     private $customer;
     private $orderProductRepository;
@@ -60,13 +59,13 @@ class InvoiceController extends Controller
     private const MANAGER_ROLE_NAME = 'manager';
 
     public function __construct(
-        Invoice                        $invoice,
+        Invoice                         $invoice,
         CustomerRelation                $customerRelation,
         Customer                        $customer,
         RoleAssignment                  $roleAssignment,
-        Roles                           $roles,
+        Role                            $role,
         BillingStatement                $billingStatement,
-        OrderProductRepository         $orderProductRepository,
+        OrderProductRepository          $orderProductRepository,
         AmazonReportListRepository      $amazonReportListRepository,
         FirstMileShipmentFeeRepository  $firstMileShipmentFeeRepository,
         FirstMileShipmentFee            $firstMileShipmentFee,
@@ -77,7 +76,7 @@ class InvoiceController extends Controller
         $this->invoice = $invoice;
         $this->customerRelation = $customerRelation;
         $this->roleAssignment = $roleAssignment;
-        $this->roles = $roles;
+        $this->role = $role;
         $this->billingStatement = $billingStatement;
         $this->customer = $customer;
         $this->orderProductRepository = $orderProductRepository;
@@ -202,7 +201,7 @@ class InvoiceController extends Controller
             ->where('active', 1)
             ->pluck('role_id');
 
-        $managerRoleID = $this->roles->select('id')
+        $managerRoleID = $this->role->select('id')
             ->where('role_name', self::MANAGER_ROLE_NAME)
             ->where('active', 1)
             ->pluck('id');
@@ -292,7 +291,7 @@ class InvoiceController extends Controller
             ->where('active', 1)
             ->pluck('role_id');
 
-        $managerRoleID = $this->roles->select('id')
+        $managerRoleID = $this->role->select('id')
             ->where('role_name', self::MANAGER_ROLE_NAME)
             ->where('active', 1)
             ->pluck('id');
