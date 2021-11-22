@@ -51,7 +51,7 @@ class BillingStatementsService
         //getReportFees
         $supplierCode = Customers::where('client_code', $clientCode)->value('supplier_code');
 
-        $getSupplierName = (new ERPRequester)->send(
+        $getSupplierName = app(ERPRequester::class)->send(
             config('services.erp.wmsUrl'),
             'getSupplierInfo',
             ["supplierCode" => $supplierCode]
