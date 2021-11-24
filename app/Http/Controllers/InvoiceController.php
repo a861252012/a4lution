@@ -474,22 +474,38 @@ class InvoiceController extends Controller
         $invoice = Invoice::create($data);
         $invoiceID = $invoice->id;
 
-        $batch = \Bus::batch([
-            [
-                new SetSaveDir($invoiceID),
-                new ExportInvoiceExcel($invoice),
-                new ExportInvoicePDFs($invoice),
-                new CreateZipToS3($invoice),
-            ],
-        ])->then(function (Batch $batch) use ($invoiceID) {
-            (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'active']);
+        \Excel::store(
+            new \App\Exports\InvoiceExport(
+                $invoice->report_date->format('Y-m-d'),
+                $invoice->client_code,
+                $invoice->id,
+                $invoice->billing_statement_id,
+            ),
+            // [資料夾(id)/檔案名稱]
+            sprintf(
+                "%s.xlsx", 
+                now()->format('Ymd'),
+            ),
+            'invoice-export',
+            \Maatwebsite\Excel\Excel::XLSX
+        );
 
-        })->catch(function (Batch $batch, \Throwable $e) use ($invoiceID) {
-            (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'failed']);
+        // $batch = \Bus::batch([
+        //     [
+        //         new SetSaveDir($invoiceID),
+        //         new ExportInvoiceExcel($invoice),
+        //         new ExportInvoicePDFs($invoice),
+        //         new CreateZipToS3($invoice),
+        //     ],
+        // ])->then(function (Batch $batch) use ($invoiceID) {
+        //     (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'active']);
 
-        })->finally(function (Batch $batch) {
-            // TODO: 建立排程刪除舊資料(Local)
-        })->dispatch();
+        // })->catch(function (Batch $batch, \Throwable $e) use ($invoiceID) {
+        //     (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'failed']);
+
+        // })->finally(function (Batch $batch) {
+        //     // TODO: 建立排程刪除舊資料(Local)
+        // })->dispatch();
 
     }
 
