@@ -416,7 +416,7 @@ class InvoiceController extends Controller
             ->value('supplier_code');
 
         $getSupplierName = $this->sendERPRequest(
-            env("ERP_WMS_URL"),
+            config('services.erp.wmsUrl'),
             'getSupplierInfo',
             ["supplierCode" => $getSupplierCode],
             "",
