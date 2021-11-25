@@ -14,13 +14,13 @@ class InvoiceRepository extends BaseRepository
 
     public function create(array $data): ?Invoice
     {
-        return $this->invoices->create($data);
+        return $this->model->create($data);
     }
 
     public function updateByDate(string $date, array $data): int
     {
         try {
-            return $this->invoices
+            return $this->model
                 ->active()
                 ->where('report_date', $date)
                 ->update($data);
@@ -33,7 +33,7 @@ class InvoiceRepository extends BaseRepository
     //檢核若已出invoice則提示訊息(需先刪除相關聯的invoices)
     public function checkIfDuplicated(string $date, string $clientCode): int
     {
-        return $this->invoices
+        return $this->model
             ->active()
             ->where('report_date', $date)
             ->where("client_code", $clientCode)
