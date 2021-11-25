@@ -106,7 +106,7 @@
                     <tbody>
                     @forelse ($lists as $item)
                         <td class="platform">{{ $item->client_code ?? '' }}</td>
-                        <td class="acc_nick_name">{{ $item->report_date ?? '' }}</td>
+                        <td class="acc_nick_name">{{ $item->report_date->format('F-Y') ?? '' }}</td>
                         <td class="acc_name">{{ $item->opex_invoice_no ?? '' }}</td>
                         <td class="file_name">{{ $item->doc_file_name ?? '' }}</td>
                         <td class="shipped_date">{{ $item->doc_status ?? '' }}</td>
