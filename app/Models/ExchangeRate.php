@@ -19,13 +19,13 @@ class ExchangeRate extends Model
     ###########
     ## SCOPE ##
     ###########
-    public function scopeActive($q, $active = 1)
+    public function scopeActive($q)
     {
-        return $q->where('active', $active);
+        return $q->where('active', 1);
     }
 
     public function scopeInActive($q)
     {
-        return $q->scopeActive('active', 0);
+        return $q->where('active', 0);
     }
 }
