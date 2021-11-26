@@ -37,7 +37,8 @@ class EbRefundDataSync extends Command
     public function __construct(
         RmaRefundListRepository $rmaRefundListRepository,
         ERPRequester            $ERPRequest
-    ) {
+    )
+    {
         parent::__construct();
         $this->rmaRefundListRepository = $rmaRefundListRepository;
         $this->erpRequest = $ERPRequest;
@@ -60,12 +61,10 @@ class EbRefundDataSync extends Command
             config('services.erp.ebUrl'),
             self::EB_SERVICE_NAME,
             [
-                'shipDateFor' => $startDateTime,
-                'shipDateTo' => $endDateTime,
-                "pagination" => [
-                    "page" => 1,
-                    "pageSize" => $pageSize
-                ]
+                'create_date_form' => $startDateTime,
+                'create_date_to' => $endDateTime,
+                "page" => 1,
+                "pageSize" => $pageSize
             ],
             self::LOG_CHANNEL
         );
@@ -93,12 +92,10 @@ class EbRefundDataSync extends Command
                     config('services.erp.ebUrl'),
                     self::EB_SERVICE_NAME,
                     [
-                        'shipDateFor' => $startDateTime,
-                        'shipDateTo' => $endDateTime,
-                        "pagination" => [
-                            "page" => $i,
-                            "pageSize" => $pageSize
-                        ]
+                        'create_date_form' => $startDateTime,
+                        'create_date_to' => $endDateTime,
+                        "page" => $i,
+                        "pageSize" => $pageSize
                     ],
                     self::LOG_CHANNEL
                 )['data'];
