@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Users;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,11 +21,11 @@ class RoleAssignment extends Model
      */
     public function users()
     {
-        return $this->belongsTo('App\Models\Users', 'user_id', 'id');
+        return $this->belongsTo('App\Models\User', 'user_id', 'id');
     }
 
     public function roles()
     {
-        return $this->belongsTo('App\Models\Roles', 'role_id', 'id');
+        return $this->belongsTo('App\Models\Role', 'role_id', 'id');
     }
 }

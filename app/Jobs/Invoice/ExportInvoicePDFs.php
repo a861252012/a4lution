@@ -2,11 +2,11 @@
 
 namespace App\Jobs\Invoice;
 
-use App\Models\Invoices;
+use App\Models\Invoice;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
-use App\Models\FirstMileShipmentFees;
+use App\Models\FirstMileShipmentFee;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -19,7 +19,7 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
     private $invoice;
 
     public function __construct(
-        Invoices $invoice
+        Invoice $invoice
     )
     {
         $this->invoice = $invoice;
@@ -58,7 +58,7 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
             $invoice->client_code,
             $invoice->fba_shipment_invoice_no,
         );
-        $firstMileShipmentFees = FirstMileShipmentFees::query()
+        $firstMileShipmentFees = FirstMileShipmentFee::query()
             ->select(
                 DB::raw("fulfillment_center as 'country'"),
                 DB::raw("fba_shipment as 'shipment_id'"),

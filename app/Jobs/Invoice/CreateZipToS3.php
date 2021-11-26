@@ -4,7 +4,7 @@ namespace App\Jobs\Invoice;
 
 use Zip;
 use ZipArchive;
-use App\Models\Invoices;
+use App\Models\Invoice;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
@@ -20,7 +20,7 @@ class CreateZipToS3 extends BaseInvoiceJob implements ShouldQueue
     private $invoice;
 
     public function __construct(
-        Invoices $invoice
+        Invoice $invoice
     )
     {
         $this->invoice = $invoice;

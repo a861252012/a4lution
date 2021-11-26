@@ -13,15 +13,15 @@ use App\Exports\LongTermStorageFeesExport;
 use App\Exports\MonthlyStorageFeesExport;
 use App\Exports\FirstMileShipmentFeesExport;
 use App\Models\AmazonDateRangeReport;
-use App\Models\FirstMileShipmentFees;
-use App\Models\LongTermStorageFees;
-use App\Models\PlatformAdFees;
-use App\Models\BatchJobs;
-use App\Models\MonthlyStorageFees;
-use App\Models\BillingStatements;
-use App\Models\ExtraordinaryItems;
-use App\Repositories\CustomersRepository;
-use App\Repositories\ExchangeRatesRepository;
+use App\Models\FirstMileShipmentFee;
+use App\Models\LongTermStorageFee;
+use App\Models\PlatformAdFee;
+use App\Models\BatchJob;
+use App\Models\MonthlyStorageFee;
+use App\Models\BillingStatement;
+use App\Models\ExtraordinaryItem;
+use App\Repositories\CustomerRepository;
+use App\Repositories\ExchangeRateRepository;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -37,36 +37,36 @@ class FeeController extends Controller
 {
     const BATCH_STATUS = 'processing';
 
-    private $batchJobs;
+    private $batchJob;
     private $amazonDateRangeReport;
-    private $platformAdFees;
-    private $monthlyStorageFees;
-    private $longTermStorageFees;
-    private $firstMileShipmentFees;
-    private $billingStatements;
-    private $customersRepository;
-    private $exchangeRatesRepository;
+    private $platformAdFee;
+    private $monthlyStorageFee;
+    private $longTermStorageFee;
+    private $firstMileShipmentFee;
+    private $billingStatement;
+    private $customerRepository;
+    private $exchangeRateRepository;
 
     public function __construct(
-        BatchJobs               $batchJobs,
+        BatchJob                $batchJob,
         AmazonDateRangeReport   $amazonDateRangeReport,
-        PlatformAdFees          $platformAdFees,
-        MonthlyStorageFees      $monthlyStorageFees,
-        LongTermStorageFees     $longTermStorageFees,
-        FirstMileShipmentFees   $firstMileShipmentFees,
-        BillingStatements       $billingStatements,
-        CustomersRepository     $customersRepository,
-        ExchangeRatesRepository $exchangeRatesRepository
+        PlatformAdFee           $platformAdFee,
+        MonthlyStorageFee       $monthlyStorageFee,
+        LongTermStorageFee      $longTermStorageFee,
+        FirstMileShipmentFee    $firstMileShipmentFee,
+        BillingStatement        $billingStatement,
+        CustomerRepository      $customerRepository,
+        ExchangeRateRepository  $exchangeRateRepository
     ) {
-        $this->batchJobs = $batchJobs;
+        $this->batchJob = $batchJob;
         $this->amazonDateRangeReport = $amazonDateRangeReport;
-        $this->platformAdFees = $platformAdFees;
-        $this->monthlyStorageFees = $monthlyStorageFees;
-        $this->longTermStorageFees = $longTermStorageFees;
-        $this->firstMileShipmentFees = $firstMileShipmentFees;
-        $this->billingStatements = $billingStatements;
-        $this->customersRepository = $customersRepository;
-        $this->exchangeRatesRepository = $exchangeRatesRepository;
+        $this->platformAdFee = $platformAdFee;
+        $this->monthlyStorageFee = $monthlyStorageFee;
+        $this->longTermStorageFee = $longTermStorageFee;
+        $this->firstMileShipmentFee = $firstMileShipmentFee;
+        $this->billingStatement = $billingStatement;
+        $this->customerRepository = $customerRepository;
+        $this->exchangeRateRepository = $exchangeRateRepository;
     }
 
     public function uploadView(Request $request)
@@ -80,7 +80,7 @@ class FeeController extends Controller
         $reportDateTo = $reportDate ? date('Y-m-31', strtotime($reportDate)) : date('Y-m-31');
         $status = $request->input('status_type') ?? null;
 
-        $query = $this->batchJobs->select(
+        $query = $this->batchJob->select(
             'batch_jobs.user_id',
             'batch_jobs.report_date',
             'batch_jobs.fee_type',
@@ -121,7 +121,7 @@ class FeeController extends Controller
 
         $currentDateTime = Carbon::now()->timezone(env('TIME_ZONE_A'))->toDateTimeString();
 
-        $batchJobsArray = [
+        $insertBatchID = BatchJob::insertGetId([
             'user_id' => Auth::id(),
             'fee_type' => $feeType,
             'file_name' => $fileName,
@@ -129,17 +129,15 @@ class FeeController extends Controller
             'total_count' => 0,
             'status' => self::BATCH_STATUS,
             'created_at' => $currentDateTime,
-        ];
-
-        $insertBatchID = BatchJobs::insertGetId($batchJobsArray);
+        ]);
 
         //查詢該月是否已結算,如已結算則不得再更改
-        $haveMonthlyReport = $this->billingStatements->where('active', 1)
+        $haveMonthlyReport = $this->billingStatement->where('active', 1)
             ->where('report_date', $inputReportDate)
             ->count();
 
         if ($haveMonthlyReport) {
-            BatchJobs::where('id', $insertBatchID)->update(
+            BatchJob::where('id', $insertBatchID)->update(
                 [
                     'status' => 'failed',
                     'exit_message' => 'The selected report date (year-month) was closed',
@@ -189,7 +187,7 @@ class FeeController extends Controller
         //調整report_date格式
         $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') as report_date");
 
-        $query = $this->platformAdFees->select(
+        $query = $this->platformAdFee->select(
             $formattedReportDate,
             'client_code as supplier',
             'platform',
@@ -289,7 +287,7 @@ class FeeController extends Controller
         //調整report_date格式
         $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') as report_date");
 
-        $query = $this->monthlyStorageFees->select(
+        $query = $this->monthlyStorageFee->select(
             $formattedReportDate,
             'asin',
             'fnsku',
@@ -329,7 +327,7 @@ class FeeController extends Controller
         //調整report_date格式
         $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') as report_date");
 
-        $query = $this->longTermStorageFees->select(
+        $query = $this->longTermStorageFee->select(
             $formattedReportDate,
             'snapshot_date',
             'sku',
@@ -374,7 +372,7 @@ class FeeController extends Controller
         //調整report_date格式
         $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') as report_date");
 
-        $query = $this->firstMileShipmentFees->select(
+        $query = $this->firstMileShipmentFee->select(
             $formattedReportDate,
             'client_code',
             'ids_sku',
@@ -442,7 +440,7 @@ class FeeController extends Controller
             case "first_mile_shipment_fees":
                 $fileName = 'SampleFile_FirstMileShipmentFee.xlsx';
 
-                return (new FirstMileShipmentFeesExport)->download($fileName, \Maatwebsite\Excel\Excel::XLSX);
+                return (new FirstMileShipmentFeeExport)->download($fileName, \Maatwebsite\Excel\Excel::XLSX);
         }
     }
 
@@ -451,7 +449,7 @@ class FeeController extends Controller
         $data['clientCode'] = $request->input('client_code') ?? null;
         $data['reportDate'] = $request->input('report_date') ?? null;
 
-        $data['lists'] = ExtraordinaryItems::from('extraordinary_items as e')
+        $data['lists'] = ExtraordinaryItem::from('extraordinary_items as e')
             ->leftJoin('users as u', function ($join) {
                 $join->on('u.id', '=', 'e.updated_by');
                 $join->where('u.active', 1);
@@ -496,7 +494,7 @@ class FeeController extends Controller
         $id = $request->route('id');
 
         try {
-            $item = ExtraordinaryItems::findOrFail($id);
+            $item = ExtraordinaryItem::findOrFail($id);
 
             $item->active = 0;
             $item->updated_at = date('Y-m-d h:i:s');
@@ -513,7 +511,7 @@ class FeeController extends Controller
     public function getClientCodeList(): JsonResponse
     {
         try {
-            $data = $this->customersRepository->getAllClientCode();
+            $data = $this->customerRepository->getAllClientCode();
 
             return response()->json(
                 [
@@ -538,7 +536,7 @@ class FeeController extends Controller
     public function getAllCurrency(): JsonResponse
     {
         try {
-            $data = $this->exchangeRatesRepository->getAllCurrency();
+            $data = $this->exchangeRateRepository->getAllCurrency();
 
             return response()->json(
                 [
@@ -575,7 +573,7 @@ class FeeController extends Controller
         $data['report_date'] = Carbon::parse($data['report_date'])->format('Y-m-d');
 
         try {
-            ExtraordinaryItems::create($data);
+            ExtraordinaryItem::create($data);
 
             return response()->json(
                 [
@@ -602,7 +600,7 @@ class FeeController extends Controller
         $data['report_date'] = Carbon::parse($data['report_date'])->format('Y-m-d');
 
         try {
-            ExtraordinaryItems::where('id', $id)->update($data);
+            ExtraordinaryItem::where('id', $id)->update($data);
 
             return response()->json(
                 [
@@ -638,7 +636,7 @@ class FeeController extends Controller
         $data['report_date'] = Carbon::parse($data['report_date'])->format('Y-m-d');
 
         try {
-            ExtraordinaryItems::create($data);
+            ExtraordinaryItem::create($data);
 
             return response()->json(
                 [
@@ -661,7 +659,7 @@ class FeeController extends Controller
     public function preValidation(Request $request): JsonResponse
     {
         //check if monthly report exist
-        $hasMonthlyBilling = $this->billingStatements
+        $hasMonthlyBilling = $this->billingStatement
             ->active()
             ->whereRaw(
                 "DATE_FORMAT(report_date,'%Y%m') = ?",
@@ -676,7 +674,7 @@ class FeeController extends Controller
                 [
                     'status' => 403,
                     'msg' => "The {$formattedDate} sales summary was generated.
-                              Please delete the sales summary and reupload it."
+                            Please delete the sales summary and reupload it."
                 ]
             );
         }

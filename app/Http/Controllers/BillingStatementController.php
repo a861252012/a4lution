@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Services\BillingStatementsService;
+use App\Services\BillingStatementService;
+use App\Http\Requests\BillingStatement\AjaxStoreRequest;
 
 class BillingStatementController extends Controller
 {
-    private $billingStatementsService;
+    private $billingStatementService;
 
-    public function __construct(BillingStatementsService $billingStatementsService)
+    public function __construct(BillingStatementService $billingStatementService)
     {
-        $this->billingStatementsService = $billingStatementsService;
+        $this->billingStatementService = $billingStatementService;
     }
 
-    // TODO: create request
-    public function ajaxStore(Request $request)
+    public function ajaxStore(AjaxStoreRequest $request)
     {
-        $this->billingStatementsService->create($request);
+        $this->billingStatementService->create($request);
     }
 }

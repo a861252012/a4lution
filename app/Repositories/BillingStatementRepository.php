@@ -2,33 +2,33 @@
 
 namespace App\Repositories;
 
-use App\Models\BillingStatements;
+use App\Models\BillingStatement;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 class BillingStatementRepository
 {
-    protected $billingStatements;
+    protected $billingStatement;
 
-    public function __construct(BillingStatements $billingStatements)
+    public function __construct(BillingStatement $billingStatement)
     {
-        $this->billingStatements = $billingStatements;
+        $this->billingStatement = $billingStatement;
     }
 
     public function getTableColumns(): array
     {
-        return Schema::getColumnListing($this->billingStatements->getTable());
+        return Schema::getColumnListing($this->billingStatement->getTable());
     }
 
     public function create(array $data)
     {
-        return $this->billingStatements->create($data);
+        return $this->billingStatement->create($data);
     }
 
     public function updateByDate(string $date, array $data): int
     {
         try {
-            return $this->billingStatements
+            return $this->billingStatement
                 ->active()
                 ->where('report_date', $date)
                 ->update($data);
@@ -41,7 +41,7 @@ class BillingStatementRepository
     //檢核若該月份已結算員工commission則提示訊息(需Revoke Approval)
     public function checkIfSettled(string $date): int
     {
-        return $this->billingStatements
+        return $this->billingStatement
             ->active()
             ->where('report_date', $date)
             ->whereNotNull('cutoff_time')
@@ -51,7 +51,7 @@ class BillingStatementRepository
     //檢核若該月份已結算員工commission則提示訊息(需Revoke Approval)
     public function checkIfDuplicated(string $date, string $clientCode): int
     {
-        return $this->billingStatements
+        return $this->billingStatement
             ->active()
             ->where('report_date', $date)
             ->where("client_code", $clientCode)

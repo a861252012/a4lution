@@ -59,9 +59,9 @@
 
                         {{-- GENERATE SUMMARY --}}
                         <div class="col-lg-2 col-md-6 col-sm-6">
-                            <label class="form-control-label" for="gen_sales_btn"></label>
+                            <label class="form-control-label" for="create_sales_btn"></label>
                             <div class="form-group mb-0">
-                                <button class="form-control _fz-1 btn _btn btn-primary" id="gen_sales_btn"
+                                <button class="form-control _fz-1 btn _btn btn-primary" id="create_sales_btn"
                                         type="button" style="margin-top: 6px;">Create Sales Summary
                                 </button>
                             </div>
@@ -69,9 +69,9 @@
 
                         {{-- CREATE SUMMARY --}}
                         <div class="col-lg-2 col-md-6 col-sm-6">
-                            <label class="form-control-label" for="create_sales_btn"></label>
+                            <label class="form-control-label" for="generate_sales_btn"></label>
                             <div class="form-group mb-0">
-                                <a id="create_sales_btn" href="#inline_content">
+                                <a id="generate_sales_btn" href="#inline_content">
                                     <button class="form-control _fz-1 btn _btn btn-success"
                                             type="button" style="margin-top: 6px;">Generate Sales Summary
                                     </button>
@@ -738,7 +738,7 @@
             });
         });
 
-        $('button#gen_sales_btn').click(function () {
+        $('button#create_sales_btn').click(function () {
             let reportDate = $('#search_report_date').val();
             let clientCode = $("#sel_client_code option:selected").val();
             let _token = $('meta[name="csrf-token"]').attr('content');
@@ -776,19 +776,19 @@
                             buttons: true,
                             buttons: ["No,Cancel Plx!", "Yes,Delete it!"]
                         })
-                            .then(function (isConfirm) {
-                                if (isConfirm) {
+                        .then(function (isConfirm) {
+                            if (isConfirm) {
 
-                                    swal({
-                                        text: "processing!",
-                                        icon: "success",
-                                        button: "OK",
-                                    });
+                                swal({
+                                    text: "processing!",
+                                    icon: "success",
+                                    button: "OK",
+                                });
 
-                                    deleteIssue(reportDate);
-                                    ajaxRunBillingStatement();
-                                }
-                            });
+                                deleteIssue(reportDate);
+                                ajaxRunBillingStatement();
+                            }
+                        });
                     } else {
                         swal({
                             icon: 'warning',
@@ -799,8 +799,6 @@
                 }
             });
         });
-
-        $("#create_sales_btn").colorbox({inline: true, width: "60%", height: "80%", closeButton: true});
 
         function ajaxRunBillingStatement() {
             let reportDate = $('#search_report_date').val();
@@ -821,13 +819,26 @@
                     client_code: clientCode
                 },
                 success: function (res) {
-                    console.log(res);
                     swal({
                         text: "Generate Summary Complete!",
                         icon: "success",
                         button: "OK",
                     });
+
                     location.reload();
+
+                }, error: function (e) {
+
+                    // 顯示 Validate Error
+                    let errors = [];
+                    $.each(JSON.parse(e.responseText).errors, function(col, msg) {                    
+                        errors.push(msg.toString());
+                    });
+
+                    swal({
+                        icon: 'error',
+                        text: errors.join("\n")
+                    });
                 }
             });
         }
@@ -855,6 +866,8 @@
                 }
             });
         }
+
+        $("#generate_sales_btn").colorbox({inline: true, width: "60%", height: "80%", closeButton: true});
 
     </script>
 @endpush

@@ -2,32 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Customers;
-use App\Models\ExchangeRates;
-use App\Models\Orders;
-use App\Models\Users;
-use App\Models\ExtraordinaryItems;
+use App\Models\Customer;
 use App\Console\Commands\OrderDataSync;
-use App\Models\Views;
-use App\Repositories\OrderProductsRepository;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Repositories\OrderProductRepository;
 use Illuminate\Support\Facades\Log;
 
 class TestController extends Controller
 {
     public function test()
     {
-        $orderProductRepository = new OrderProductsRepository();
+        $orderProductRepository = new OrderProductRepository();
 
         dump($orderProductRepository->getSkuAvolutionCommission('S53A', 202108));
         $res = round($orderProductRepository->getSkuAvolutionCommission('S53A', 202108), 2) ?? 0;
         dd($res);
         try {
-            $data = Customers::select('client_code')
+            $data = Customer::select('client_code')
                 ->where('active', 1)
                 ->pluck('client_code');
 

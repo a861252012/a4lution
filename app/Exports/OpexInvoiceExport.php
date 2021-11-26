@@ -2,8 +2,8 @@
 
 namespace App\Exports;
 
-use App\Models\BillingStatements;
-use App\Models\Invoices;
+use App\Models\BillingStatement;
+use App\Models\Invoice;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
@@ -44,7 +44,7 @@ class OpexInvoiceExport implements WithTitle, WithEvents
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoices::findOrFail($this->insertInvoiceID);
+        $invoice = Invoice::findOrFail($this->insertInvoiceID);
         $invoice->doc_status = "deleted";
         $invoice->save();
 
@@ -57,9 +57,9 @@ class OpexInvoiceExport implements WithTitle, WithEvents
     {
         return [
             BeforeSheet::class => function (BeforeSheet $event) {
-                $invoice = Invoices::findOrFail($this->insertInvoiceID);
+                $invoice = Invoice::findOrFail($this->insertInvoiceID);
 
-                $billing = BillingStatements::findOrFail($this->insertBillingID);
+                $billing = BillingStatement::findOrFail($this->insertBillingID);
 
                 $event->sheet->SetCellValue("E5", "OPEX Invoice");
                 $event->sheet->SetCellValue("D8", "Details");

@@ -3,7 +3,7 @@
 namespace App\Exports;
 
 use Throwable;
-use App\Models\Invoices;
+use App\Models\Invoice;
 use Maatwebsite\Excel\Excel;
 use App\Models\RmaRefundList;
 use Illuminate\Support\Facades\DB;
@@ -41,7 +41,7 @@ class ReturnAndRefundExport implements WithTitle, FromCollection, WithHeadings, 
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoices::findOrFail($this->insertInvoiceID);
+        $invoice = Invoice::findOrFail($this->insertInvoiceID);
         $invoice->doc_status = "deleted";
         $invoice->save();
 

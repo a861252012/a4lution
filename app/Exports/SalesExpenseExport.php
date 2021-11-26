@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\Invoices;
+use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
@@ -13,7 +13,7 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Events\BeforeSheet;
 use Maatwebsite\Excel\Excel;
-use App\Models\BillingStatements;
+use App\Models\BillingStatement;
 use Throwable;
 
 class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents
@@ -45,7 +45,7 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoices::findOrFail($this->insertInvoiceID);
+        $invoice = Invoice::findOrFail($this->insertInvoiceID);
         $invoice->doc_status = "deleted";
         $invoice->save();
 
@@ -78,7 +78,7 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents
                 $msg = "Monthly Sales & OPEX Summary in HKD ";
                 $msg .= " (for the period of {$formattedStartDate} to {$formattedEndDate})";
 
-                $billing = BillingStatements::findOrFail($this->insertBillingID);
+                $billing = BillingStatement::findOrFail($this->insertBillingID);
 
                 //A4lution Account Sales Overview
                 $event->sheet->SetCellValue("B1", $msg);

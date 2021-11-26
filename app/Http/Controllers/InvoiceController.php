@@ -2,106 +2,91 @@
 
 namespace App\Http\Controllers;
 
-use DateTime;
-use Carbon\Carbon;
-use App\Models\Roles;
-use App\Models\Orders;
-use App\Models\Invoices;
-use App\Models\Customers;
-use Illuminate\Bus\Batch;
-use Illuminate\Http\Request;
-use App\Jobs\UploadFileToAWS;
-use App\Models\ExchangeRates;
-use App\Models\OrderProducts;
-use App\Models\RmaRefundList;
-use App\Exports\FBADateExport;
-use App\Exports\InvoiceExport;
-use App\Models\PlatformAdFees;
-use App\Models\RoleAssignment;
-use App\Jobs\Invoice\SetSaveDir;
-use App\Services\InvoiceService;
-use App\Models\BillingStatements;
-use App\Models\CustomerRelations;
-use Illuminate\Http\JsonResponse;
-use App\Models\CommissionSettings;
-use Illuminate\Support\Facades\DB;
-use App\Exports\SalesExpenseExport;
 use App\Jobs\Invoice\CreateZipToS3;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Models\AmazonDateRangeReport;
-use App\Models\FirstMileShipmentFees;
-use Illuminate\Filesystem\Filesystem;
-use App\Repositories\OrdersRepository;
-use App\Jobs\Invoice\ExportInvoicePDFs;
-use App\Repositories\InvoiceRepository;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\Storage;
 use App\Jobs\Invoice\ExportInvoiceExcel;
-use App\Repositories\OrderProductsRepository;
+use App\Jobs\Invoice\ExportInvoicePDFs;
+use App\Jobs\Invoice\SetSaveDir;
+use App\Models\BillingStatement;
+use App\Models\CommissionSetting;
+use App\Models\Customer;
+use App\Models\CustomerRelation;
+use App\Models\FirstMileShipmentFee;
+use App\Models\Invoice;
+use App\Models\OrderProduct;
+use App\Models\Role;
+use App\Models\RoleAssignment;
 use App\Repositories\AmazonReportListRepository;
 use App\Repositories\BillingStatementRepository;
-use App\Repositories\FirstMileShipmentFeesRepository;
+use App\Repositories\FirstMileShipmentFeeRepository;
+use App\Repositories\InvoiceRepository;
+use App\Repositories\OrderProductRepository;
+use App\Services\InvoiceService;
+use App\Support\ERPRequester;
+use Carbon\Carbon;
+use Illuminate\Bus\Batch;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class InvoiceController extends Controller
 {
-    private $invoices;
-    private $customerRelations;
-    private $roleAssignment;
-    private $roles;
-    private $exchangeRates;
-    private $commissionSettings;
-    private $billingStatements;
-    private $customers;
-    private $ordersRepository;
-    private $orderProductRepository;
-    private $amazonReportListRepository;
-    private $firstMileShipmentFeesRepository;
-    private $billingStatementRepository;
-    private $firstMileShipmentFees;
-    private $invoiceService;
+    private Invoice $invoice;
+    private CustomerRelation $customerRelation;
+    private RoleAssignment $roleAssignment;
+    private Role $role;
+    private BillingStatement $billingStatement;
+    private Customer $customer;
+    private OrderProductRepository $orderProductRepository;
+    private AmazonReportListRepository $amazonReportListRepository;
+    private FirstMileShipmentFeeRepository $firstMileShipmentFeeRepository;
+    private BillingStatementRepository $billingStatementRepository;
+    private FirstMileShipmentFee $firstMileShipmentFee;
+    private InvoiceService $invoiceService;
     private const MANAGER_ROLE_NAME = 'manager';
+    private const GET_SUPPLIER_INFO = 'getSupplierInfo';
 
     public function __construct(
-        Invoices                        $invoices,
-        CustomerRelations               $customerRelations,
-        Customers                       $customers,
-        RoleAssignment                  $roleAssignment,
-        Roles                           $roles,
-        ExchangeRates                   $exchangeRates,
-        CommissionSettings              $commissionSettings,
-        BillingStatements               $billingStatements,
-        OrdersRepository                $ordersRepository,
-        OrderProductsRepository         $orderProductRepository,
-        AmazonReportListRepository      $amazonReportListRepository,
-        FirstMileShipmentFeesRepository $firstMileShipmentFeesRepository,
-        FirstMileShipmentFees           $firstMileShipmentFees,
-        InvoiceService                  $invoiceService,
-        BillingStatementRepository      $billingStatementRepository
+        Invoice                        $invoice,
+        CustomerRelation               $customerRelation,
+        Customer                       $customer,
+        RoleAssignment                 $roleAssignment,
+        Role                           $role,
+        BillingStatement               $billingStatement,
+        OrderProductRepository         $orderProductRepository,
+        AmazonReportListRepository     $amazonReportListRepository,
+        FirstMileShipmentFeeRepository $firstMileShipmentFeeRepository,
+        FirstMileShipmentFee           $firstMileShipmentFee,
+        InvoiceService                 $invoiceService,
+        BillingStatementRepository     $billingStatementRepository
     ) {
-        $this->invoices = $invoices;
-        $this->customerRelations = $customerRelations;
+        // TODO: 很多 new object，但下面 Methods 沒使用
+        $this->invoice = $invoice;
+        $this->customerRelation = $customerRelation;
         $this->roleAssignment = $roleAssignment;
-        $this->roles = $roles;
-        $this->exchangeRates = $exchangeRates;
-        $this->commissionSettings = $commissionSettings;
-        $this->billingStatements = $billingStatements;
-        $this->customers = $customers;
-        $this->ordersRepository = $ordersRepository;
+        $this->role = $role;
+        $this->billingStatement = $billingStatement;
+        $this->customer = $customer;
         $this->orderProductRepository = $orderProductRepository;
         $this->amazonReportListRepository = $amazonReportListRepository;
-        $this->firstMileShipmentFeesRepository = $firstMileShipmentFeesRepository;
+        $this->firstMileShipmentFeeRepository = $firstMileShipmentFeeRepository;
         $this->billingStatementRepository = $billingStatementRepository;
-        $this->firstMileShipmentFees = $firstMileShipmentFees;
+        $this->firstMileShipmentFee = $firstMileShipmentFee;
         $this->invoiceService = $invoiceService;
     }
 
-    public function getAvolutionCommission(string $clientCode, string $shipDate, float $tieredParam, array $commissionRate)
+    public function getAvolutionCommission(
+        string $clientCode,
+        string $shipDate,
+        float  $tieredParam,
+        array  $commissionRate
+    )
     {
         switch ($commissionRate['type']) {
             case 'sku':
-                $orderProductRepository = new OrderProductsRepository();
+                $orderProductRepository = new OrderProductRepository();
 
                 return $orderProductRepository->getSkuAvolutionCommission($clientCode, $shipDate) ?: 0;
             case 'promotion':
@@ -114,7 +99,7 @@ class InvoiceController extends Controller
 
     public function getTieredInfo(string $clientCode, float $totalSalesAmount): array
     {
-        $setting = CommissionSettings::where('client_code', $clientCode)->first();
+        $setting = CommissionSetting::where('client_code', $clientCode)->first();
 
         if (!empty($setting) & $totalSalesAmount >= $setting->tier_1_threshold) {
             $newLevel = 1;
@@ -141,10 +126,10 @@ class InvoiceController extends Controller
 
     public function getCommissionRate(string $clientCode, string $reportDate, float $totalSalesAmount)
     {
-        $commissionSettings = new CommissionSettings();
-        $orderProductRepository = new OrderProductsRepository();
+        $commissionSetting = new CommissionSetting();
+        $orderProductRepository = new OrderProductRepository();
 
-        $settings = $commissionSettings->where('client_code', $clientCode)->first();
+        $settings = $commissionSetting->where('client_code', $clientCode)->first();
 
         if ($settings->is_sku_level_commission === 'T') {
             //check unmatched record
@@ -159,7 +144,7 @@ class InvoiceController extends Controller
             $orders = $orderProductRepository->getFitOrder($clientCode, $reportDate);
             if ($orders) {
                 foreach ($orders as $item) {
-                    $thisOrder = OrderProducts::find($item->id);
+                    $thisOrder = OrderProduct::find($item->id);
 
                     $thisOrder->sku_commission_rate = $this->getSkuCommissionRate(
                         $item,
@@ -211,18 +196,18 @@ class InvoiceController extends Controller
             ->where('active', 1)
             ->pluck('role_id');
 
-        $managerRoleID = $this->roles->select('id')
+        $managerRoleID = $this->role->select('id')
             ->where('role_name', self::MANAGER_ROLE_NAME)
             ->where('active', 1)
             ->pluck('id');
 
         if ($roleID == $managerRoleID) {
-            $data['client_code_lists'] = $this->customerRelations
+            $data['client_code_lists'] = $this->customerRelation
                 ->select('customer_relations.client_code')
                 ->distinct('customer_relations.client_code')
                 ->pluck('client_code');
         } else {
-            $data['client_code_lists'] = $this->customerRelations
+            $data['client_code_lists'] = $this->customerRelation
                 ->select('customer_relations.client_code')
                 ->distinct('customer_relations.client_code')
                 ->join('users', 'users.id', '=', 'customer_relations.user_id')
@@ -234,7 +219,7 @@ class InvoiceController extends Controller
         if (count($request->all())) {
             $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') AS report_date");
 
-            $query = $this->invoices->select(
+            $query = $this->invoice->select(
                 'id',
                 'client_code',
                 $formattedReportDate,
@@ -272,7 +257,7 @@ class InvoiceController extends Controller
 
         $fileName = sprintf(
             '%s.zip',
-            $this->invoices->where('doc_storage_token', $token)->value('doc_file_name')
+            $this->invoice->where('doc_storage_token', $token)->value('doc_file_name')
         );
 
         $headers = [
@@ -281,11 +266,10 @@ class InvoiceController extends Controller
         ];
 
         return \Response::make(
-            Storage::disk('s3')->get("invoices/{$token}.zip"), 
-            200, 
+            Storage::disk('s3')->get("invoices/{$token}.zip"),
+            200,
             $headers
         );
-
     }
 
     public function issueView(Request $request)
@@ -301,18 +285,18 @@ class InvoiceController extends Controller
             ->where('active', 1)
             ->pluck('role_id');
 
-        $managerRoleID = $this->roles->select('id')
+        $managerRoleID = $this->role->select('id')
             ->where('role_name', self::MANAGER_ROLE_NAME)
             ->where('active', 1)
             ->pluck('id');
 
         if ($roleID == $managerRoleID) {
-            $data['client_code_lists'] = $this->customerRelations
+            $data['client_code_lists'] = $this->customerRelation
                 ->select('customer_relations.client_code')
                 ->distinct('customer_relations.client_code')
                 ->pluck('client_code');
         } else {
-            $data['client_code_lists'] = $this->customerRelations
+            $data['client_code_lists'] = $this->customerRelation
                 ->select('customer_relations.client_code')
                 ->distinct('customer_relations.client_code')
                 ->join('users', 'users.id', '=', 'customer_relations.user_id')
@@ -323,7 +307,7 @@ class InvoiceController extends Controller
 
         if (count($request->all())) {
             $formattedShipDate = DB::raw("date_format(report_date,'%b-%Y') as 'report_date'");
-            $query = $this->billingStatements->select(
+            $query = $this->billingStatement->select(
                 'id',
                 'client_code',
                 'avolution_commission',
@@ -389,7 +373,6 @@ class InvoiceController extends Controller
 
     public function editView(Request $request)
     {
-        $billingStatementId = $request->billing_statement_id;
         $data['clientCode'] = $request->client_code ?? null;
         $data['reportDate'] = $request->report_date ?? null;
         $data['status'] = $request->status ?? null;
@@ -403,10 +386,10 @@ class InvoiceController extends Controller
         $data['nextMonthDate'] = date("m/d/Y", strtotime('+30 days', strtotime($data['currentDate'])));
 
         // TODO: create repo
-        $data['billingStatement'] = $this->billingStatements->find($billingStatementId);
+        $data['billingStatement'] = $this->billingStatement->find($request->billing_statement_id);
 
 //        Client Contact : customers.contact_person
-        $data['customerInfo'] = $this->customers
+        $data['customerInfo'] = $this->customer
             ->select(
                 'contact_person',
                 'company_name',
@@ -422,16 +405,13 @@ class InvoiceController extends Controller
             ->toArray();
 
         //打api取 SupplierName
-        $getSupplierCode = $this->customers->where('client_code', $data['clientCode'])
+        $getSupplierCode = $this->customer->where('client_code', $data['clientCode'])
             ->value('supplier_code');
 
-        $getSupplierName = $this->sendERPRequest(
+        $getSupplierName = app(ERPRequester::class)->send(
             config('services.erp.wmsUrl'),
-            'getSupplierInfo',
+            self::GET_SUPPLIER_INFO,
             ["supplierCode" => $getSupplierCode],
-            "",
-            "",
-            100
         );
 
         $data['supplierName'] = $getSupplierName['data']['supplierName'] ?? '';
@@ -446,12 +426,12 @@ class InvoiceController extends Controller
 
         $data['report_date'] = Carbon::parse($request->step_report_date)->format('Y-m-d');
 
-        $data['issue_date'] = isset($data['issue_date']) 
-            ? date("Y-m-d", strtotime($data['issue_date'])) 
+        $data['issue_date'] = isset($data['issue_date'])
+            ? date("Y-m-d", strtotime($data['issue_date']))
             : date("Y-m-d");
 
-        $data['due_date'] = isset($data['due_date']) 
-            ? date("Y-m-d", strtotime($data['due_date'])) 
+        $data['due_date'] = isset($data['due_date'])
+            ? date("Y-m-d", strtotime($data['due_date']))
             : date('Y-m-d', strtotime('+30 days'));
 
         $formattedIssueDate = date("ymd", strtotime($data['issue_date']));
@@ -481,7 +461,7 @@ class InvoiceController extends Controller
 
         $data['doc_storage_token'] = $this->genDocStorageToken();
 
-        $invoice = Invoices::create($data);
+        $invoice = Invoice::create($data);
         $invoiceID = $invoice->id;
 
         $batch = \Bus::batch([
@@ -493,14 +473,11 @@ class InvoiceController extends Controller
             ],
         ])->then(function (Batch $batch) use ($invoiceID) {
             (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'active']);
-
         })->catch(function (Batch $batch, \Throwable $e) use ($invoiceID) {
             (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'failed']);
-
         })->finally(function (Batch $batch) {
             // TODO: 建立排程刪除舊資料(Local)
         })->dispatch();
-
     }
 
     public function genDocStorageToken(): string
@@ -527,12 +504,12 @@ class InvoiceController extends Controller
         $type = $request->route('type');
 
         if ($type === 'byID' && $condition) {
-            $billingStatements = $this->billingStatements->find($condition);
-            if ($billingStatements) {
-                $billingStatements->active = 0;
-                $billingStatements->deleted_at = date('Y-m-d h:i:s');
-                $billingStatements->deleted_by = Auth::id();
-                $billingStatements->save();
+            $billingStatement = $this->billingStatement->find($condition);
+            if ($billingStatement) {
+                $billingStatement->active = 0;
+                $billingStatement->deleted_at = date('Y-m-d h:i:s');
+                $billingStatement->deleted_by = Auth::id();
+                $billingStatement->save();
 
                 return response()->json(['msg' => 'deleted', 'status' => 'success', 'icon' => 'success']);
             }
@@ -541,7 +518,7 @@ class InvoiceController extends Controller
         if ($type === 'byDate' && $condition) {
             $reportDate = date("Y-m-d", strtotime($condition));
 
-            $this->billingStatements->where('report_date', $reportDate)
+            $this->billingStatement->where('report_date', $reportDate)
                 ->update(
                     [
                         'active' => 0,
@@ -560,7 +537,7 @@ class InvoiceController extends Controller
             return response()->json(['msg' => 'wrong ID', 'status' => 'error', 'icon' => 'error']);
         }
 
-        $invoice = $this->invoices->findOrFail($id);
+        $invoice = $this->invoice->findOrFail($id);
 
         if (!$invoice) {
             return response()->json(['msg' => 'wrong ID', 'status' => 'error', 'icon' => 'error']);

@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\Invoices;
+use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\FromQuery;
@@ -11,7 +11,7 @@ use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Excel;
-use App\Models\FirstMileShipmentFees;
+use App\Models\FirstMileShipmentFee;
 use Throwable;
 
 class FBADateExport implements WithTitle, FromQuery, WithMapping, WithStrictNullComparison
@@ -33,7 +33,7 @@ class FBADateExport implements WithTitle, FromQuery, WithMapping, WithStrictNull
 
     public function query()
     {
-        return FirstMileShipmentFees::select(
+        return FirstMileShipmentFee::select(
             DB::raw("fulfillment_center as 'country'"),
             DB::raw("fba_shipment as 'shipment_id'"),
             DB::raw("COUNT(DISTINCT ids_sku) AS 'sku'"),
@@ -47,7 +47,7 @@ class FBADateExport implements WithTitle, FromQuery, WithMapping, WithStrictNull
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoices::findOrFail($this->insertInvoiceID);
+        $invoice = Invoice::findOrFail($this->insertInvoiceID);
         $invoice->doc_status = "deleted";
         $invoice->save();
 

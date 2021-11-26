@@ -2,7 +2,7 @@
 
 namespace App\Jobs\Invoice;
 
-use App\Models\Invoices;
+use App\Models\Invoice;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use App\Exports\InvoiceExport;
@@ -19,7 +19,7 @@ class ExportInvoiceExcel extends BaseInvoiceJob implements ShouldQueue
     private $saveDir;
 
     public function __construct(
-        Invoices $invoice
+        Invoice $invoice
     )
     {
         $this->invoice = $invoice;

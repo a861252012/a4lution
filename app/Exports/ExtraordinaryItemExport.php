@@ -2,8 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\BillingStatements;
-use App\Models\Invoices;
+use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromArray;
@@ -45,7 +44,7 @@ class ExtraordinaryItemExport implements WithTitle, FromQuery, WithHeadings, wit
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoices::findOrFail($this->insertInvoiceID);
+        $invoice = Invoice::findOrFail($this->insertInvoiceID);
         $invoice->doc_status = "deleted";
         $invoice->save();
 
@@ -99,7 +98,7 @@ class ExtraordinaryItemExport implements WithTitle, FromQuery, WithHeadings, wit
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
-                $invoice = Invoices::findOrFail($this->insertInvoiceID);
+                $invoice = Invoice::findOrFail($this->insertInvoiceID);
                 $invoice->doc_status = "active";
                 $invoice->save();
             },

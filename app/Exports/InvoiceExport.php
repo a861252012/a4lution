@@ -3,20 +3,18 @@
 namespace App\Exports;
 
 use Throwable;
-use App\Models\Users;
-use App\Models\Invoices;
+use App\Models\User;
+use App\Models\Invoice;
 use Maatwebsite\Excel\Excel;
 use App\Exports\FBADateExport;
 use App\Exports\PaymentExport;
 use App\Exports\StorageFeeExport;
-use App\Models\BillingStatements;
 use App\Exports\OpexInvoiceExport;
 use Illuminate\Support\Facades\DB;
 use App\Exports\ADSPromotionExport;
 use App\Exports\SalesExpenseExport;
 use Illuminate\Support\Facades\Log;
 use App\Exports\MisCellaneousExport;
-use App\Models\FirstMileShipmentFees;
 use App\Exports\ReturnAndRefundExport;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\FromArray;
@@ -52,7 +50,7 @@ class InvoiceExport implements WithMultipleSheets, WithEvents
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoices::findOrFail($this->insertInvoiceID);
+        $invoice = Invoice::findOrFail($this->insertInvoiceID);
         $invoice->doc_status = "failed_bye";
         $invoice->save();
 
@@ -108,7 +106,7 @@ class InvoiceExport implements WithMultipleSheets, WithEvents
 //    {
 //        return [
 //            AfterSheet::class => function (AfterSheet $event) {
-//                $invoice = Invoices::findOrFail($this->insertInvoiceID);
+//                $invoice = Invoice::findOrFail($this->insertInvoiceID);
 //                $invoice->doc_status = "active!";
 //                $invoice->save();
 //            }
