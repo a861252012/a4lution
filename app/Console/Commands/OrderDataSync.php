@@ -18,6 +18,7 @@ class OrderDataSync extends Command
     private const GET_PRODUCT_BY_SKU = 'getProductBySku';
     private const GET_ORDER_DETAIL = 'getOrderCostDetailSku';
     private const AMZ_REPORT = 'amazonReportList';
+    private const LOG_CHANNEL = 'daily_order_sync';
 
     /**
      * The name and signature of the console command.
@@ -86,6 +87,7 @@ class OrderDataSync extends Command
                     "pageSize" => $pageSize
                 ]
             ],
+            self::LOG_CHANNEL
         );
 
         $ordersWhiteList = $this->orderRepository->getTableColumns();
@@ -101,7 +103,8 @@ class OrderDataSync extends Command
                 $getProductInfo = $this->erpRequest->send(
                     config('services.erp.wmsUrl'),
                     self::GET_PRODUCT_BY_SKU,
-                    ['productSku' => $productListItem['sku']]
+                    ['productSku' => $productListItem['sku']],
+                    self::LOG_CHANNEL
                 );
 
                 //如果回傳的 procutCategoryName1 是 AVO,則儲存產品資訊到 order_products
@@ -188,6 +191,7 @@ class OrderDataSync extends Command
                             "pageSize" => $pageSize
                         ]
                     ],
+                    self::LOG_CHANNEL
                 )['data'];
 
                 foreach ($content as $v) {
@@ -196,7 +200,8 @@ class OrderDataSync extends Command
                         $getProductInfos = $this->erpRequest->send(
                             config('services.erp.wmsUrl'),
                             self::GET_PRODUCT_BY_SKU,
-                            ['productSku' => $productListItem['sku']]
+                            ['productSku' => $productListItem['sku']],
+                            self::LOG_CHANNEL
                         );
 
                         //如果回傳的 procutCategoryName1 是 AVO,則儲存產品資訊到 order_products
@@ -271,9 +276,9 @@ class OrderDataSync extends Command
                 $getCostDetail = $this->erpRequest->send(
                     config('services.erp.wmsUrl'),
                     self::GET_ORDER_DETAIL,
-                    $v
+                    $v,
+                    self::LOG_CHANNEL
                 );
-
 
                 if ($getCostDetail['data']) {
                     $tempCostDetailArr = array();
@@ -349,7 +354,8 @@ class OrderDataSync extends Command
                 $amazonReportList = $this->erpRequest->send(
                     config('services.erp.ebUrl'),
                     self::AMZ_REPORT,
-                    $getAmazonReportParams
+                    $getAmazonReportParams,
+                    self::LOG_CHANNEL
                 );
 
                 if (!empty($amazonReportList['data'])) {
@@ -376,7 +382,8 @@ class OrderDataSync extends Command
                                 $amazonReportList = $this->erpRequest->send(
                                     config('services.erp.ebUrl'),
                                     self::AMZ_REPORT,
-                                    $getAmazonReportParam
+                                    $getAmazonReportParam,
+                                    self::LOG_CHANNEL
                                 );
 
                                 foreach ($amazonReportList['data'] as $lists) {

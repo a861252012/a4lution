@@ -17,12 +17,18 @@ class ERPRequester
     public function send(
         string $url,
         string $serviceName,
-        array  $customParam = []
+        array  $customParam = [],
+        string $logChannel = ''
     ): array {
         $jsonParams = json_encode($customParam);
 
-        Log::channel('daily_order_sync')
-            ->info("[daily_order_sync.{$serviceName}.reqJSON]" . $jsonParams);
+        //record request JSON
+        if ($logChannel) {
+            Log::channel($logChannel)
+                ->info("[{$logChannel}.{$serviceName}.reqJSON]" . $jsonParams);
+        } else {
+            Log::debug("[{$logChannel}.{$serviceName}.reqJSON]" . $jsonParams);
+        }
 
         $ebSoapRequest = $this->genXML(
             $jsonParams,
@@ -43,8 +49,13 @@ class ERPRequester
 
         $analyzedRes = json_decode($this->analyzeSOAP($res), true);
 
-        Log::channel('daily_order_sync')
-            ->info("[daily_order_sync.{$serviceName}.resJSON]" . json_encode($analyzedRes));
+        //record response JSON
+        if ($logChannel) {
+            Log::channel($logChannel)
+                ->info("[{$logChannel}.{$serviceName}.resJSON]" . json_encode($analyzedRes));
+        } else {
+            Log::debug("[{$logChannel}.{$serviceName}.resJSON]" . json_encode($analyzedRes));
+        }
 
         return $analyzedRes;
     }
