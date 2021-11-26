@@ -2,75 +2,65 @@
 
 namespace App\Http\Controllers;
 
-use DateTime;
-use Carbon\Carbon;
-use App\Models\Role;
-use App\Models\Order;
-use App\Models\Invoice;
-use App\Models\Customer;
-use Illuminate\Bus\Batch;
-use Illuminate\Http\Request;
-use App\Jobs\UploadFileToAWS;
-use App\Models\OrderProduct;
-use App\Models\RmaRefundList;
-use App\Exports\FBADateExport;
-use App\Exports\InvoiceExport;
-use App\Models\RoleAssignment;
-use App\Jobs\Invoice\SetSaveDir;
-use App\Services\InvoiceService;
-use App\Models\BillingStatement;
-use App\Models\CustomerRelation;
-use Illuminate\Http\JsonResponse;
-use App\Models\CommissionSetting;
-use Illuminate\Support\Facades\DB;
-use App\Exports\SalesExpenseExport;
 use App\Jobs\Invoice\CreateZipToS3;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Models\AmazonDateRangeReport;
-use App\Models\FirstMileShipmentFee;
-use Illuminate\Filesystem\Filesystem;
-use App\Repositories\OrderRepository;
-use App\Jobs\Invoice\ExportInvoicePDFs;
-use App\Repositories\InvoiceRepository;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\Storage;
 use App\Jobs\Invoice\ExportInvoiceExcel;
-use App\Repositories\OrderProductRepository;
+use App\Jobs\Invoice\ExportInvoicePDFs;
+use App\Jobs\Invoice\SetSaveDir;
+use App\Models\BillingStatement;
+use App\Models\CommissionSetting;
+use App\Models\Customer;
+use App\Models\CustomerRelation;
+use App\Models\FirstMileShipmentFee;
+use App\Models\Invoice;
+use App\Models\OrderProduct;
+use App\Models\Role;
+use App\Models\RoleAssignment;
 use App\Repositories\AmazonReportListRepository;
 use App\Repositories\BillingStatementRepository;
 use App\Repositories\FirstMileShipmentFeeRepository;
+use App\Repositories\InvoiceRepository;
+use App\Repositories\OrderProductRepository;
+use App\Services\InvoiceService;
+use App\Support\ERPRequester;
+use Carbon\Carbon;
+use Illuminate\Bus\Batch;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class InvoiceController extends Controller
 {
-    private $invoice;
-    private $customerRelation;
-    private $roleAssignment;
-    private $role;
-    private $billingStatement;
-    private $customer;
-    private $orderProductRepository;
-    private $amazonReportListRepository;
-    private $firstMileShipmentFeeRepository;
-    private $billingStatementRepository;
-    private $firstMileShipmentFee;
-    private $invoiceService;
+    private Invoice $invoice;
+    private CustomerRelation $customerRelation;
+    private RoleAssignment $roleAssignment;
+    private Role $role;
+    private BillingStatement $billingStatement;
+    private Customer $customer;
+    private OrderProductRepository $orderProductRepository;
+    private AmazonReportListRepository $amazonReportListRepository;
+    private FirstMileShipmentFeeRepository $firstMileShipmentFeeRepository;
+    private BillingStatementRepository $billingStatementRepository;
+    private FirstMileShipmentFee $firstMileShipmentFee;
+    private InvoiceService $invoiceService;
     private const MANAGER_ROLE_NAME = 'manager';
+    private const GET_SUPPLIER_INFO = 'getSupplierInfo';
 
     public function __construct(
-        Invoice                         $invoice,
-        CustomerRelation                $customerRelation,
-        Customer                        $customer,
-        RoleAssignment                  $roleAssignment,
-        Role                            $role,
-        BillingStatement                $billingStatement,
-        OrderProductRepository          $orderProductRepository,
-        AmazonReportListRepository      $amazonReportListRepository,
-        FirstMileShipmentFeeRepository  $firstMileShipmentFeeRepository,
-        FirstMileShipmentFee            $firstMileShipmentFee,
-        InvoiceService                  $invoiceService,
-        BillingStatementRepository      $billingStatementRepository
+        Invoice                        $invoice,
+        CustomerRelation               $customerRelation,
+        Customer                       $customer,
+        RoleAssignment                 $roleAssignment,
+        Role                           $role,
+        BillingStatement               $billingStatement,
+        OrderProductRepository         $orderProductRepository,
+        AmazonReportListRepository     $amazonReportListRepository,
+        FirstMileShipmentFeeRepository $firstMileShipmentFeeRepository,
+        FirstMileShipmentFee           $firstMileShipmentFee,
+        InvoiceService                 $invoiceService,
+        BillingStatementRepository     $billingStatementRepository
     ) {
         // TODO: 很多 new object，但下面 Methods 沒使用
         $this->invoice = $invoice;
@@ -87,7 +77,12 @@ class InvoiceController extends Controller
         $this->invoiceService = $invoiceService;
     }
 
-    public function getAvolutionCommission(string $clientCode, string $shipDate, float $tieredParam, array $commissionRate)
+    public function getAvolutionCommission(
+        string $clientCode,
+        string $shipDate,
+        float  $tieredParam,
+        array  $commissionRate
+    )
     {
         switch ($commissionRate['type']) {
             case 'sku':
@@ -271,11 +266,10 @@ class InvoiceController extends Controller
         ];
 
         return \Response::make(
-            Storage::disk('s3')->get("invoices/{$token}.zip"), 
-            200, 
+            Storage::disk('s3')->get("invoices/{$token}.zip"),
+            200,
             $headers
         );
-
     }
 
     public function issueView(Request $request)
@@ -379,7 +373,6 @@ class InvoiceController extends Controller
 
     public function editView(Request $request)
     {
-        $billingStatementId = $request->billing_statement_id;
         $data['clientCode'] = $request->client_code ?? null;
         $data['reportDate'] = $request->report_date ?? null;
         $data['status'] = $request->status ?? null;
@@ -393,7 +386,7 @@ class InvoiceController extends Controller
         $data['nextMonthDate'] = date("m/d/Y", strtotime('+30 days', strtotime($data['currentDate'])));
 
         // TODO: create repo
-        $data['billingStatement'] = $this->billingStatement->find($billingStatementId);
+        $data['billingStatement'] = $this->billingStatement->find($request->billing_statement_id);
 
 //        Client Contact : customers.contact_person
         $data['customerInfo'] = $this->customer
@@ -415,13 +408,10 @@ class InvoiceController extends Controller
         $getSupplierCode = $this->customer->where('client_code', $data['clientCode'])
             ->value('supplier_code');
 
-        $getSupplierName = $this->sendERPRequest(
+        $getSupplierName = app(ERPRequester::class)->send(
             config('services.erp.wmsUrl'),
-            'getSupplierInfo',
+            self::GET_SUPPLIER_INFO,
             ["supplierCode" => $getSupplierCode],
-            "",
-            "",
-            100
         );
 
         $data['supplierName'] = $getSupplierName['data']['supplierName'] ?? '';
@@ -436,12 +426,12 @@ class InvoiceController extends Controller
 
         $data['report_date'] = Carbon::parse($request->step_report_date)->format('Y-m-d');
 
-        $data['issue_date'] = isset($data['issue_date']) 
-            ? date("Y-m-d", strtotime($data['issue_date'])) 
+        $data['issue_date'] = isset($data['issue_date'])
+            ? date("Y-m-d", strtotime($data['issue_date']))
             : date("Y-m-d");
 
-        $data['due_date'] = isset($data['due_date']) 
-            ? date("Y-m-d", strtotime($data['due_date'])) 
+        $data['due_date'] = isset($data['due_date'])
+            ? date("Y-m-d", strtotime($data['due_date']))
             : date('Y-m-d', strtotime('+30 days'));
 
         $formattedIssueDate = date("ymd", strtotime($data['issue_date']));
@@ -483,14 +473,11 @@ class InvoiceController extends Controller
             ],
         ])->then(function (Batch $batch) use ($invoiceID) {
             (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'active']);
-
         })->catch(function (Batch $batch, \Throwable $e) use ($invoiceID) {
             (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'failed']);
-
         })->finally(function (Batch $batch) {
             // TODO: 建立排程刪除舊資料(Local)
         })->dispatch();
-
     }
 
     public function genDocStorageToken(): string
