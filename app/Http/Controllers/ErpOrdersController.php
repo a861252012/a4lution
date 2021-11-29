@@ -3,16 +3,17 @@
 namespace App\Http\Controllers;
 
 use DateTime;
+use Carbon\Carbon;
+use App\Models\Order;
+use App\Models\ExchangeRate;
+use App\Models\OrderProduct;
 use Illuminate\Http\Request;
 use App\Models\RmaRefundList;
-use App\Models\Order;
-use App\Models\OrderProduct;
-use App\Models\ExchangeRate;
 use App\Models\SystemChangeLog;
 use App\Models\BillingStatement;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
 class ErpOrdersController extends Controller
@@ -94,16 +95,13 @@ class ErpOrdersController extends Controller
 
     public function ordersSearchView(Request $request)
     {
-        $data['shipped_date'] = $request->input('shipped_date') ?? null;
-        $data['acc_nick_name'] = $request->input('acc_nick_name') ?? null;
-        $data['sku'] = $request->input('sku') ?? null;
-        $data['erp_order_id'] = $request->input('erp_order_id') ?? null;
-        $data['package_id'] = $request->input('package_id') ?? null;
+        $data['erp_order_id'] = $request->erp_order_id;
+        $data['shipped_date_from'] = $request->shipped_date_from;
+        $data['shipped_date_to'] = $request->shipped_date_to;
+        $data['sku'] = $request->sku;
+        $data['supplier'] = $request->supplier;
 
-        $formattedShipDate = DB::raw("date_format(o.ship_time,'%Y-%m-%d') as 'shipped_date'");
-        $formattedWareHouse = DB::raw("CONCAT(o.warehouse_code,'[',o.warehouse_name,']') AS 'warehouse'");
-
-        $query = $this->order::from('orders as o')
+        $data['lists'] = $this->order::from('orders as o')
             ->join('order_products as p', function ($join) {
                 $join->on('p.order_code', '=', 'o.order_code')
                     ->where('p.active', '=', 1);
@@ -125,34 +123,20 @@ class ErpOrdersController extends Controller
                 'o.order_code AS package_id',
                 'd.site_id',
                 'p.sales_amount AS order_price',
-                $formattedShipDate,
-                $formattedWareHouse
-            );
-
-        if ($data['acc_nick_name']) {
-            $query->where('o.seller_id', '=', $data['acc_nick_name']);
-        }
-
-        if ($data['erp_order_id']) {
-            $query->where('o.reference_no', '=', $data['erp_order_id']);
-        }
-
-        if ($data['sku']) {
-            $query->where('p.sku', '=', $data['sku']);
-        }
-
-        if ($data['package_id']) {
-            $query->where('o.order_code', '=', $data['package_id']);
-        }
-
-        if ($data['shipped_date']) {
-            $shippedDateFrom = date('Y-m-d 00:00:00', strtotime($data['shipped_date']));
-            $shippedDateTo = date('Y-m-d 23:59:59', strtotime($data['shipped_date']));
-
-            $query->whereBetween('o.ship_time', [$shippedDateFrom, $shippedDateTo]);
-        }
-
-        $data['lists'] = $query->paginate(100)
+                DB::raw("date_format(o.ship_time,'%Y-%m-%d') as 'shipped_date'"),
+                DB::raw("CONCAT(o.warehouse_code,'[',o.warehouse_name,']') AS 'warehouse'"),
+            )
+            ->when($request->erp_order_id, fn ($q) => $q->where('o.reference_no', $request->erp_order_id))
+            ->when($request->sku, fn ($q) => $q->where('p.sku', $request->sku))
+            ->when($request->supplier, fn ($q) => $q->where('p.supplier', $request->supplier))
+            ->when(
+                $request->shipped_date_from && $request->shipped_date_to, 
+                fn ($q) => $q->whereBetween(
+                    'o.ship_time', [
+                        Carbon::parse($request->shipped_date_from)->startOfDay()->toDateTimeString(),
+                        Carbon::parse($request->shipped_date_to)->endOfDay()->toDateTimeString(),
+                    ]))
+            ->paginate(100)
             ->appends($request->query());
 
         return view('erpOrders.ordersSearch', ['data' => $data]);
