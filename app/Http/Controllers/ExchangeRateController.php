@@ -12,9 +12,16 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ExchangeRateController extends Controller
 {
+    private ExchangeRateRepository $exchangeRateRepository;
+
+    public function __construct(ExchangeRateRepository $exchangeRateRepository)
+    {
+        $this->exchangeRateRepository = $exchangeRateRepository;
+    }
+
     public function index()
     {
-        $data['lists'] = (new ExchangeRateRepository)->getNewestActiveRate('quoted_date')->map(function ($item) {
+        $data['lists'] = $this->exchangeRateRepository->getNewestActiveRate('quoted_date')->map(function ($item) {
             $item->quoted_date = Carbon::parse($item->quoted_date)->format('F-Y');
             return $item;
         });
@@ -64,7 +71,7 @@ class ExchangeRateController extends Controller
     {
         return response()->json(
             [
-                'data' => (new ExchangeRateRepository)->getNewestActiveRate(
+                'data' => $this->exchangeRateRepository->getNewestActiveRate(
                     'updated_at',
                     $request->route('date')
                 ),
@@ -78,7 +85,7 @@ class ExchangeRateController extends Controller
     {
         return response()->json(
             [
-                'data' => (new ExchangeRateRepository)->getSpecificRateByDateRange(
+                'data' => $this->exchangeRateRepository->getSpecificRateByDateRange(
                     $request->currency,
                     $request->startDate,
                     $request->endDate,
