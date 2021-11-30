@@ -70,13 +70,6 @@
                     </tbody>
                 </table>
 
-                {{-- Pagination --}}
-                {{--                @if($lists && $lists->lastPage() > 1)--}}
-                {{--                    <div class="d-flex justify-content-center" style='margin-top: 20px;'>--}}
-                {{--                        {{ $lists->appends($_GET)->links() }}--}}
-                {{--                    </div>--}}
-                {{--                @endif--}}
-
             </div>
         </div>
     </div>
@@ -448,32 +441,6 @@
 
                     <tbody id="historicalBody">
                     </tbody>
-
-                    {{--                    <tbody>--}}
-                    {{--                    @forelse ($lists as $item)--}}
-                    {{--                        <td class="platform">{{ $item->client_code ?? '' }}</td>--}}
-                    {{--                        <td class="acc_nick_name">{{ $item->report_date->format('F-Y') ?? '' }}</td>--}}
-                    {{--                        <td class="acc_name">{{ $item->opex_invoice_no ?? '' }}</td>--}}
-                    {{--                        <td class="file_name">{{ $item->doc_file_name ?? '' }}</td>--}}
-                    {{--                        <td class="shipped_date">{{ $item->doc_status ?? '' }}</td>--}}
-                    {{--                        <td class="package_id">{{ $item->created_at ?? '' }}</td>--}}
-                    {{--                        <td>--}}
-                    {{--                            <button class="btn btn-icon btn-primary download_file btn-sm _fz-1"--}}
-                    {{--                                    type="button" @if($item->doc_status !="active") {{ 'disabled' }} @endif>--}}
-                    {{--                                <span class="btn-inner--icon"><i class="ni ni-cloud-download-95"></i></span>--}}
-                    {{--                                <span class="btn-inner--text">Download</span>--}}
-                    {{--                            </button>--}}
-                    {{--                            <button class="btn btn-danger delete_btn btn-sm _fz-1" type="button"--}}
-                    {{--                                    data-id="{{$item->id}}">--}}
-                    {{--                                <span class="btn-inner--text">Delete</span>--}}
-                    {{--                            </button>--}}
-                    {{--                        </td>--}}
-
-                    {{--                        <input name="file_token" type="hidden" value="{{$item->doc_storage_token ?? ''}}">--}}
-                    {{--                        </tr>--}}
-                    {{--                    @empty--}}
-                    {{--                    @endforelse--}}
-                    {{--                    </tbody>--}}
                 </table>
             </form>
         </div>
@@ -482,9 +449,8 @@
 @endsection
 
 @push('js')
-    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.3/dist/jquery.validate.min.js"></script>
-    <script src="https://momentjs.com/downloads/moment.min.js"></script>
-    {{--TODO download cdn plugin--}}
+    <script src="{{ asset('js') }}/jquery-validation_1.19.3.js"></script>
+    <script src="{{ asset('js') }}/momentJS.js"></script>
     <script type="text/javascript">
         $(function () {
             $('#quoted_date').datepicker({
