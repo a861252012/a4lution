@@ -101,4 +101,11 @@ Route::group(['middleware' => 'auth'], function () {
         Route::put('/batch/{date}', 'AdminController@batchApprove');
         Route::put('/revoke/{date}', 'AdminController@revokeApprove');
     });
+
+    Route::prefix('management')->group(function () {
+        Route::get('/exchangeRate', 'ExchangeRateController@index');
+        Route::post('/exchangeRate/create', 'ExchangeRateController@create');
+        Route::get('/exchangeRate/{date}', 'ExchangeRateController@show');
+        Route::get('/exchangeRate/{currency}/{startDate}/{endDate}', 'ExchangeRateController@getExchangeRate');
+    });
 });

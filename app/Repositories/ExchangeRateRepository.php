@@ -4,10 +4,32 @@ namespace App\Repositories;
 
 use App\Models\ExchangeRate;
 use App\Support\LaravelLoggerUtil;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
 class ExchangeRateRepository extends BaseRepository
 {
+    const CURRENCY_ARRAY = [
+        'RMB',
+        'AUD',
+        'CAD',
+        'EUR',
+        'GBP',
+        'JPY',
+        'KRW',
+        'MYR',
+        'NZD',
+        'SGD',
+        'THB',
+        'TWD',
+        'USD',
+        'MXN',
+        'PLN',
+        'IDR',
+        'PHP',
+        'VND'
+    ];
+
     public function __construct()
     {
         parent::__construct(new ExchangeRate);
@@ -31,12 +53,59 @@ class ExchangeRateRepository extends BaseRepository
                 ->where('quoted_date', $date)
                 ->active()
                 ->get();
-
         } catch (\Throwable $e) {
             LaravelLoggerUtil::loggerException($e);
             $exchangeRates = Collection::make();
         }
 
         return $exchangeRates;
+    }
+
+    public function getNewestActiveRate($orderBy, $quotedDate = null): ?Collection
+    {
+        try {
+            return $this->model
+                ->when($quotedDate, fn($q) => $q->where('quoted_date', Carbon::parse($quotedDate)->format('Y-m-d')))
+                ->whereIn('base_currency', self::CURRENCY_ARRAY)
+                ->active()
+                ->orderBy($orderBy, 'desc')
+                ->take(18)
+                ->get();
+        } catch (\Throwable $e) {
+            LaravelLoggerUtil::loggerException($e);
+            return Collection::make();
+        }
+    }
+
+    public function getSpecificRateByDateRange($currency, $startDate, $endDate): ?Collection
+    {
+        try {
+            return ExchangeRate::from('exchange_rates as e')
+                ->join('users as u', 'u.id', '=', 'e.updated_by')
+                ->select(
+                    'e.quoted_date',
+                    'e.base_currency',
+                    'e.quote_currency',
+                    'e.exchange_rate',
+                    'e.created_at',
+                    'e.updated_at',
+                    'e.active',
+                    'u.user_name',
+                )
+                ->whereBetween(
+                    'e.created_at',
+                    [
+                        Carbon::parse($startDate)->startOfDay()->toDateTimeString(),
+                        Carbon::parse($endDate)->endOfDay()->toDateTimeString()
+                    ]
+                )
+                ->where('e.base_currency', $currency)
+                ->orderBy('e.updated_at', 'desc')
+                ->take(18)
+                ->get();
+        } catch (\Throwable $e) {
+            LaravelLoggerUtil::loggerException($e);
+            return Collection::make();
+        }
     }
 }
