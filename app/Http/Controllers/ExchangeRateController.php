@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 class ExchangeRateController extends Controller
 {
     private ExchangeRateRepository $exchangeRateRepository;
+    private const QUOTE_CURRENCY = 'HKD';
 
     public function __construct(ExchangeRateRepository $exchangeRateRepository)
     {
@@ -39,7 +40,7 @@ class ExchangeRateController extends Controller
             $data = collect($request->exchange_rate)->map(fn($val, $currency) => [
                 'quoted_date' => $date,
                 'base_currency' => $currency,
-                'quote_currency' => 'HKD',
+                'quote_currency' => self::QUOTE_CURRENCY,
                 'exchange_rate' => $val,
                 'active' => 1,
                 'created_at' => now()->toDateTimeString(),
