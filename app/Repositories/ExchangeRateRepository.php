@@ -29,22 +29,22 @@ class ExchangeRateRepository extends BaseRepository
     public function getByQuotedDate(string $date): ?Collection
     {
         try {
-            $exchangeRates = $this->model
+            $models = $this->model
                 ->where('quoted_date', $date)
                 ->active()
                 ->get();
         } catch (\Throwable $e) {
             LaravelLoggerUtil::loggerException($e);
-            $exchangeRates = Collection::make();
+            $models = Collection::make();
         }
 
-        return $exchangeRates;
+        return $models;
     }
 
     public function getNewestActiveRate($orderBy, $quotedDate = null): ?Collection
     {
         try {
-            $newestActiveRate = $this->model
+            $models = $this->model
                 ->when($quotedDate, fn($q) => $q->where('quoted_date', Carbon::parse($quotedDate)->format('Y-m-d')))
                 ->whereIn('base_currency', Currency::EXCHANGE_RATE)
                 ->active()
@@ -53,16 +53,16 @@ class ExchangeRateRepository extends BaseRepository
                 ->get();
         } catch (\Throwable $e) {
             LaravelLoggerUtil::loggerException($e);
-            $newestActiveRate = Collection::make();
+            $models = Collection::make();
         }
 
-        return $newestActiveRate;
+        return $models;
     }
 
     public function getSpecificRateByDateRange($currency, $startDate, $endDate): ?Collection
     {
         try {
-            $specificRateByDateRange = ExchangeRate::from('exchange_rates as e')
+            $models = ExchangeRate::from('exchange_rates as e')
                 ->join('users as u', 'u.id', '=', 'e.updated_by')
                 ->select(
                     'e.quoted_date',
@@ -87,9 +87,9 @@ class ExchangeRateRepository extends BaseRepository
                 ->get();
         } catch (\Throwable $e) {
             LaravelLoggerUtil::loggerException($e);
-            $specificRateByDateRange = Collection::make();
+            $models = Collection::make();
         }
 
-        return $specificRateByDateRange;
+        return $models;
     }
 }
