@@ -51,7 +51,7 @@
                     <tbody>
                     @forelse ($lists as $item)
                         <tr>
-                            <td>{{ $item->quoted_date }}</td>
+                            <td>{{ \Carbon\Carbon::parse($item->quoted_date)->format('F-Y') }}</td>
                             <td>{{ $item->base_currency }}</td>
                             <td>{{ $item->quote_currency }}</td>
                             <td>{{ $item->exchange_rate }}</td>
@@ -449,8 +449,6 @@
 @endsection
 
 @push('js')
-    <script src="{{ asset('js') }}/jquery-validation_1.19.3.js"></script>
-    <script src="{{ asset('js') }}/momentJS.js"></script>
     <script type="text/javascript">
         $(function () {
             $('#quoted_date').datepicker({
@@ -466,8 +464,8 @@
                 $.colorbox({
                     href: "#inline_content",
                     inline: true,
-                    width: "65%",
-                    height: "80%",
+                    width: "70%",
+                    height: "85%",
                     closeButton: true,
                     onComplete: function () {
                         //datepicker changeDate event

@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Constants\Currency;
 use App\Models\ExchangeRate;
 use App\Support\LaravelLoggerUtil;
 use Carbon\Carbon;
@@ -9,27 +10,6 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ExchangeRateRepository extends BaseRepository
 {
-    const CURRENCY_ARRAY = [
-        'RMB',
-        'AUD',
-        'CAD',
-        'EUR',
-        'GBP',
-        'JPY',
-        'KRW',
-        'MYR',
-        'NZD',
-        'SGD',
-        'THB',
-        'TWD',
-        'USD',
-        'MXN',
-        'PLN',
-        'IDR',
-        'PHP',
-        'VND'
-    ];
-
     public function __construct()
     {
         parent::__construct(new ExchangeRate);
@@ -64,23 +44,25 @@ class ExchangeRateRepository extends BaseRepository
     public function getNewestActiveRate($orderBy, $quotedDate = null): ?Collection
     {
         try {
-            return $this->model
+            $newestActiveRate = $this->model
                 ->when($quotedDate, fn($q) => $q->where('quoted_date', Carbon::parse($quotedDate)->format('Y-m-d')))
-                ->whereIn('base_currency', self::CURRENCY_ARRAY)
+                ->whereIn('base_currency', Currency::EXCHANGE_RATE)
                 ->active()
                 ->orderBy($orderBy, 'desc')
                 ->take(18)
                 ->get();
         } catch (\Throwable $e) {
             LaravelLoggerUtil::loggerException($e);
-            return Collection::make();
+            $newestActiveRate = Collection::make();
         }
+
+        return $newestActiveRate;
     }
 
     public function getSpecificRateByDateRange($currency, $startDate, $endDate): ?Collection
     {
         try {
-            return ExchangeRate::from('exchange_rates as e')
+            $specificRateByDateRange = ExchangeRate::from('exchange_rates as e')
                 ->join('users as u', 'u.id', '=', 'e.updated_by')
                 ->select(
                     'e.quoted_date',
@@ -105,7 +87,9 @@ class ExchangeRateRepository extends BaseRepository
                 ->get();
         } catch (\Throwable $e) {
             LaravelLoggerUtil::loggerException($e);
-            return Collection::make();
+            $specificRateByDateRange = Collection::make();
         }
+
+        return $specificRateByDateRange;
     }
 }

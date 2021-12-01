@@ -21,27 +21,26 @@ class ExchangeRateController extends Controller
 
     public function index()
     {
-        $data['lists'] = $this->exchangeRateRepository->getNewestActiveRate('quoted_date')->map(function ($item) {
-            $item->quoted_date = Carbon::parse($item->quoted_date)->format('F-Y');
-            return $item;
-        });
-
-        return view('exchangeRate.index', $data);
+        return view(
+            'exchangeRate.index',
+            [
+                'lists' => $this->exchangeRateRepository->getNewestActiveRate('quoted_date')
+            ]
+        );
     }
 
-    public function create(Request $request): JsonResponse
+    public function ajaxCreate(Request $request): JsonResponse
     {
-        $req = $request->except('_token');
-        $date = Carbon::parse($req['quoted_date'])->format('Y-m-d');
+        $date = Carbon::parse($request->quoted_date)->format('Y-m-d');
 
         try {
             ExchangeRate::where('quoted_date', $date)->update(['active' => 0]);
 
-            $data = collect($req['exchange_rate'])->map(fn($key, $val) => [
+            $data = collect($request->exchange_rate)->map(fn($val, $currency) => [
                 'quoted_date' => $date,
-                'base_currency' => $val,
-                'quote_currency' => $req['quote_currency'],
-                'exchange_rate' => $req['exchange_rate'][$val],
+                'base_currency' => $currency,
+                'quote_currency' => 'HKD',
+                'exchange_rate' => $val,
                 'active' => 1,
                 'created_at' => now()->toDateTimeString(),
                 'created_by' => Auth::id(),
@@ -67,7 +66,7 @@ class ExchangeRateController extends Controller
         }
     }
 
-    public function show(Request $request): JsonResponse
+    public function ajaxShow(Request $request): JsonResponse
     {
         return response()->json(
             [
@@ -81,7 +80,7 @@ class ExchangeRateController extends Controller
         );
     }
 
-    public function getExchangeRate(Request $request): JsonResponse
+    public function ajaxGetExchangeRate(Request $request): JsonResponse
     {
         return response()->json(
             [

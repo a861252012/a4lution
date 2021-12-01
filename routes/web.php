@@ -59,10 +59,6 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/allCurrency', 'FeeController@getAllCurrency');
     });
 
-    // ERP Orders
-    Route::get('refund/search', 'ErpOrdersController@refundSearchView')->name('refundOrder.view');
-    Route::get('orders/search', 'ErpOrdersController@ordersSearchView')->name('erpOrder.view');
-
     Route::prefix('orders')->group(function () {
         Route::post('/edit', 'ErpOrdersController@editOrders');
         Route::put('/orderDetail/{id}', 'ErpOrdersController@editOrderDetail');
@@ -91,6 +87,9 @@ Route::group(['middleware' => 'auth'], function () {
 
     Route::get('{page}', 'PageController@index')->name('page.index');
 
+    Route::get('refund/search', 'ErpOrdersController@refundSearchView')->name('refundOrder.view');
+    Route::get('orders/search', 'ErpOrdersController@ordersSearchView')->name('erpOrder.view');
+
     Route::prefix('employee')->group(function () {
         Route::get('/commissionpay', 'EmployeeController@commissionPayView')->name('employeeCommission.view');
         Route::get('/commissionpay/detail/{userID?}/{date?}', 'EmployeeController@commissionDetail');
@@ -104,8 +103,8 @@ Route::group(['middleware' => 'auth'], function () {
 
     Route::prefix('management')->group(function () {
         Route::get('/exchangeRate', 'ExchangeRateController@index');
-        Route::post('/exchangeRate/create', 'ExchangeRateController@create');
-        Route::get('/exchangeRate/{date}', 'ExchangeRateController@show');
-        Route::get('/exchangeRate/{currency}/{startDate}/{endDate}', 'ExchangeRateController@getExchangeRate');
+        Route::post('/exchangeRate/create', 'ExchangeRateController@ajaxCreate');
+        Route::get('/exchangeRate/{date}', 'ExchangeRateController@ajaxShow');
+        Route::get('/exchangeRate/{currency}/{startDate}/{endDate}', 'ExchangeRateController@ajaxGetExchangeRate');
     });
 });

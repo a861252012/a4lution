@@ -17,18 +17,14 @@ class ExchangeRate extends Model
 
     public $incrementing = false;
 
-    ###########
-    ## SCOPE ##
-    ###########
-    public function scopeActive($q)
-    {
-        return $q->where('active', 1);
-    }
-
-    public function scopeInActive($q)
-    {
-        return $q->where('active', 0);
-    }
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'quoted_date' => 'datetime:Y-m-d',
+    ];
 
     /**
      * The "booted" method of the model.
@@ -45,5 +41,18 @@ class ExchangeRate extends Model
         static::updating(function ($exchangeRate) {
             $exchangeRate->updated_by = Auth::id();
         });
+    }
+
+    ###########
+    ## SCOPE ##
+    ###########
+    public function scopeActive($q)
+    {
+        return $q->where('active', 1);
+    }
+
+    public function scopeInActive($q)
+    {
+        return $q->where('active', 0);
     }
 }
