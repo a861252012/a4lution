@@ -59,6 +59,10 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/allCurrency', 'FeeController@getAllCurrency');
     });
 
+    // ERP Orders
+    Route::get('refund/search', 'ErpOrdersController@refundSearchView')->name('refundOrder.view');
+    Route::get('orders/search', 'ErpOrdersController@ordersSearchView')->name('erpOrder.view');
+
     Route::prefix('orders')->group(function () {
         Route::post('/edit', 'ErpOrdersController@editOrders');
         Route::put('/orderDetail/{id}', 'ErpOrdersController@editOrderDetail');
@@ -86,9 +90,6 @@ Route::group(['middleware' => 'auth'], function () {
     });
 
     Route::get('{page}', 'PageController@index')->name('page.index');
-
-    Route::get('refund/search', 'ErpOrdersController@refundSearchView')->name('refundOrder.view');
-    Route::get('orders/search', 'ErpOrdersController@ordersSearchView')->name('erpOrder.view');
 
     Route::prefix('employee')->group(function () {
         Route::get('/commissionpay', 'EmployeeController@commissionPayView')->name('employeeCommission.view');
