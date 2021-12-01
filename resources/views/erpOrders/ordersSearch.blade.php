@@ -24,15 +24,6 @@
                     <form method="GET" action="/orders/search" role="form" onsubmit="return validateForm()"
                             class="form">
                         <div class="row">
-                            {{-- ACC NICK NAME --}}
-                            <div class="col-lg-2 col-md-6 col-sm-6">
-                                <div class="form-group mb-0">
-                                    <label class="form-control-label _fz-1" for="acc_nick_name">Acc Nick Name</label>
-                                    <input class="form-control _fz-1" name="acc_nick_name" id="acc_nick_name"
-                                            type="text" placeholder="ACC NICK NAME"
-                                            value="{{$data['acc_nick_name'] ?? ''}}">
-                                </div>
-                            </div>
 
                             {{-- ERP ORDER ID --}}
                             <div class="col-lg-2 col-md-6 col-sm-6">
@@ -45,21 +36,18 @@
                             </div>
 
                             {{-- SHIPPED DATE --}}
-                            <div class="col-lg-2 col-md-6 col-sm-6">
-                                <div class="form-group mb-0">
-                                    <label class="form-control-label _fz-1" for="shipped_date">Shipped Date</label>
-                                    <input class="form-control _fz-1" name="shipped_date" id="shipped_date"
+                            <div class="col-lg-4 col-md-12 col-sm-12">
+                                <label class="form-control-label _fz-1" for="shipped_date_from">Shipped Date</label>
+                                <div class="input-group input-daterange mb-0">
+                                    <input class="form-control _fz-1" name="shipped_date_from" id="shipped_date_from"
                                             type="text"
-                                            placeholder="SHIPPED DATE" value="{{$data['shipped_date'] ?? ''}}">
-                                </div>
-                            </div>
-
-                            {{-- PACKAGE ID --}}
-                            <div class="col-lg-2 col-md-6 col-sm-6">
-                                <div class="form-group mb-0">
-                                    <label class="form-control-label _fz-1" for="package_id">Package Id</label>
-                                    <input class="form-control _fz-1" name="package_id" id="package_id" type="text"
-                                            placeholder="PACKAGE ID" value="{{$data['package_id'] ?? ''}}">
+                                            placeholder="SHIPPED DATE FROM" value="{{ $data['shipped_date_from'] ?? '' }}">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-secondary">to</span>
+                                    </div>
+                                    <input class="form-control _fz-1" name="shipped_date_to" id="shipped_date_to"
+                                            type="text"
+                                            placeholder="SHIPPED DATE TO" value="{{ $data['shipped_date_to'] ?? '' }}">
                                 </div>
                             </div>
 
@@ -69,6 +57,15 @@
                                     <label class="form-control-label _fz-1" for="sku">Sku</label>
                                     <input class="form-control _fz-1" name="sku" id="sku" type="text"
                                             placeholder="SKU" value="{{$data['sku'] ?? ''}}">
+                                </div>
+                            </div>
+
+                            {{-- Supplier --}}
+                            <div class="col-lg-2 col-md-6 col-sm-6">
+                                <div class="form-group mb-0">
+                                    <label class="form-control-label _fz-1" for="supplier">Supplier</label>
+                                    <input class="form-control _fz-1" name="supplier" id="supplier" type="text"
+                                            placeholder="SUPPLIER" value="{{$data['supplier'] ?? ''}}">
                                 </div>
                             </div>
 
@@ -94,11 +91,9 @@
                     <tr>
                         <th>Details</th>
                         <th>Platform</th>
-                        <th>Acc Nick Name</th>
                         <th>Acc Name</th>
                         <th>Site</th>
                         <th>Shipped Date</th>
-                        <th>Package Id</th>
                         <th>Erp Order Id</th>
                         <th>Sku</th>
                         <th>Order Price</th>
@@ -117,11 +112,9 @@
                                 </a>
                             </td>
                             <td class="platform">{{ $item->platform }}</td>
-                            <td class="acc_nick_name">{{ $item->acc_nick_name }}</td>
                             <td class="acc_name">{{ $item->acc_name }}</td>
                             <td class="site_id">{{ $item->site_id }}</td>
                             <td class="shipped_date">{{ $item->shipped_date }}</td>
-                            <td class="package_id">{{ $item->package_id }}</td>
                             <td class="erp_order_id">{{ $item->erp_order_id }}</td>
                             <td class="sku">{{ $item->sku }}</td>
                             <td class="order_price">{{ $item->order_price }}</td>
@@ -153,26 +146,22 @@
     <script type="text/javascript">
         $(function () {
 
-            let shippedDate = $('#shipped_date').val();
-
-            $('#shipped_date').datepicker({
-                format: 'yyyy-mm-dd',//日期時間格式
-                ignoreReadonly: false,  //禁止使用者輸入 啟用唯讀
-                autoclose: true
+            $('.input-daterange input').each(function() {
+                $(this).datepicker({
+                    format: 'yyyy-mm-dd',//日期時間格式
+                    ignoreReadonly: false,  //禁止使用者輸入 啟用唯讀
+                    autoclose: true
+                });
             });
-
-            $('#report_date').datepicker('update', shippedDate);
 
             $("a.ajax_btn").click(function () {
                 let data = [];
 
                 data['_token'] = $('meta[name="csrf-token"]').attr('content');
                 data['platform'] = $(this).parent().parent().find('[class="platform"]').text();
-                data['acc_nick_name'] = $(this).parent().parent().find('[class="acc_nick_name"]').text();
                 data['acc_name'] = $(this).parent().parent().find('[class="acc_name"]').text();
                 data['site_id'] = $(this).parent().parent().find('[class="site_id"]').text();
                 data['shipped_date'] = $(this).parent().parent().find('[class="shipped_date"]').text();
-                data['package_id'] = $(this).parent().parent().find('[class="package_id"]').text();
                 data['erp_order_id'] = $(this).parent().parent().find('[class="erp_order_id"]').text();
                 data['sku'] = $(this).parent().parent().find('[class="sku"]').text();
                 data['order_price'] = $(this).parent().parent().find('[class="order_price"]').text();
@@ -211,11 +200,9 @@
                     data: {
                         _token: data['_token'],
                         platform: data['platform'],
-                        acc_nick_name: data['acc_nick_name'],
                         acc_name: data['acc_name'],
                         site_id: data['site_id'],
                         shipped_date: data['shipped_date'],
-                        package_id: data['package_id'],
                         erp_order_id: data['erp_order_id'],
                         sku: data['sku'],
                         order_price: data['order_price'],
@@ -317,12 +304,11 @@
         });
 
         function validateForm() {
-            let accNickName = $('#acc_nick_name').val();
             let erpOrderId = $('#erp_order_id').val();
-            let shippedDate = $('#shipped_date').val();
-            let packageID = $('#package_id').val();
+            let shippedDateFrom = $('#shipped_date_from').val();
+            let shippedDateTo = $('#shipped_date_to').val();
             let sku = $('#sku').val();
-            if (!accNickName && !erpOrderId && !shippedDate && !packageID && !sku) {
+            if (!erpOrderId && !(shippedDateFrom && shippedDateTo) && !sku) {
                 swal({
                     icon: "warning",
                     text: "must have at least one search condition"

@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\FirstMileShipmentFees;
+use App\Models\FirstMileShipmentFee;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
@@ -96,7 +96,7 @@ class FBAFirstMileShipmentFeesExport implements WithTitle, WithEvents
                 $event->sheet->SetCellValue("E15", 'Quantity');
                 $event->sheet->SetCellValue("F15", 'Amount');
 
-                $lists = FirstMileShipmentFees::select(
+                $lists = FirstMileShipmentFee::select(
                     DB::raw("fulfillment_center as 'country'"),
                     DB::raw("fba_shipment as 'shipment_id'"),
                     DB::raw("COUNT(DISTINCT ids_sku) AS 'sku'"),
