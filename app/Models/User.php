@@ -55,7 +55,11 @@ class User extends Authenticatable
 
     public function mainViews()
     {
-        return $this->hasManyDeep(View::class, ['role_assignment', Role::class, 'view_permission'])
+        return $this->hasManyDeep(View::class, [
+                'role_assignment', // pivot table: user <-> role
+                Role::class, // many-to-many model
+                'view_permission' // pivot table: role <-> view
+            ])
             ->where('level', 1)
             ->orderByRaw('views.module , views.level , views.order');
     }
