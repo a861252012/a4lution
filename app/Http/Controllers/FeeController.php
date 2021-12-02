@@ -11,7 +11,7 @@ use App\Exports\PlatformAdFeesExport;
 use App\Exports\AmazonDateRangeExport;
 use App\Exports\LongTermStorageFeesExport;
 use App\Exports\MonthlyStorageFeesExport;
-use App\Exports\FirstMileShipmentFeesExport;
+use App\Exports\FirstMileShipmentFeeExport;
 use App\Models\AmazonDateRangeReport;
 use App\Models\FirstMileShipmentFee;
 use App\Models\LongTermStorageFee;
