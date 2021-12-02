@@ -45,7 +45,9 @@ return [
         'wmsUrl' => env('ERP_WMS_URL'),
         'ebAccount' => env('EB_ACCOUNT'),
         'ebPwd' => env('EB_PWD'),
+    ],
+
+    'timezone' => [
+        'taipei' => env('TIME_ZONE_A'),
     ]
-
-
 ];

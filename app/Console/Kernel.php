@@ -26,15 +26,15 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('eb_refund_data_sync')
-            ->timezone(env('TIME_ZONE_A'))
+            ->timezone(config('services.timezone.taipei'))
             ->dailyAt('05:00');
 
-        $schedule->command('order_data_sync')
-            ->timezone(env('TIME_ZONE_A'))
-            ->dailyAt('09:00');
+//        $schedule->command('order_data_sync')
+//            ->timezone(config('services.timezone.taipei'))
+//            ->dailyAt('09:00');
 
         $schedule->command('calculate_commission')
-            ->timezone(env('TIME_ZONE_A'))
+            ->timezone(config('services.timezone.taipei'))
             ->monthlyOn(15, '00:00');
     }
 

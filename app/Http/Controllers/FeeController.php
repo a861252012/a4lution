@@ -119,7 +119,7 @@ class FeeController extends Controller
 
         $reportDate = $inputReportDate ? date('Y-m-d', strtotime($inputReportDate)) : date('Y-m-d');
 
-        $currentDateTime = Carbon::now()->timezone(env('TIME_ZONE_A'))->toDateTimeString();
+        $currentDateTime = Carbon::now()->timezone((config('services.timezone.taipei')))->toDateTimeString();
 
         $insertBatchID = BatchJob::insertGetId([
             'user_id' => Auth::id(),
