@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\Role;
+use App\Models\View;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable, HasRelationships;
 
     protected $table = "users";
 
@@ -31,11 +34,10 @@ class User extends Authenticatable
         'updated_by'
     ];
 
-    /**
-     * Get the role of the user
-     *
-     * @return HasOne
-     */
+    ###################
+    ## Relationships ##
+    ###################
+
     public function roleAssignment(): HasOne
     {
         return $this->hasOne('App\Models\RoleAssignment', 'user_id', 'id');
@@ -49,6 +51,13 @@ class User extends Authenticatable
     public function customerRelations(): HasMany
     {
         return $this->hasMany('App\Models\CustomerRelation', 'user_id', 'id');
+    }
+
+    public function mainViews()
+    {
+        return $this->hasManyDeep(View::class, ['role_assignment', Role::class, 'view_permission'])
+            ->where('level', 1)
+            ->orderByRaw('views.module , views.level , views.order');
     }
 
     /**

@@ -20,25 +20,23 @@
             <div class="collapse navbar-collapse" id="sidenav-collapse-main">
                 <!-- Nav items -->
                 <ul class="navbar-nav">
-                    @foreach ($parentMenu as $item)
-                        <li class="nav-item {{ $parentSection == 'dashboards' ? 'active' : '' }}">
-                            <a class="nav-link collapsed" href="#{{ $item->menu_slug }}" data-toggle="collapse"
-                               role="button"
-                               aria-expanded="{{ $parentSection == 'dashboards' ? 'true' : '' }}"
-                               aria-controls="{{ $item->menu_slug }}">
+                    @foreach ($sidebarMenu as $mainView)
+                        <li class="nav-item {{ $mainView->module == optional($nowView)->module ? 'active' : '' }}">
+                            <a class="nav-link collapsed" href="#{{ $mainView->menu_slug }}" data-toggle="collapse"
+                                role="button"
+                                aria-expanded="{{ $parentSection == 'dashboards' ? 'true' : '' }}"
+                                aria-controls="{{ $mainView->menu_slug }}">
                                 <i class="ni ni-shop text-primary"></i>
-                                <span class="nav-link-text">{{ $item->menu_title }}</span>
+                                <span class="nav-link-text">{{ $mainView->menu_title }}</span>
                             </a>
-                            <div class="collapse {{ $parentSection == 'dashboards' ? 'show' : '' }}"
-                                 id="{{ $item->menu_slug }}">
+                            <div class="collapse {{ $mainView->module == optional($nowView)->module ? 'show' : '' }}"
+                                id="{{ $mainView->menu_slug }}">
                                 <ul class="nav nav-sm flex-column">
-                                    @foreach ($childMenu as $subItem)
-                                        @if ($subItem->module === $item->module)
-                                            <li class="nav-item {{ $elementName == 'dashboard' ? 'active' : '' }}">
-                                                <a href="{{ url($subItem->path) }}"
-                                                   class="nav-link">{{ $subItem->menu_title }}</a>
-                                            </li>
-                                        @endif
+                                    @foreach ($mainView->subViews as $subView)
+                                        <li class="nav-item {{ $subView->menu_slug == optional($nowView)->menu_slug ? 'active' : '' }}">
+                                            <a href="{{ url($subView->path) }}"
+                                                class="nav-link">{{ $subView->menu_title }}</a>
+                                        </li>
                                     @endforeach
                                 </ul>
                             </div>
