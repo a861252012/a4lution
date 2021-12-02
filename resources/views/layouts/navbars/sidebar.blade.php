@@ -24,7 +24,7 @@
                         <li class="nav-item {{ $mainView->module == optional($nowView)->module ? 'active' : '' }}">
                             <a class="nav-link collapsed" href="#{{ $mainView->menu_slug }}" data-toggle="collapse"
                                 role="button"
-                                aria-expanded="{{ $parentSection == 'dashboards' ? 'true' : '' }}"
+                                aria-expanded="{{ $mainView->module == optional($nowView)->module ? 'true' : '' }}"
                                 aria-controls="{{ $mainView->menu_slug }}">
                                 <i class="ni ni-shop text-primary"></i>
                                 <span class="nav-link-text">{{ $mainView->menu_title }}</span>
