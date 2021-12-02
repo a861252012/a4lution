@@ -19,7 +19,7 @@ class Invoice extends Model
 
     public function getCreatedAtAttribute(): Carbon
     {
-        return Carbon::parse($this->attributes['created_at'])->setTimezone(env('TIME_ZONE_A'));
+        return Carbon::parse($this->attributes['created_at'])->setTimezone((config('services.timezone.taipei')));
     }
 
     ################

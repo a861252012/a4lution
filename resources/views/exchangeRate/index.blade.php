@@ -21,14 +21,14 @@
             <!-- Card header -->
             <div class="card-header py-2">
                 <div class="row">
-                    <div class="col-lg-9 col-md-9 col-sm-9 text-left" style="margin-top: 6px;">
+                    <div class="col-lg-9 col-md-9 col-sm-9 text-left">
                         <div class="h2 text-muted mb-0">
                             Currencies
                         </div>
                     </div>
 
                     <div class="col-lg-3 col-md-3 col-sm-3 text-right">
-                        <a class="btn btn-success" href="#inline_content" id="create_btn">
+                        <a class="_fz-1 btn btn-sm btn-success" href="#inline_content" id="create_btn">
                             <i class="ni ni-fat-add"></i>
                             Add Currency Exchange
                         </a>
@@ -45,7 +45,7 @@
                         <th>Quote Currency</th>
                         <th>Exchange Rate</th>
                         <th>Last Updated</th>
-                        <th class="col col-1 text-center">Action</th>
+                        <th class="col-1 text-center">Action</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -55,10 +55,10 @@
                             <td>{{ $item->base_currency }}</td>
                             <td>{{ $item->quote_currency }}</td>
                             <td>{{ $item->exchange_rate }}</td>
-                            <td>{{ $item->updated_at }}</td>
+                            <td>{{ \Carbon\Carbon::parse($item->updated_at)->setTimezone(config('services.timezone.taipei'))}}</td>
                             <td>
                                 <div class="col-lg-8 col-md-3 col-sm-3 text-right">
-                                    <a class="btn btn-success _fz-1 text-white historical_rate_btn"
+                                    <a class="btn btn-success _fz-1 text-white historical_rate_btn btn-sm"
                                        data-attr="{{$item->base_currency}}">
                                         Historical Exchange Rates
                                     </a>
@@ -85,7 +85,8 @@
                         <label class="form-control-label required" for="quoted_date">Quoted Date</label>
                     </div>
                     <div class="col-3">
-                        <input type="text" name="quoted_date" class="form-control" id="quoted_date" required>
+                        <input type="text" name="quoted_date" class="form-control form-control-sm" id="quoted_date"
+                               required>
                     </div>
                 </div>
 
@@ -105,7 +106,8 @@
                     </div>
 
                     <div class="col-3">
-                        <input type="text" name="quote_currency" class="form-control" value="HKD" id="base_currency"
+                        <input type="text" name="quote_currency" class="form-control form-control-sm" value="HKD"
+                               id="base_currency"
                                readonly required>
                     </div>
                 </div>
@@ -120,254 +122,255 @@
 
                 <!-- TABLE HEADER -->
                 <div class="row">
-                    <div class="col-4 form-group">Quote Currency</div>
-                    <div class="col-4 form-group">Current Amount</div>
-                    <div class="col-4 form-group" id="historical_date">Historical Rates(2021-11-04)</div>
+                    <div class="col-4">Quote Currency</div>
+                    <div class="col-4">Current Amount</div>
+                    <div class="col-4" id="historical_date">Historical Rates(2021-11-04)</div>
                 </div>
 
-                <!-- RMB -->
                 <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- RMB -->
+                    <div class="col-4 text-right">
                         <label class="form-control-label" for="RMB">RMB</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[RMB]" class="form-control" id="RMB" required>
+                    <div class="col-4">
+                        <input type="number" min="0" name="exchange_rate[RMB]" class="form-control form-control-sm"
+                               id="RMB" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="RMB_old_val" disabled>
+                    <div class="col-4">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="RMB_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- AUD -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- AUD -->
+                    <div class="col-4 text-right">
                         <label class="form-control-label" for="AUD">AUD</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[AUD]" class="form-control" id="AUD" required>
+                    <div class="col-4">
+                        <input type="number" min="0" name="exchange_rate[AUD]" class="form-control form-control-sm"
+                               id="AUD" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="AUD_old_val" disabled>
+                    <div class="col-4">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="AUD_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- CAD -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- CAD -->
+                    <div class="col-4 text-right">
                         <label class="form-control-label" for="CAD">CAD</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[CAD]" class="form-control" id="CAD" required>
+                    <div class="col-4">
+                        <input type="number" min="0" name="exchange_rate[CAD]" class="form-control form-control-sm"
+                               id="CAD" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="CAD_old_val" disabled>
+                    <div class="col-4">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="CAD_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- EUR -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- EUR -->
+                    <div class="col-4 text-right">
                         <label class="form-control-label" for="EUR">EUR</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[EUR]" class="form-control" id="EUR" required>
+                    <div class="col-4">
+                        <input type="number" min="0" name="exchange_rate[EUR]" class="form-control form-control-sm"
+                               id="EUR" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="EUR_old_val" disabled>
+                    <div class="col-4">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="EUR_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- GBP -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- GBP -->
+                    <div class="col-4 text-right">
                         <label class="form-control-label" for="GBP">GBP</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[GBP]" class="form-control" id="GBP" required>
+                    <div class="col-4">
+                        <input type="number" min="0" name="exchange_rate[GBP]" class="form-control form-control-sm"
+                               id="GBP" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="GBP_old_val" disabled>
+                    <div class="col-4">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="GBP_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- JPY -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- JPY -->
+                    <div class="col-4 text-right">
                         <label class="form-control-label" for="JPY">JPY</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[JPY]" class="form-control" id="JPY" required>
+                    <div class="col-4">
+                        <input type="number" min="0" name="exchange_rate[JPY]" class="form-control form-control-sm"
+                               id="JPY" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="JPY_old_val" disabled>
+                    <div class="col-4">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="JPY_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- KRW -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- KRW -->
+                    <div class="col-4 text-right">
                         <label class="form-control-label" for="KRW">KRW</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[KRW]" class="form-control" id="KRW" required>
+                    <div class="col-4">
+                        <input type="number" min="0" name="exchange_rate[KRW]" class="form-control form-control-sm"
+                               id="KRW" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="KRW_old_val" disabled>
+                    <div class="col-4">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="KRW_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- MYR -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- MYR -->
+                    <div class="col-4 text-right">
                         <label class="form-control-label" for="MYR">MYR</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[MYR]" class="form-control" id="MYR" required>
+                    <div class="col-4">
+                        <input type="number" min="0" name="exchange_rate[MYR]" class="form-control form-control-sm"
+                               id="MYR" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="MYR_old_val" disabled>
+                    <div class="col-4">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="MYR_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- NZD -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- NZD -->
+                    <div class="col-4 text-right">
                         <label class="form-control-label" for="NZD">NZD</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[NZD]" class="form-control" id="NZD" required>
+                    <div class="col-4">
+                        <input type="number" min="0" name="exchange_rate[NZD]" class="form-control form-control-sm"
+                               id="NZD" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="NZD_old_val" disabled>
+                    <div class="col-4">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="NZD_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- SGD -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- SGD -->
+                    <div class="col-4 text-right">
                         <label class="form-control-label" for="SGD">SGD</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[SGD]" class="form-control" id="SGD" required>
+                    <div class="col-4">
+                        <input type="number" min="0" name="exchange_rate[SGD]" class="form-control form-control-sm"
+                               id="SGD" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="SGD_old_val" disabled>
+                    <div class="col-4 ">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="SGD_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- THB -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- THB -->
+                    <div class="col-4  text-right">
                         <label class="form-control-label" for="THB">THB</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[THB]" class="form-control" id="THB" required>
+                    <div class="col-4 ">
+                        <input type="number" min="0" name="exchange_rate[THB]" class="form-control form-control-sm"
+                               id="THB" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="THB_old_val" disabled>
+                    <div class="col-4 ">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="THB_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- TWD -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- TWD -->
+                    <div class="col-4  text-right">
                         <label class="form-control-label" for="TWD">TWD</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[TWD]" class="form-control" id="TWD" required>
+                    <div class="col-4 ">
+                        <input type="number" min="0" name="exchange_rate[TWD]" class="form-control form-control-sm"
+                               id="TWD" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="TWD_old_val" disabled>
+                    <div class="col-4 ">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="TWD_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- USD -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- USD -->
+                    <div class="col-4  text-right">
                         <label class="form-control-label" for="USD">USD</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[USD]" class="form-control" id="USD" required>
+                    <div class="col-4 ">
+                        <input type="number" min="0" name="exchange_rate[USD]" class="form-control form-control-sm"
+                               id="USD" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="USD_old_val" disabled>
+                    <div class="col-4 ">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="USD_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- MXN -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- MXN -->
+                    <div class="col-4  text-right">
                         <label class="form-control-label" for="MXN">MXN</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[MXN]" class="form-control" id="MXN" required>
+                    <div class="col-4 ">
+                        <input type="number" min="0" name="exchange_rate[MXN]" class="form-control form-control-sm"
+                               id="MXN" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="MXN_old_val" disabled>
+                    <div class="col-4 ">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="MXN_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- PLN -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- PLN -->
+                    <div class="col-4  text-right">
                         <label class="form-control-label" for="PLN">PLN</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[PLN]" class="form-control" id="PLN" required>
+                    <div class="col-4 ">
+                        <input type="number" min="0" name="exchange_rate[PLN]" class="form-control form-control-sm"
+                               id="PLN" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="PLN_old_val" disabled>
+                    <div class="col-4 ">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="PLN_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- IDR -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- IDR -->
+                    <div class="col-4  text-right">
                         <label class="form-control-label" for="IDR">IDR</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[IDR]" class="form-control" id="IDR" required>
+                    <div class="col-4 ">
+                        <input type="number" min="0" name="exchange_rate[IDR]" class="form-control form-control-sm"
+                               id="IDR" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="IDR_old_val" disabled>
+                    <div class="col-4 ">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="IDR_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- PHP -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- PHP -->
+                    <div class="col-4  text-right">
                         <label class="form-control-label" for="PHP">PHP</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[PHP]" class="form-control" id="PHP" required>
+                    <div class="col-4 ">
+                        <input type="number" min="0" name="exchange_rate[PHP]" class="form-control form-control-sm"
+                               id="PHP" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="PHP_old_val" disabled>
+                    <div class="col-4 ">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="PHP_old_val"
+                               disabled>
                     </div>
-                </div>
 
-                <!-- VND -->
-                <div class="row">
-                    <div class="col-4 form-group text-right">
+                    <!-- VND -->
+                    <div class="col-4  text-right">
                         <label class="form-control-label" for="VND">VND</label>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" min="0" name="exchange_rate[VND]" class="form-control" id="VND" required>
+                    <div class="col-4 ">
+                        <input type="number" min="0" name="exchange_rate[VND]" class="form-control form-control-sm"
+                               id="VND" required>
                     </div>
-                    <div class="col-4 form-group">
-                        <input type="number" class="form-control" name="old_val" id="VND_old_val" disabled>
+                    <div class="col-4 ">
+                        <input type="number" class="form-control form-control-sm" name="old_val" id="VND_old_val"
+                               disabled>
                     </div>
-                </div>
 
+                </div>
 
                 <!-- Save Cancel button-->
                 <div class="row justify-content-center align-items-center">
                     <div class="col-3">
-                        <button class="btn btn-primary" type="submit" id="inline_submit">Save</button>
+                        <button class="btn btn-primary _fz-1" type="submit" id="inline_submit">Save</button>
                     </div>
-
                     <div class="col-3">
-                        <button class="btn btn-primary" type="button" id="cancel_btn">Cancel</button>
+                        <button class="btn btn-primary _fz-1" type="button" id="cancel_btn">Cancel</button>
                     </div>
                 </div>
 
@@ -419,14 +422,13 @@
                     </div>
 
                     <div class="col-4 text-right">
-                        <button class="btn btn-success" type="button" id="search_btn">Search</button>
-                        <button class="btn btn-primary" type="button" id="close_btn">Close</button>
+                        <button class="btn btn-success _fz-1" type="button" id="search_btn">Search</button>
+                        <button class="btn btn-primary _fz-1" type="button" id="close_btn">Close</button>
                     </div>
                 </div>
 
-
                 {{-- table --}}
-                <table class="table table-sm _table">
+                <table class="table table-sm _table table-striped">
                     <thead>
                     <tr class="bg-primary">
                         <th class="text-white" scope="col">Quoted Date</th>
@@ -612,11 +614,11 @@
                         let closeTime = (item.active) ? '-' : item.updated_at;
 
                         html += '<tr>';
-                        html += '<td>' + item.quoted_date + '</td>';
+                        html += '<td>' + moment(new Date(Date.parse(item.quoted_date))).format('MMMM-Y') + '</td>';
                         html += '<td>' + item.base_currency + '</td>';
                         html += '<td>' + item.quote_currency + '</td>';
                         html += '<td>' + item.exchange_rate + '</td>';
-                        html += '<td>' + item.created_at + '</td>';
+                        html += '<td>' + moment(new Date(Date.parse(item.created_at))).add(8, 'hours').format('YYYY-MM-DD H:i:s') + '</td>';
                         html += '<td>' + closeTime + '</td>';
                         html += '<td>' + item.user_name + '</td>';
                         html += '</tr>';
