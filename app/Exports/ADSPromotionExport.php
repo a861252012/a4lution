@@ -4,14 +4,11 @@ namespace App\Exports;
 
 use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Excel;
 use App\Models\PlatformAdFee;
 use Throwable;
 
@@ -26,8 +23,7 @@ class ADSPromotionExport implements WithTitle, FromQuery, WithHeadings, withMapp
         string $reportDate,
         string $clientCode,
         int    $insertInvoiceID
-    )
-    {
+    ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
@@ -73,6 +69,7 @@ class ADSPromotionExport implements WithTitle, FromQuery, WithHeadings, withMapp
             ->leftJoin('exchange_rates as r', function ($join) {
                 $join->on('platform_ad_fees.report_date', '=', 'r.quoted_date');
                 $join->on('platform_ad_fees.currency', '=', 'r.base_currency');
+                $join->where('r.exchange_rate', 1);
             })
             ->where('platform_ad_fees.active', 1)
             ->where('platform_ad_fees.client_code', $this->clientCode)

@@ -2,14 +2,14 @@
 
 namespace App\Jobs\Invoice;
 
+use App\Exports\InvoiceExport;
 use App\Models\Invoice;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
-use App\Exports\InvoiceExport;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 
 class ExportInvoiceExcel extends BaseInvoiceJob implements ShouldQueue
 {
@@ -18,15 +18,13 @@ class ExportInvoiceExcel extends BaseInvoiceJob implements ShouldQueue
     private $invoice;
     private $saveDir;
 
-    public function __construct(
-        Invoice $invoice
-    )
+    public function __construct(Invoice $invoice)
     {
         $this->invoice = $invoice;
     }
 
     public function handle()
-    {   
+    {
         \Excel::store(
             new InvoiceExport(
                 $this->invoice->report_date->format('Y-m-d'),
@@ -36,7 +34,7 @@ class ExportInvoiceExcel extends BaseInvoiceJob implements ShouldQueue
             ),
             // [資料夾(id)/檔案名稱]
             sprintf(
-                "%s/%s_AVO format_sales report %s.xlsx", 
+                "%s/%s_AVO format_sales report %s.xlsx",
                 $this->invoice->id,
                 $this->invoice->supplier_name,
                 $this->invoice->report_date->format('M Y'),

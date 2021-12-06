@@ -2,20 +2,16 @@
 
 namespace App\Exports;
 
-use Throwable;
+use App\Models\AmazonDateRangeReport;
 use App\Models\Invoice;
-use Maatwebsite\Excel\Excel;
 use App\Models\RmaRefundList;
 use Illuminate\Support\Facades\DB;
-use App\Models\AmazonDateRangeReport;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
+use Maatwebsite\Excel\Concerns\WithTitle;
+use Throwable;
 
 class ReturnAndRefundExport implements WithTitle, FromCollection, WithHeadings, withMapping, WithStrictNullComparison
 {
@@ -27,8 +23,7 @@ class ReturnAndRefundExport implements WithTitle, FromCollection, WithHeadings, 
         string $reportDate,
         string $clientCode,
         int    $insertInvoiceID
-    )
-    {
+    ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
@@ -94,6 +89,7 @@ class ReturnAndRefundExport implements WithTitle, FromCollection, WithHeadings, 
                     '=',
                     DB::raw("DATE_FORMAT(r.quoted_date, '%Y%m')")
                 );
+                $join->where('r.active', 1);
             })
             ->where('d.type', 'Refund')
             ->where('d.fulfillment', 'Amazon')
@@ -143,6 +139,7 @@ class ReturnAndRefundExport implements WithTitle, FromCollection, WithHeadings, 
                     '=',
                     DB::raw("DATE_FORMAT(r.quoted_date, '%Y%m')")
                 );
+                $join->where('r.active', 1);
             })
             ->where(DB::raw("DATE_FORMAT(a.create_date,'%Y%m')"), $this->reportDate)
             ->where('a.pc_name', $this->clientCode)

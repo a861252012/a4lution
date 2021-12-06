@@ -4,18 +4,14 @@ namespace App\Exports;
 
 use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
-use Maatwebsite\Excel\Excel;
 use Throwable;
 
 class StorageFeeExport implements WithTitle, FromQuery, WithHeadings, withMapping, WithStrictNullComparison, WithEvents
@@ -30,8 +26,7 @@ class StorageFeeExport implements WithTitle, FromQuery, WithHeadings, withMappin
         string $reportDate,
         string $clientCode,
         int    $insertInvoiceID
-    )
-    {
+    ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
@@ -91,7 +86,8 @@ class StorageFeeExport implements WithTitle, FromQuery, WithHeadings, withMappin
                 DB::raw("(m.monthly_storage_fee_est * r.exchange_rate) AS 'storage_fee_HKD'")
             )->leftJoin('exchange_rates as r', function ($join) {
                 $join->on('m.report_date', '=', 'r.quoted_date')
-                    ->where('m.currency', '=', 'r.base_currency');
+                    ->where('m.currency', '=', 'r.base_currency')
+                    ->where('r.active', 1);
             })->where('m.supplier', $this->clientCode)
             ->where('m.report_date', $this->reportDate);
 
@@ -131,7 +127,8 @@ class StorageFeeExport implements WithTitle, FromQuery, WithHeadings, withMappin
                 DB::raw("(t.12_mo_long_terms_storage_fee * r.exchange_rate) AS storage_fee_HKD")
             )->leftJoin('exchange_rates as r', function ($join) {
                 $join->on('t.report_date', '=', 'r.quoted_date')
-                    ->where('t.currency', '=', 'r.base_currency');
+                    ->where('t.currency', '=', 'r.base_currency')
+                    ->where('r.active', 1);
             })->where('t.supplier', $this->clientCode)
             ->where('t.report_date', $this->reportDate);
 

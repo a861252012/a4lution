@@ -120,7 +120,7 @@ class CalculateCommission extends Command
                 $RateOfTWD = (float)ExchangeRate::select('exchange_rate')
                     ->where('base_currency', 'TWD')
                     ->where('quoted_date', $date)
-                    ->where('active', 1)
+                    ->active()
                     ->value('exchange_rate');
 
                 //3.判斷是否有達標獎金

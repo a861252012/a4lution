@@ -82,7 +82,7 @@ class ExchangeRateRepository extends BaseRepository
                     ]
                 )
                 ->where('e.base_currency', $currency)
-                ->orderBy('e.updated_at', 'desc')
+                ->orderBy('e.quoted_date', 'desc')
                 ->take(18)
                 ->get();
         } catch (\Throwable $e) {
