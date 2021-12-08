@@ -6,10 +6,11 @@
 - Laravel 8
 - MySQL 5.7
 
-###  相關設定與安裝
+###  相關設定與安裝 (For Docker)
 - schedule 設定
     - ```crontab -e```
     - 新增此語法: ```* * * * * php /app/artisan schedule:run >> /dev/null 2>&1```
+    - 啟動 cron: ```service cron start```
 - supervisor 安裝
     - sudo apt-get install supervisor
     - 在 /etc/supervisor/conf.d 目錄下建立 horizon.conf，內容如下
