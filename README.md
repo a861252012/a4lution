@@ -22,3 +22,4 @@
         stdout_logfile=/logs/horizon.log
         ```
     - 啟動 supervisor: ```service supervisor start```
+- redis 安裝
