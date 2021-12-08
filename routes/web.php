@@ -89,8 +89,6 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/invoice/export', 'InvoiceController@ajaxExport')->name('ajax.invoice.export');
     });
 
-    Route::get('{page}', 'PageController@index')->name('page.index');
-
     Route::prefix('employee')->group(function () {
         Route::get('/commissionpay', 'EmployeeController@commissionPayView')->name('employeeCommission.view');
         Route::get('/commissionpay/detail/{userID?}/{date?}', 'EmployeeController@commissionDetail');
@@ -101,4 +99,13 @@ Route::group(['middleware' => 'auth'], function () {
         Route::put('/batch/{date}', 'AdminController@batchApprove');
         Route::put('/revoke/{date}', 'AdminController@revokeApprove');
     });
+
+    Route::prefix('customers')->group(function () {
+        Route::get('/', 'CustomerController@index')->name('customer.index');
+        Route::post('/edit', 'CustomerController@edit')->name('customer.edit'); // colorbox
+    });
+    
+
+
+    Route::get('{page}', 'PageController@index')->name('page.index');
 });
