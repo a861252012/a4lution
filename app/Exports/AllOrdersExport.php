@@ -5,19 +5,15 @@ namespace App\Exports;
 use App\Models\Invoice;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Excel;
 use Throwable;
 
 class AllOrdersExport implements WithTitle, FromQuery, WithHeadings, withMapping, WithStrictNullComparison
 {
-
     private $reportDate;
     private $clientCode;
     private $insertInvoiceID;
@@ -26,8 +22,7 @@ class AllOrdersExport implements WithTitle, FromQuery, WithHeadings, withMapping
         string $reportDate,
         string $clientCode,
         int    $insertInvoiceID
-    )
-    {
+    ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
@@ -88,6 +83,7 @@ class AllOrdersExport implements WithTitle, FromQuery, WithHeadings, withMapping
                     '=',
                     DB::raw("DATE_FORMAT(r.quoted_date, '%Y%m')")
                 );
+                $join->where('r.active', 1);
             })
             ->where(
                 DB::raw("DATE_FORMAT(orders.ship_time,'%Y%m')"),

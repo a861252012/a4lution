@@ -22,7 +22,7 @@ use Maatwebsite\Excel\Events\ImportFailed;
 
 class QueueAmazonDateRangeImport implements ToModel, WithChunkReading, ShouldQueue, WithHeadingRow, WithCalculatedFormulas, WithBatchInserts, WithValidation, WithEvents
 {
-    use Importable, RegistersEventListeners, RemembersRowNumber, Importable;
+    use Importable, RegistersEventListeners, RemembersRowNumber;
 
     public $rows = 0;
     private $userID;

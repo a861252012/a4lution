@@ -2,19 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use DateTime;
-use Carbon\Carbon;
-use App\Models\Order;
+use App\Exports\ErpOrderSampleExport;
+use App\Imports\BulkUpdateImport;
+use App\Models\BillingStatement;
 use App\Models\ExchangeRate;
+use App\Models\Order;
+use App\Models\OrderBulkUpdate;
 use App\Models\OrderProduct;
-use Illuminate\Http\Request;
 use App\Models\RmaRefundList;
 use App\Models\SystemChangeLog;
-use App\Models\BillingStatement;
+use App\Http\Requests\ErpOrder\BulkUpdateRequest;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ErpOrdersController extends Controller
 {
@@ -26,14 +29,13 @@ class ErpOrdersController extends Controller
     private $orderProduct;
 
     public function __construct(
-        RmaRefundList     $rmaRefundList,
-        Order             $order,
-        ExchangeRate      $exchangeRate,
-        SystemChangeLog   $systemChangeLog,
-        BillingStatement  $billingStatement,
-        OrderProduct      $orderProduct
-    )
-    {
+        RmaRefundList    $rmaRefundList,
+        Order            $order,
+        ExchangeRate     $exchangeRate,
+        SystemChangeLog  $systemChangeLog,
+        BillingStatement $billingStatement,
+        OrderProduct     $orderProduct
+    ) {
         $this->rmaRefundList = $rmaRefundList;
         $this->order = $order;
         $this->exchangeRate = $exchangeRate;
@@ -130,12 +132,15 @@ class ErpOrdersController extends Controller
             ->when($request->sku, fn ($q) => $q->where('p.sku', $request->sku))
             ->when($request->supplier, fn ($q) => $q->where('p.supplier', $request->supplier))
             ->when(
-                $request->shipped_date_from && $request->shipped_date_to, 
+                $request->shipped_date_from && $request->shipped_date_to,
                 fn ($q) => $q->whereBetween(
-                    'o.ship_time', [
+                    'o.ship_time',
+                    [
                         Carbon::parse($request->shipped_date_from)->startOfDay()->toDateTimeString(),
                         Carbon::parse($request->shipped_date_to)->endOfDay()->toDateTimeString(),
-                    ]))
+                    ]
+                )
+            )
             ->paginate(100)
             ->appends($request->query());
 
@@ -422,5 +427,38 @@ class ErpOrdersController extends Controller
             return response()->json(['msg' => $msg, 'status' => 'failed']);
         }
         return response()->json(['status' => 'success']);
+    }
+
+    public function bulkUpdateView(Request $request)
+    {
+        $data['lists'] = OrderBulkUpdate::from('order_bulk_updates as o')
+            ->join('users as u', 'u.id', '=', 'o.created_by')
+            ->select('u.user_name', 'o.*')
+            ->when($request->order_id, fn ($q) => $q->where('o.site_order_id', $request->order_id))
+            ->when($request->status_type, fn ($q) => $q->where('o.execution_status', $request->status_type))
+            ->when(
+                $request->upload_date,
+                fn ($q) => $q->whereBetween(
+                    'o.created_at',
+                    [
+                        Carbon::parse($request->upload_date)->startOfDay()->toDateTimeString(),
+                        Carbon::parse($request->upload_date)->endOfDay()->toDateTimeString(),
+                    ]
+                )
+            )
+            ->orderBy('o.id', 'desc')
+            ->paginate(50);
+
+        return view('erpOrders.bulkUpdate', $data);
+    }
+
+    public function bulkUpdate(BulkUpdateRequest $request)
+    {
+        Excel::queueImport(new BulkUpdateImport(Auth::id()), $request->file('file'))->allOnQueue('queue_excel');
+    }
+
+    public function exportSample()
+    {
+        return (new ErpOrderSampleExport)->download('bulkUpdateSampleFile.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 }

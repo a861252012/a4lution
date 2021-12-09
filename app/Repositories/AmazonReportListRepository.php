@@ -30,6 +30,7 @@ FROM
         LEFT JOIN
     exchange_rates r ON a.report_date = r.quoted_date
         AND a.currency = r.base_currency
+        AND r.active = 1
 WHERE
     a.report_date = '{$reportDate}'
         AND a.supplier = '{$clientCode}'
@@ -50,6 +51,7 @@ FROM
         LEFT JOIN
     exchange_rates r ON a.report_date = r.quoted_date
         AND a.currency = r.base_currency
+        AND r.active = 1 
 WHERE
     a.report_date = '{$reportDate}'
         AND a.supplier = '{$clientCode}'

@@ -5,7 +5,6 @@ namespace App\Repositories;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use phpDocumentor\Reflection\Types\Boolean;
 
 class OrderRepository
 {
@@ -48,6 +47,7 @@ FROM
         LEFT JOIN
     exchange_rates r ON d.currency_code_org = r.base_currency
     AND DATE_FORMAT(o.ship_time, '%Y%m') = DATE_FORMAT(r.quoted_date, '%Y%m')
+    AND r.active = 1
 WHERE
     DATE_FORMAT(o.ship_time, '%Y%m') = {$reportDate}
     AND p.supplier = '{$clientCode}'";
@@ -71,6 +71,7 @@ FROM
         LEFT JOIN
     exchange_rates r ON a.currency = r.base_currency
         AND DATE_FORMAT(a.create_date, '%Y%M') = DATE_FORMAT(r.quoted_date, '%Y%M')
+        AND r.active = 1
 WHERE
     a.pc_name = '{$clientCode}'
         AND DATE_FORMAT(a.create_date, '%Y%m') = {$reportDate}
@@ -99,6 +100,7 @@ FROM
         LEFT JOIN
     exchange_rates r ON d.currency_code_org = r.base_currency
         AND DATE_FORMAT(o.ship_time, '%Y%m') = DATE_FORMAT(r.quoted_date, '%Y%m')
+        AND r.active = 1
 WHERE
     DATE_FORMAT(o.ship_time, '%Y%m') = {$reportDate}
         AND p.supplier = '{$clientCode}'
@@ -121,6 +123,7 @@ FROM
         LEFT JOIN
     exchange_rates r ON d.currency = r.base_currency
         AND DATE_FORMAT(d.report_date, '%Y%M') = DATE_FORMAT(r.quoted_date, '%Y%M')
+        AND r.active = 1
 WHERE
     d.`type` = 'Refund'
         AND d.fulfillment = 'Amazon'
@@ -142,6 +145,7 @@ FROM
         LEFT JOIN
     exchange_rates r ON p.report_date = r.quoted_date
         AND p.currency = r.base_currency
+        AND r.active = 1
 WHERE
     p.active = 1 AND p.client_code = '{$clientCode}'
         AND p.report_date = '{$reportDate}'
@@ -165,6 +169,7 @@ FROM
         monthly_storage_fees m
     LEFT JOIN exchange_rates r ON m.report_date = r.quoted_date
         AND m.currency = r.base_currency
+        AND r.active = 1
     WHERE
         m.supplier = '{$clientCode}'
             AND m.report_date = '{$reportDate}'
@@ -178,6 +183,7 @@ FROM
         long_term_storage_fees t
     LEFT JOIN exchange_rates r ON t.report_date = r.quoted_date
         AND t.currency = r.base_currency
+        AND r.active = 1
     WHERE
         t.supplier = '{$clientCode}'
             AND t.report_date = '{$reportDate}'
@@ -224,6 +230,7 @@ FROM
         LEFT JOIN
     exchange_rates r ON d.currency_code_org = r.base_currency
         AND DATE_FORMAT(o.ship_time, '%Y%m') = DATE_FORMAT(r.quoted_date, '%Y%m')
+        AND r.active = 1
 WHERE
     DATE_FORMAT(o.ship_time, '%Y%m') = '{$reportDate}'
         AND p.supplier = '{$clientCode}'
