@@ -1,4 +1,11 @@
 
+<link href="{{ asset('css/plugins/bootstrap-duallistbox/bootstrap-duallistbox.css') }}" rel="stylesheet">
+<style>
+    .table-sm td, .table-sm th {
+        padding: .1rem .5rem;
+    }
+</style>
+
 <!-- colorbox html part start -->
 <div class="container">
     
@@ -95,7 +102,9 @@
             </div>
             <div class="form-group mb-2">
                 <label class="form-control-label _fz-1" for="">Sales Rep</label>
-                <button class="_btn-sales-rep btn m-l-xs" type="button">modal</button>
+                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#salesRepModal">
+                    Setting
+                </button>
             </div>
         </div>
         {{-- ./ Advanced Setting --}}
@@ -125,88 +134,113 @@
             <thead>
                 <tr>
                     <th>Tier</th>
-                    <th>Amount Threshold</th>
-                    <th>Commission Amount</th>
-                    <th>Commission Rate(Percent of Sale)</th>
+                    <th class="text-center">Amount Threshold</th>
+                    <th class="text-center">Commission Amount</th>
+                    <th class="text-center">Commission Rate(Percent of Sale)</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>1</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <th>1</th>
+                    <td>
+                        <input class="form-control _fz-1" type="text">
+                    </td>
+                    <td>
+                        <input class="form-control _fz-1" type="text">
+                    </td>
+                    <td>
+                        <input class="form-control _fz-1" type="text">
+                    </td>
                 </tr>
                 <tr>
-                    <td>2</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <th>2</th>
+                    <td>
+                        <input class="form-control _fz-1" type="text">
+                    </td>
+                    <td>
+                        <input class="form-control _fz-1" type="text">
+                    </td>
+                    <td>
+                        <input class="form-control _fz-1" type="text">
+                    </td>
                 </tr>
                 <tr>
-                    <td>3</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <th>3</th>
+                    <td>
+                        <input class="form-control _fz-1" type="text">
+                    </td>
+                    <td>
+                        <input class="form-control _fz-1" type="text">
+                    </td>
+                    <td>
+                        <input class="form-control _fz-1" type="text">
+                    </td>
                 </tr>
                 <tr>
-                    <td>4</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <th>4</th>
+                    <td>
+                        <input class="form-control _fz-1" type="text">
+                    </td>
+                    <td>
+                        <input class="form-control _fz-1" type="text">
+                    </td>
+                    <td>
+                        <input class="form-control _fz-1" type="text">
+                    </td>
                 </tr>
                 <tr>
-                    <td></td>
-                    <th>Maximum Amount</th>
-                    <td></td>
-                    <td></td>
+                    <th></th>
+                    <th class="text-center">Maximum Amount</th>
+                    <td>
+                        <input class="form-control _fz-1" type="text">
+                    </td>
+                    <td>
+                        <input class="form-control _fz-1" type="text">
+                    </td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-
-    
-
-
-    <!-- modal test -->
-    <div class="modal fade" id="SetupCountry" tabindex="-1" role="dialog" aria-labelledby="SetupCountryLabel"
-         aria-hidden="true">
-        <div class="modal-dialog modal-xl" style="width:750px;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span>
-                    </button>
-                    <span class="sr-only">Close</span>
-                    <h3 class="modal-tittle" id="SetupCountryLabel">Service Country Setup</h3>
-                </div>
-
-                <div class="modal-body">
+    <!-- Modal -->
+    <div class="modal fade" id="salesRepModal" tabindex="-1" role="dialog" aria-labelledby="salesRepModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="salesRepModalLabel">Sales Rep Setup</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="" id="service_type_country" role="form" class="form create_white_form">
                     <div class="row">
-                        <div class="col-sm-12">
-                            <form method="POST" action="" id="service_type_country" role="form" class="form create_white_form">
-                                <div class="row">
-                                    <div class="form-group col-lg-12">
-                                        <select class="dual-listbox-body" multiple="multiple" name="countries[]">
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="form-group text-right">
-                                    <button type="submit" class="btn btn-primary"> Save</button>
-                                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                                </div>
-                            </form>
+                        <div class="form-group col-lg-12">
+                            <select class="_select-sales_rep" multiple="multiple" name="sales_rep">
+                                <option value="1">GroupA</option>
+                                <option selected value="2">GroupB</option>
+                                <option value="3">GroupC</option>
+                                <option value="4">GroupD</option>
+                                <option selected value="5">GroupE</option>
+                                <option value="6">GroupF</option>
+                                <option value="7">GroupG</option>
+                            </select>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
+            {{-- <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div> --}}
+        </div>
         </div>
     </div>
 
 </div>
 
-<script src="{{ asset('argon') }}/vendor/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+<script src="{{ asset('argon/vendor/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js') }}"></script>
+<script src="{{ asset('js/plugins/bootstrap-duallistbox/jquery.bootstrap-duallistbox.js') }}"></script>
 
 <script type="text/javascript">
     $(document).ready(function() {
@@ -217,9 +251,40 @@
         });
 
         $('._btn-sales-rep').click(function() {
-            $('#SetupCountry').modal('show')
+            $('#salesRepModal').modal('show')
         }) ;
 
+        var dualListbox = $("select[name='sales_rep']").bootstrapDualListbox({
+            nonSelectedListLabel: 'Available',
+            selectedListLabel: 'Selected',
+        });
+
+        var dualListContainer = $("select[name='sales_rep']").bootstrapDualListbox('getContainer');
+        dualListContainer.find('.btn-group').css('display', 'none');
+
+        // alert(dualListbox.val());
+
+        // sales_rep_helper1 名稱為套件自行命名的規則: 主select的name加上suffix「_helper1」
+        $("select[name='sales_rep_helper1']").change(function(e) {
+            $("select[name='sales_rep'] option:selected").each(function() {
+                var $this = $(this);
+                if ($this.length) {
+                    var selText = $this.text();
+                    alert(selText);
+                }
+            });
+        });
+        $("select[name='sales_rep_helper2']").change(function(e) {
+            $("select[name='sales_rep'] option:selected").each(function() {
+                var $this = $(this);
+                if ($this.length) {
+                    var selText = $this.text();
+                    alert(selText);
+                }
+            });
+        });
+
+        
     });
 
     

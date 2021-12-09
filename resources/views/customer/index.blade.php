@@ -180,8 +180,8 @@
                 $.colorbox({
                     iframe: false,
                     href: origin + '/customers/edit',
-                    width: "70%",
-                    height: "70%",
+                    width: "80%",
+                    height: "90%",
                     returnFocus: false,
                     data: {
                         _token: _token,
