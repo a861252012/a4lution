@@ -275,18 +275,7 @@ class ErpOrdersController extends Controller
             $data['exchange_rate'][$data['lists']['currency_code_org']],
             $data['lists']['other_transaction']
         ) : 0;
-//        $data['lists']['marketplace_tax_hkd'] = $data['lists']['marketplace_tax'] ? $this->getHkdRate(
-//            $data['exchange_rate'][$data['lists']['currency_code_org']],
-//            $data['lists']['marketplace_tax']
-//        ) : 0;
-//        $data['lists']['cost_of_point_hkd'] = $data['lists']['cost_of_point'] ? $this->getHkdRate(
-//            $data['exchange_rate'][$data['lists']['currency_code_org']],
-//            $data['lists']['cost_of_point']
-//        ) : 0;
-//        $data['lists']['exclusives_referral_fee_hkd'] = $data['lists']['exclusives_referral_fee'] ? $this->getHkdRate(
-//            $data['exchange_rate'][$data['lists']['currency_code_org']],
-//            $data['lists']['exclusives_referral_fee']
-//        ) : 0;
+
         $data['lists']['gross_profit'] = $this->getGrossProfit($data['lists']);
 
         return view('erpOrders/ordersEdit', $data);
@@ -461,7 +450,13 @@ class ErpOrdersController extends Controller
 
     public function bulkUpdate(BulkUpdateRequest $request)
     {
-        Excel::queueImport(new BulkUpdateImport(Auth::id()), $request->file('file'))->allOnQueue('queue_excel');
+        Excel::queueImport(
+            new BulkUpdateImport(
+                Auth::id(),
+                now()->format('YmdHisu')
+            ),
+            $request->file('file')
+        )->allOnQueue('queue_excel');
     }
 
     public function exportSample()

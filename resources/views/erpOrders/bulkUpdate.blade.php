@@ -228,6 +228,17 @@
                     return false;
                 }
 
+                $('#inline_submit').prop('disabled', true)
+
+                swal({
+                    icon: 'success',
+                    text: 'Processing'
+                }).then(function (isConfirm) {
+                    if (isConfirm) {
+                        $.colorbox.close();
+                    }
+                });
+
                 $.ajax({
                     url: window.location.origin + '/orders/bulkUpdate',
                     type: 'post',
@@ -235,14 +246,14 @@
                     contentType: false,
                     data: data,
                     success: function () {
+                        $('#inline_submit').prop('disabled', false)
+                    }, error: function (error) {
                         swal({
-                            icon: 'success',
-                            text: 'Processing'
-                        }).then(function (isConfirm) {
-                            if (isConfirm) {
-                                $.colorbox.close();
-                            }
+                            icon: 'error',
+                            text: error
                         });
+                        $('#inline_submit').prop('disabled', false)
+
                     }
                 });
             });
