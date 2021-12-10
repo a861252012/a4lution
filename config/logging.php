@@ -120,6 +120,14 @@ return [
             'days' => 60,
             'permission' => 0666,
         ],
+
+        'order_bulk_update_import' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/order_bulk_update_import.log'),
+            'level' => 'debug',
+            'days' => 60,
+            'permission' => 0666,
+        ],
     ],
 
 ];

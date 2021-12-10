@@ -6,6 +6,7 @@ use App\Models\OrderBulkUpdate;
 use App\Models\OrderProduct;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -34,6 +35,9 @@ class BulkUpdateImport implements
         $dateTime = now()->format('YmdHisu');
 
         $row->each(function ($item, $key) use ($dateTime) {
+            Log::channel('order_bulk_update_import')
+                ->info("[batch_job_id:{$dateTime} key:{$key}] " . $item);
+
             $bulkUpdateID = OrderBulkUpdate::insertGetId(
                 $item->merge(
                     [
@@ -49,6 +53,7 @@ class BulkUpdateImport implements
 
             $executionStatus = 'FAILURE';
 
+            //if order_code and sku match condition,then update OrderProduct and record as success
             if (OrderProduct::where(['order_code' => $item['order_id'], 'sku' => $item['sku']])->exists()) {
                 $executionStatus = 'SUCCESS';
 
@@ -60,6 +65,7 @@ class BulkUpdateImport implements
                 )->update($this->formOrderProductData($item));
             }
 
+            //update OrderBulkUpdate table by id
             $BulkOrder = OrderBulkUpdate::find($bulkUpdateID);
             $BulkOrder->execution_status = $executionStatus;
             ($executionStatus === 'FAILURE') ? $BulkOrder->exit_message = 'No records match this find criteria' : null;
@@ -69,6 +75,7 @@ class BulkUpdateImport implements
 
     public function formOrderProductData($row): array
     {
+        //other_transaction = 上傳數據Other Fee + marketpalce tax + cost of point + Exclusives Referral Fee
         return [
             'sales_amount' => $row['order_price_original_currency'],
             'paypal_fee' => $row['paypal_fee_original_currency'],
@@ -83,6 +90,9 @@ class BulkUpdateImport implements
             'marketplace_tax' => $row['marketplace_tax_original_currency'],
             'cost_of_point' => $row['cost_of_point_original_currency'],
             'exclusives_referral_fee' => $row['exclusives_referral_fee_original_currency'],
+            'other_transaction' => (float)$row['other_fee_original_currency'] +
+                (float)$row['cost_of_point_original_currency'] + (float)$row['marketplace_tax_original_currency'] +
+                (float)$row['exclusives_referral_fee_original_currency'],
         ];
     }
 
@@ -94,5 +104,11 @@ class BulkUpdateImport implements
     public function chunkSize(): int
     {
         return 1000;
+    }
+
+    //The 2nd row will now be used as heading row
+    public function headingRow(): int
+    {
+        return 2;
     }
 }
