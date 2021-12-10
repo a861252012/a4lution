@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\OrderBulkUpdate;
 use App\Models\OrderProduct;
+use App\Repositories\OrderSkuCostDetailRepository;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -47,7 +48,7 @@ class BulkUpdateImport implements
             $executionStatus = 'FAILURE';
 
             //if order_code and sku match condition,then update OrderProduct and record as success
-            if (OrderProduct::where(['order_code' => $item['erp_order_id'], 'sku' => $item['sku']])->exists()) {
+            if (app(OrderSkuCostDetailRepository::class)->checkIfExist($item['erp_order_id'], $item['sku'])) {
                 $executionStatus = 'SUCCESS';
 
                 OrderProduct::where(
@@ -72,8 +73,8 @@ class BulkUpdateImport implements
             [
                 'batch_job_id' => $this->batchJobID,
                 'execution_status' => 'PENDING',
-                'site_order_id' => $collection['erp_order_id'],
-                'site_product_sku' => $collection['sku'],
+                'platform_order_id' => $collection['erp_order_id'],
+                'product_sku' => $collection['sku'],
                 'created_at' => date('Y-m-d h:i:s'),
                 'created_by' => $this->userID,
             ]
@@ -94,8 +95,8 @@ class BulkUpdateImport implements
                 'exclusives_referral_fee_original_currency',
                 'batch_job_id',
                 'execution_status',
-                'site_order_id',
-                'site_product_sku',
+                'platform_order_id',
+                'product_sku',
                 'created_at',
                 'created_by',
             ]
