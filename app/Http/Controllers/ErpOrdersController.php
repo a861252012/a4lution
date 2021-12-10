@@ -461,7 +461,7 @@ class ErpOrdersController extends Controller
 
     public function bulkUpdate(BulkUpdateRequest $request)
     {
-        Excel::import(new BulkUpdateImport(Auth::id()), $request->file('file'));
+        Excel::queueImport(new BulkUpdateImport(Auth::id()), $request->file('file'))->allOnQueue('queue_excel');
     }
 
     public function exportSample()
