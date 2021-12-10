@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\ErpOrderSampleExport;
+use App\Http\Requests\ErpOrder\BulkUpdateRequest;
 use App\Imports\BulkUpdateImport;
 use App\Models\BillingStatement;
 use App\Models\ExchangeRate;
@@ -11,8 +12,9 @@ use App\Models\OrderBulkUpdate;
 use App\Models\OrderProduct;
 use App\Models\RmaRefundList;
 use App\Models\SystemChangeLog;
-use App\Http\Requests\ErpOrder\BulkUpdateRequest;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -291,12 +293,31 @@ class ErpOrdersController extends Controller
     }
 
     //取得港幣匯率(取至小數點第二位)
+
+    public function getChangeLog($productID)
+    {
+        return $this->systemChangeLog->from('system_changelogs as s')
+            ->select(
+                's.field_name',
+                's.original_value',
+                's.new_value',
+                's.created_at',
+                'u.user_name'
+            )
+            ->join('users as u', 's.created_by', '=', 'u.id')//TODO
+            ->where('s.reference_id', $productID)
+            ->where('s.created_by', Auth::id())
+            ->orderBy('s.created_at', 'desc')
+            ->get();
+    }
+
+    //取得港幣匯率(取至小數點第二位)
+
     public function getHkdRate(float $rate, float $num): float
     {
         return substr(sprintf(" % .3f", $num * $rate), 0, -1);
     }
 
-    //取得港幣匯率(取至小數點第二位)
     public function getGrossProfit(array $lists): float
     {
         $keys = [
@@ -323,24 +344,7 @@ class ErpOrdersController extends Controller
         return $sum;
     }
 
-    public function getChangeLog($productID)
-    {
-        return $this->systemChangeLog->from('system_changelogs as s')
-            ->select(
-                's.field_name',
-                's.original_value',
-                's.new_value',
-                's.created_at',
-                'u.user_name'
-            )
-            ->join('users as u', 's.created_by', '=', 'u.id')//TODO
-            ->where('s.reference_id', $productID)
-            ->where('s.created_by', Auth::id())
-            ->orderBy('s.created_at', 'desc')
-            ->get();
-    }
-
-    public function editOrderDetail(): \Illuminate\Http\JsonResponse
+    public function editOrderDetail(): JsonResponse
     {
         $productID = request()->route('id');
         $inputs = request()->except(['product_id']);
@@ -372,7 +376,7 @@ class ErpOrdersController extends Controller
             }
 
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
             Log::error($e);
             return response()->json(['msg' => 'failed!', 'status' => 'failed']);
@@ -380,7 +384,7 @@ class ErpOrdersController extends Controller
         return response()->json(['msg' => 'UPDATED!', 'status' => 'success', 'icon' => 'success']);
     }
 
-    public function checkEditQualification(): \Illuminate\Http\JsonResponse
+    public function checkEditQualification(): JsonResponse
     {
         $supplier = request()->input('supplier');
 
@@ -402,7 +406,7 @@ class ErpOrdersController extends Controller
         return response()->json(['msg' => 'UPDATED!', 'status' => 'success', 'icon' => 'success']);
     }
 
-    public function checkRate(): \Illuminate\Http\JsonResponse
+    public function checkRate(): JsonResponse
     {
         $shippedDate = request()->input('shipped_date') ?? null;
         $currency = request()->input('currency') ?? null;
@@ -431,30 +435,33 @@ class ErpOrdersController extends Controller
 
     public function bulkUpdateView(Request $request)
     {
-        $data['lists'] = OrderBulkUpdate::from('order_bulk_updates as o')
-            ->join('users as u', 'u.id', '=', 'o.created_by')
-            ->select('u.user_name', 'o.*')
-            ->when($request->order_id, fn ($q) => $q->where('o.site_order_id', $request->order_id))
-            ->when($request->status_type, fn ($q) => $q->where('o.execution_status', $request->status_type))
-            ->when(
-                $request->upload_date,
-                fn ($q) => $q->whereBetween(
-                    'o.created_at',
-                    [
-                        Carbon::parse($request->upload_date)->startOfDay()->toDateTimeString(),
-                        Carbon::parse($request->upload_date)->endOfDay()->toDateTimeString(),
-                    ]
+        $data['lists'] = [];
+        if (count($request->all())) {
+            $data['lists'] = OrderBulkUpdate::from('order_bulk_updates as o')
+                ->join('users as u', 'u.id', '=', 'o.created_by')
+                ->select('u.user_name', 'o.*')
+                ->when($request->order_id, fn ($q) => $q->where('o.site_order_id', $request->order_id))
+                ->when($request->status_type, fn ($q) => $q->where('o.execution_status', $request->status_type))
+                ->when(
+                    $request->upload_date,
+                    fn ($q) => $q->whereBetween(
+                        'o.created_at',
+                        [
+                            Carbon::parse($request->upload_date)->startOfDay()->toDateTimeString(),
+                            Carbon::parse($request->upload_date)->endOfDay()->toDateTimeString(),
+                        ]
+                    )
                 )
-            )
-            ->orderBy('o.id', 'desc')
-            ->paginate(50);
+                ->orderBy('o.id', 'desc')
+                ->paginate(50);
+        }
 
         return view('erpOrders.bulkUpdate', $data);
     }
 
     public function bulkUpdate(BulkUpdateRequest $request)
     {
-        Excel::queueImport(new BulkUpdateImport(Auth::id()), $request->file('file'))->allOnQueue('queue_excel');
+        Excel::import(new BulkUpdateImport(Auth::id()), $request->file('file'));
     }
 
     public function exportSample()
