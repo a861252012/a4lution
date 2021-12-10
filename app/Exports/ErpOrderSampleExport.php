@@ -13,7 +13,7 @@ class ErpOrderSampleExport implements FromArray
     {
         return [
             [
-                'ORDER ID',
+                'ERP ORDER ID',
                 'SKU',
                 'Order Price (Original Currency)',
                 'PayPal Fee (Original Currency)',

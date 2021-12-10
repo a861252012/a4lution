@@ -38,28 +38,17 @@ class BulkUpdateImport implements
             Log::channel('order_bulk_update_import')
                 ->info("[batch_job_id:{$dateTime} key:{$key}] " . $item);
 
-            $bulkUpdateID = OrderBulkUpdate::insertGetId(
-                $item->merge(
-                    [
-                        'batch_job_id' => $dateTime,
-                        'execution_status' => 'PENDING',
-                        'site_order_id' => $item['order_id'],
-                        'site_product_sku' => $item['sku'],
-                        'created_at' => date('Y-m-d h:i:s'),
-                        'created_by' => $this->userID,
-                    ]
-                )->except(['order_id', 'sku'])->all()
-            );
+            $bulkUpdateID = OrderBulkUpdate::insertGetId($this->formBulkUpdateData($item, $dateTime));
 
             $executionStatus = 'FAILURE';
 
             //if order_code and sku match condition,then update OrderProduct and record as success
-            if (OrderProduct::where(['order_code' => $item['order_id'], 'sku' => $item['sku']])->exists()) {
+            if (OrderProduct::where(['order_code' => $item['erp_order_id'], 'sku' => $item['sku']])->exists()) {
                 $executionStatus = 'SUCCESS';
 
                 OrderProduct::where(
                     [
-                        'order_code' => $item['order_id'],
+                        'order_code' => $item['erp_order_id'],
                         'sku' => $item['sku']
                     ]
                 )->update($this->formOrderProductData($item));
@@ -71,6 +60,42 @@ class BulkUpdateImport implements
             ($executionStatus === 'FAILURE') ? $BulkOrder->exit_message = 'No records match this find criteria' : null;
             $BulkOrder->save();
         });
+    }
+
+    public function formBulkUpdateData(Collection $collection, $dateTime): array
+    {
+        return $collection->merge(
+            [
+                'batch_job_id' => $dateTime,
+                'execution_status' => 'PENDING',
+                'site_order_id' => $collection['erp_order_id'],
+                'site_product_sku' => $collection['sku'],
+                'created_at' => date('Y-m-d h:i:s'),
+                'created_by' => $this->userID,
+            ]
+        )->only(
+            [
+                'order_price_original_currency',
+                'paypal_fee_original_currency',
+                'transaction_fee_original_currency',
+                'fba_fee_original_currency',
+                'first_mile_shipping_fee_original_currency',
+                'first_mile_tariff_original_currency',
+                'last_mile_shipping_fee_original_currency',
+                'other_fee_original_currency',
+                'purchase_shipping_fee_original_currency',
+                'product_cost_original_currency',
+                'marketplace_tax_original_currency',
+                'cost_of_point_original_currency',
+                'exclusives_referral_fee_original_currency',
+                'batch_job_id',
+                'execution_status',
+                'site_order_id',
+                'site_product_sku',
+                'created_at',
+                'created_by',
+            ]
+        )->all();
     }
 
     public function formOrderProductData($row): array
