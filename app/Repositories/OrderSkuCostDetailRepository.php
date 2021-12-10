@@ -42,18 +42,15 @@ class OrderSkuCostDetailRepository extends BaseRepository
             ->exists();
     }
 
-    public function checkIfExist(string $orderId, string $sku): bool
+    public function getProductId(string $orderId, string $sku)
     {
-        return $this->model->join('order_bulk_updates', function ($join) {
-            $join->on('order_bulk_updates.platform_order_id', '=', 'order_sku_cost_details.platform_reference_no')
-                ->on('order_bulk_updates.product_sku', '=', 'order_sku_cost_details.product_barcode');
-        })
+        return $this->model->select('order_products.id')
             ->join('order_products', function ($join) {
                 $join->on('order_products.order_code', '=', 'order_sku_cost_details.reference_no')
                     ->on('order_products.sku', '=', 'order_sku_cost_details.product_barcode');
             })
             ->where('order_sku_cost_details.platform_reference_no', $orderId)
             ->where('order_sku_cost_details.product_barcode', $sku)
-            ->exists();
+            ->first();
     }
 }

@@ -48,15 +48,14 @@ class BulkUpdateImport implements
             $executionStatus = 'FAILURE';
 
             //if order_code and sku match condition,then update OrderProduct and record as success
-            if (app(OrderSkuCostDetailRepository::class)->checkIfExist($item['erp_order_id'], $item['sku'])) {
-                $executionStatus = 'SUCCESS';
+            $orderProductId = app(OrderSkuCostDetailRepository::class)->getProductId(
+                $item['erp_order_id'],
+                $item['sku']
+            );
 
-                OrderProduct::where(
-                    [
-                        'order_code' => $item['erp_order_id'],
-                        'sku' => $item['sku']
-                    ]
-                )->update($this->formOrderProductData($item));
+            if ($orderProductId) {
+                $executionStatus = 'SUCCESS';
+                OrderProduct::where('id', $orderProductId->id)->update($this->formOrderProductData($item));
             }
 
             //update OrderBulkUpdate table by id
