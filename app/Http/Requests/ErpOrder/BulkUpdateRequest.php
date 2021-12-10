@@ -9,7 +9,7 @@ class BulkUpdateRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'file' => 'required|max:1024|mimes:xlsx',
+            'file' => 'required|max:5120|mimes:xlsx',
         ];
     }
 }
