@@ -24,10 +24,14 @@ class BulkUpdateImport implements
     use Importable, RegistersEventListeners;
 
     private int $userID;
+    private string $batchJobID;
 
-    public function __construct($userID)
-    {
+    public function __construct(
+        $userID,
+        $batchJobID
+    ) {
         $this->userID = $userID;
+        $this->batchJobID = $batchJobID;
     }
 
     public function collection(Collection $row)
@@ -38,7 +42,7 @@ class BulkUpdateImport implements
             Log::channel('order_bulk_update_import')
                 ->info("[batch_job_id:{$dateTime} key:{$key}] " . $item);
 
-            $bulkUpdateID = OrderBulkUpdate::insertGetId($this->formBulkUpdateData($item, $dateTime));
+            $bulkUpdateID = OrderBulkUpdate::insertGetId($this->formBulkUpdateData($item));
 
             $executionStatus = 'FAILURE';
 
@@ -62,11 +66,11 @@ class BulkUpdateImport implements
         });
     }
 
-    public function formBulkUpdateData(Collection $collection, $dateTime): array
+    public function formBulkUpdateData(Collection $collection): array
     {
         return $collection->merge(
             [
-                'batch_job_id' => $dateTime,
+                'batch_job_id' => $this->batchJobID,
                 'execution_status' => 'PENDING',
                 'site_order_id' => $collection['erp_order_id'],
                 'site_product_sku' => $collection['sku'],
