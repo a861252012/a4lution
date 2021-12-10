@@ -160,7 +160,7 @@
                             <div class="fallback">
                                 <div class="custom-file">
                                     <input type="file" name="file" class="form-control" id="bulkUploadFile" required>
-                                    <div class="required">Maximum size: 1 MB</div>
+                                    <div class="required">Maximum size: 5 MB</div>
                                 </div>
                             </div>
                         </div>
@@ -250,7 +250,7 @@
             //check file size
             $('input[type=file]').change(e => {
                 if (e.currentTarget.files.length > 0) {
-                    if ((e.currentTarget.files[0].size / 1024 / 1024) > 1) {
+                    if ((e.currentTarget.files[0].size / 1024 / 1024) > 5) {
                         $('#inline_submit').prop('disabled', true)
                     } else {
                         $('#inline_submit').prop('disabled', false)
