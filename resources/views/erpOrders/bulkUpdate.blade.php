@@ -109,8 +109,8 @@
                     @foreach ($lists as $item)
                         <tr>
                             <td>{{ $item->batch_job_id }}</td>
-                            <td>{{ $item->site_order_id }}</td>
-                            <td>{{ $item->site_product_sku }}</td>
+                            <td>{{ $item->platform_order_id }}</td>
+                            <td>{{ $item->product_sku }}</td>
                             <td>{{ $item->execution_status }}</td>
                             <td>{{ $item->exit_message }}</td>
                             <td>{{ $item->created_at }}</td>

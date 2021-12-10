@@ -1,31 +1,27 @@
 <?php
 
-
 namespace App\Repositories;
-
 
 use App\Models\OrderSkuCostDetail;
 use Illuminate\Support\Facades\DB;
 
-class OrderSkuCostDetailRepository
+class OrderSkuCostDetailRepository extends BaseRepository
 {
-    protected $orderSkuCostDetail;
-
-    public function __construct(OrderSkuCostDetail $orderSkuCostDetail)
+    public function __construct()
     {
-        $this->orderSkuCostDetail = $orderSkuCostDetail;
+        parent::__construct(new OrderSkuCostDetail);
     }
 
     public function insertData(array $data)
     {
         return DB::transaction(function () use ($data) {
-            return $this->orderSkuCostDetail->insert($data);
+            return $this->model->insert($data);
         });
     }
 
     public function getSkuDetail(string $referenceNo, string $barcode)
     {
-        return $this->orderSkuCostDetail->select(
+        return $this->model->select(
             'currency_code_org',
             'order_total_amount_org',
             'platform_cost_org',
@@ -41,8 +37,23 @@ class OrderSkuCostDetailRepository
 
     public function checkIfSkuDetailDuplicated(string $productBarcode, string $referenceNo): bool
     {
-        return $this->orderSkuCostDetail->where('product_barcode', $productBarcode)
+        return $this->model->where('product_barcode', $productBarcode)
             ->where('reference_no', $referenceNo)
+            ->exists();
+    }
+
+    public function checkIfExist(string $orderId, string $sku): bool
+    {
+        return $this->model->join('order_bulk_updates', function ($join) {
+            $join->on('order_bulk_updates.platform_order_id', '=', 'order_sku_cost_details.platform_reference_no')
+                ->on('order_bulk_updates.product_sku', '=', 'order_sku_cost_details.product_barcode');
+        })
+            ->join('order_products', function ($join) {
+                $join->on('order_products.order_code', '=', 'order_sku_cost_details.reference_no')
+                    ->on('order_products.sku', '=', 'order_sku_cost_details.product_barcode');
+            })
+            ->where('order_sku_cost_details.platform_reference_no', $orderId)
+            ->where('order_sku_cost_details.product_barcode', $sku)
             ->exists();
     }
 }
