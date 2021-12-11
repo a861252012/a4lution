@@ -412,6 +412,7 @@ class ErpOrdersController extends Controller
         $formattedShippedDate = date("Ym", strtotime($shippedDate));
 
         $exchangeRate = $this->exchangeRate->select('base_currency', 'exchange_rate')
+            ->active()
             ->wherein('base_currency', [$currency, 'RMB'])
             ->where($formattedQuotedDate, $formattedShippedDate)
             ->count();
