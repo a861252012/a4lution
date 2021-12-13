@@ -431,7 +431,7 @@ class ErpOrdersController extends Controller
             $data['lists'] = OrderBulkUpdate::from('order_bulk_updates as o')
                 ->join('users as u', 'u.id', '=', 'o.created_by')
                 ->select('u.user_name', 'o.*')
-                ->when($request->order_id, fn ($q) => $q->where('o.site_order_id', $request->order_id))
+                ->when($request->order_id, fn ($q) => $q->where('o.platform_order_id', $request->order_id))
                 ->when($request->status_type, fn ($q) => $q->where('o.execution_status', $request->status_type))
                 ->when(
                     $request->upload_date,
