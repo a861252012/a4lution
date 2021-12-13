@@ -229,6 +229,7 @@ class ErpOrdersController extends Controller
         $formattedShippedDate = date("Ym", strtotime($data['shipped_date']));
 
         $data['exchange_rate'] = $this->exchangeRate->select('base_currency', 'exchange_rate')
+            ->active()
             ->wherein('base_currency', [$data['lists']['currency_code_org'], 'RMB'])
             ->where($formattedQuotedDate, $formattedShippedDate)
             ->pluck('exchange_rate', 'base_currency')

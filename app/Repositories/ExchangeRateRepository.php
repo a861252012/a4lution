@@ -18,7 +18,7 @@ class ExchangeRateRepository extends BaseRepository
     public function getAllCurrency()
     {
         return ExchangeRate::selectRaw('DISTINCT base_currency')
-            ->where('active', 1)
+            ->active()
             ->pluck('base_currency');
     }
 
@@ -45,7 +45,7 @@ class ExchangeRateRepository extends BaseRepository
     {
         try {
             $exchangeRates = $this->model
-                ->when($quotedDate, fn($q) => $q->where('quoted_date', Carbon::parse($quotedDate)->format('Y-m-d')))
+                ->when($quotedDate, fn ($q) => $q->where('quoted_date', Carbon::parse($quotedDate)->format('Y-m-d')))
                 ->whereIn('base_currency', Currency::EXCHANGE_RATE)
                 ->active()
                 ->orderBy($orderBy, 'desc')
@@ -62,27 +62,28 @@ class ExchangeRateRepository extends BaseRepository
     public function getSpecificRateByDateRange($currency, $startDate, $endDate): ?Collection
     {
         try {
-            $exchangeRates = ExchangeRate::from('exchange_rates as e')
-                ->join('users as u', 'u.id', '=', 'e.updated_by')
+            $exchangeRates = ExchangeRate::from('exchange_rates')
+                ->join('users', 'users.id', '=', 'exchange_rates.updated_by')
                 ->select(
-                    'e.quoted_date',
-                    'e.base_currency',
-                    'e.quote_currency',
-                    'e.exchange_rate',
-                    'e.created_at',
-                    'e.updated_at',
-                    'e.active',
-                    'u.user_name',
+                    'exchange_rates.quoted_date',
+                    'exchange_rates.base_currency',
+                    'exchange_rates.quote_currency',
+                    'exchange_rates.exchange_rate',
+                    'exchange_rates.created_at',
+                    'exchange_rates.updated_at',
+                    'exchange_rates.active',
+                    'users.user_name',
                 )
                 ->whereBetween(
-                    'e.created_at',
+                    'exchange_rates.created_at',
                     [
                         Carbon::parse($startDate)->startOfDay()->toDateTimeString(),
                         Carbon::parse($endDate)->endOfDay()->toDateTimeString()
                     ]
                 )
-                ->where('e.base_currency', $currency)
-                ->orderBy('e.quoted_date', 'desc')
+                ->where('exchange_rates.active')
+                ->where('exchange_rates.base_currency', $currency)
+                ->orderBy('exchange_rates.quoted_date', 'desc')
                 ->take(18)
                 ->get();
         } catch (\Throwable $e) {
