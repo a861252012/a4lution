@@ -28,9 +28,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="client_code">Client Code</label>
                                 <input class="form-control _fz-1" name="client_code" id="client_code"
-                                    type="text" placeholder="Client Code" value="{{ $clientCode ?? '' }}">
-
-                                    {{-- type="text" placeholder="Client Code" value="{{ $clientCode ?? '' }}"> --}}
+                                    type="text" placeholder="Client Code" value="{{ $query['client_code'] ?? '' }}">
                             </div>
                         </div>
 
@@ -40,12 +38,10 @@
                                 <label class="form-control-label _fz-1" for="active">Status</label>
                                 <select class="form-control _fz-1" data-toggle="select" name="active" id="active">
                                     <option value="">All</option>
-                                    {{-- <option value="1" @if($active) {{ 'selected' }} @endif> --}}
-                                    <option value="1">
+                                    <option value="1" @if($query['active'] === '1') {{ 'selected' }} @endif>
                                         Active
                                     </option>
-                                    {{-- <option value="0" @if(!$active) {{ 'selected' }} @endif> --}}
-                                    <option value="0">
+                                    <option value="0" @if($query['active'] === '0') {{ 'selected' }} @endif>
                                         Inactive
                                     </option>
                                 </select>
@@ -58,12 +54,10 @@
                                 <label class="form-control-label _fz-1" for="sales_region">Sales Region</label>
                                 <select class="form-control _fz-1" data-toggle="select" name="sales_region" id="sales_region">
                                     <option value="">All</option>
-                                    {{-- <option value="hk" @if($sales_region == 'hk') {{ 'selected' }} @endif> --}}
-                                    <option value="hk">
+                                    <option value="hk" @if($query['sales_region'] === 'hk') {{ 'selected' }} @endif>
                                         HK
                                     </option>
-                                    {{-- <option value="tw" @if($sales_region == 'tw') {{ 'selected' }} @endif> --}}
-                                    <option value="tw">
+                                    <option value="tw" @if($query['sales_region'] === 'tw') {{ 'selected' }} @endif>
                                         TW
                                     </option>
                                 </select>
@@ -98,72 +92,36 @@
                     </thead>
 
                     <tbody>
-                    {{-- @forelse ($lists as $item)
-                        <tr>
-                            <input type="hidden" name="bill_state_id" value="{{ $item->id }}">
-                            <td class="report_date">{{ $item->report_date ?? '' }}</td>
-                            <td class="client_code">{{ $item->client_code ?? '' }}</td>
-                            <td class="avolution_commission">{{ $item->avolution_commission ?? '' }}</td>
-                            <td class="commission_type">{{ $item->commission_type ?? '' }}</td>
-                            <td class="total_sales_orders">{{ $item->total_sales_orders ?? '' }}</td>
-                            <td class="total_sales_amount">{{ $item->total_sales_amount ?? '' }}</td>
-                            <td class="total_expenses">{{ $item->total_expenses ?? '' }}</td>
-                            <td>
-                                <button class="btn btn-primary issue_btn btn-sm _fz-1" type="button"
-                                        billing-statement-id="{{ $item->id }}"
-                                @if($item->commission_type === "manual") {{ 'disabled' }} @endif>
-                                    <span class="btn-inner--text">Issue Invoice</span>
-                                </button>
-                                <button class="btn btn-danger delete_btn btn-sm _fz-1" type="button">
-                                    <span class="btn-inner--text">Delete</span>
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
-                    @endforelse --}}
-                        <tr>
-                            <td>1</td>
-                            <td>2</td>
-                            <td>3</td>
-                            <td>4</td>
-                            <td>5</td>
-                            <td class="py-1">
-                                <div class="dropdown">
-                                    <a class="btn btn-sm btn-icon-only text-light" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </a>
-                                    <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow" style="">
-                                        <a class="dropdown-item" href="http://argon.test/user/2/edit">Edit</a>
+                        @forelse ($customers as $customer)
+                            <tr>
+                                <td>{{ $customer->client_code }}</td>
+                                <td>{{ optional($customer->contract_date)->format('Y/m/d') }}</td>
+                                <td>{{ $customer->active ? 'Active' : 'Inactive' }}</td>
+                                <td>{{ $customer->sales_region }}</td>
+                                <td>{{ $customer->salesReps->pluck('user_name')->implode(',') }}</td>
+                                <td class="py-1">
+                                    <div class="dropdown">
+                                        <a class="btn btn-sm btn-icon-only text-light" href="#" role="button" data-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow" style="">
+                                            <a class="dropdown-item _edit-btn" client-code="{{ $customer->client_code }}">Edit</a>
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>1</td>
-                            <td>2</td>
-                            <td>3</td>
-                            <td>4</td>
-                            <td>5</td>
-                            <td class="py-1">
-                                <div class="dropdown">
-                                    <a class="btn btn-sm btn-icon-only text-light" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </a>
-                                    <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow" style="">
-                                        <a class="dropdown-item _edit-btn">Edit</a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
+                                </td>
+                            </tr>
+                        @empty
+                        @endforelse
                     </tbody>
                 </table>
             </div>
+
             {{-- Pagination --}}
-            {{-- @if($lists && $lists->lastPage() > 1)
-                <div class="d-flex justify-content-center" style='margin-top: 20px;'>
-                    {{ $lists->appends($_GET)->links() }}
+            @if($customers && $customers->lastPage() > 1)
+                <div class="d-flex justify-content-center mt-1">
+                    {{ $customers->appends($_GET)->links() }}
                 </div>
-            @endif --}}
+            @endif
         </div>
         <!-- ./Card -->
     </div>
@@ -176,18 +134,51 @@
             $('._edit-btn').click(function () {
 
                 let _token = $('meta[name="csrf-token"]').attr('content');
+                let client_code = $(this).attr('client-code');
 
                 $.colorbox({
                     iframe: false,
-                    href: origin + '/customers/edit',
+                    href: origin + '/ajax/customers/edit',
                     width: "80%",
                     height: "90%",
                     returnFocus: false,
                     data: {
                         _token: _token,
+                        client_code: client_code,
                     },
                     onComplete: function () {
 
+                        // prepare Options Object
+                        let options = {
+                            url: '/ajax/customers',
+                            responseType: 'blob', // important
+                            type: 'PATCH',
+                            beforeSend: function (e) {
+                                // 關閉 colorbox
+                                $('#cboxOverlay').remove();
+                                $('#colorbox').remove();
+                                $.colorbox.close();
+
+                            },
+                            success: function (res) {
+                                let msg = "Changed Success";
+
+                                swal({
+                                    icon: 'success',
+                                    text: msg,
+                                });
+
+                            },
+                            error: function (e) {
+                                swal({
+                                    icon: "error",
+                                    text: e
+                                });
+                            }
+                        };
+
+                        // pass options to ajaxForm
+                        $('#customer_form').ajaxForm(options);
                     },
                     onClosed:function(e){
                         // 隱藏 modal

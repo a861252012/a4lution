@@ -100,10 +100,9 @@ Route::group(['middleware' => 'auth'], function () {
         Route::put('/revoke/{date}', 'AdminController@revokeApprove');
     });
 
-    Route::prefix('customers')->group(function () {
-        Route::get('/', 'CustomerController@index')->name('customer.index');
-        Route::post('/edit', 'CustomerController@edit')->name('customer.edit'); // colorbox
-    });
+    Route::get('/customers', 'CustomerController@index')->name('customer.index');
+    Route::post('/ajax/customers/edit', 'CustomerController@ajaxEdit')->name('ajax.customer.edit');
+    Route::patch('/ajax/customers', 'CustomerController@ajaxUpdate')->name('ajax.customer.update');
     
 
 

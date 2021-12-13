@@ -1,15 +1,14 @@
 <?php
 
-namespace App\Http\Requests\BillingStatement;
+namespace App\Http\Requests\Customer;
 
 use App\Http\Requests\BaseFormRequest;
 
-class AjaxStoreRequest extends BaseFormRequest
+class AjaxEditRequest extends BaseFormRequest
 {
     public function rules(): array
     {
         return [
-            'report_date' => 'required',
             'client_code' => 'required',
         ];
     }

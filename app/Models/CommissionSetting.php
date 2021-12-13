@@ -13,4 +13,17 @@ class CommissionSetting extends Model
     protected $guarded = [];
 
     public $incrementing = false;
+
+    ############
+    ## Others ##
+    ############
+    public function isSku(): bool
+    {
+        return $this->is_sku_level_commission === 'T';
+    }
+
+    public function isTier(): bool
+    {
+        return $this->tier === 'T';
+    }
 }
