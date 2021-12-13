@@ -1,6 +1,5 @@
 <!-- colorbox html part start -->
 <div class="container">
-    {{--                                            {{ dd(get_defined_vars()) }}--}}
     <input type="hidden" id="csrf_token" name="_token" value="{{ csrf_token() }}">
 
     @if(count($errors) > 0 )
@@ -56,7 +55,8 @@
         </div>
 
         <div class="col-4 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Shipping Method:</label>{{$lists['sm_code']}}
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Shipping Method:</label>
+            {{$lists['sm_code']}}
         </div>
 
         <div class="col-4 form-group _fz-1">
@@ -71,12 +71,13 @@
         </div>
 
         <div class="col-4 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Paid Date:</label>{{$lists['order_paydate']}}
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Paid
+                Date:</label>{{$lists['order_paydate']}}
         </div>
 
         <div class="col-4 form-group _fz-1">
-            <label class="form-control-label _fz-1 inline_shipped_date" style="font-weight:bold;" 
-                data-attr="{{$shipped_date}}">Shipped Date:</label>{{$shipped_date}}
+            <label class="form-control-label _fz-1 inline_shipped_date" style="font-weight:bold;"
+                   data-attr="{{$shipped_date}}">Shipped Date:</label>{{$shipped_date}}
         </div>
     </div>
 
@@ -90,7 +91,8 @@
 
     <div class="row">
         <div class="col-12 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Product Name:</label>{{$lists['product_title']}}
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Product
+                Name:</label>{{$lists['product_title']}}
         </div>
     </div>
 
@@ -116,7 +118,8 @@
             <label class="form-control-label _fz-1" style="font-weight:bold;">Qty:</label>{{$lists['quantity']}}
         </div>
         <div class="col-4 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Product Weight:</label>{{$lists['weight']}}
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Product
+                Weight:</label>{{$lists['weight']}}
         </div>
     </div>
 
@@ -152,7 +155,8 @@
 
     <div class="row">
         <div class="col-6 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">(AMAZON)Promotion Metadata Definition Value:</label>
+            <label class="form-control-label _fz-1" style="font-weight:bold;">(AMAZON)Promotion Metadata Definition
+                Value:</label>
             {{$lists['promotion_amount']}}
         </div>
         <div class="col-6 form-group _fz-1">
@@ -271,27 +275,11 @@
             <td>{{$lists['other_transaction_hkd']}}</td>
         </tr>
         <tr class="table-info">
-            {{--            <th rowspan="row">MARKETPLACE TAX</th>--}}
-            {{--            <td></td>--}}
-            {{--            <td><input type="text" name="marketplace_tax" class="editable" value="{{$lists['marketplace_tax']}}"--}}
-            {{--                       readonly></td>--}}
-            {{--            <td>{{$lists['marketplace_tax_hkd']}}</td>--}}
         </tr>
         <tr class="table-info">
-            {{--            <th rowspan="row">COST OF POINT</th>--}}
-            {{--            <td></td>--}}
-            {{--            <td><input type="text" name="cost_of_point" class="editable" value="{{$lists['cost_of_point']}}" readonly>--}}
-            {{--            </td>--}}
-            {{--            <td>{{$lists['cost_of_point_hkd']}}</td>--}}
         </tr>
 
         <tr class="table-info">
-            {{--            <th rowspan="row">EXCLUSIVES REFERRAL FEE</th>--}}
-            {{--            <td></td>--}}
-            {{--            <td><input type="text" name="exclusives_referral_fee" class="editable"--}}
-            {{--                       value="{{$lists['exclusives_referral_fee']}}"--}}
-            {{--                       readonly></td>--}}
-            {{--            <td>{{$lists['exclusives_referral_fee_hkd']}}</td>--}}
         </tr>
         {{-- GROSS PROFIT --}}
         <tr class="table-dark">
@@ -339,17 +327,13 @@
                 <th rowspan="row">{{$item->field_name}}</th>
                 <td>{{$item->original_value}}</td>
                 <td>{{$item->new_value}}</td>
-                <td>{{$item->created_at}}</td>
+                <td>{{ \Carbon\Carbon::parse($item->created_at)->setTimezone(config('services.timezone.taipei'))}}</td>
                 <td>{{$item->user_name}}</td>
             </tr>
         @endforeach
         </tbody>
     </table>
-
-
 </div>
-{{--        </div>--}}
-{{--    </div>--}}
 <!-- colorbox html part end -->
 
 <!-- sweetalert JS -->
@@ -357,20 +341,8 @@
 
 <script src="{{ asset('argon') }}/vendor/jquery/dist/jquery-3.1.0.js"></script>
 
-{{--<script src="{{ asset('argon') }}/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>--}}
-{{--<script src="{{ asset('argon') }}/vendor/js-cookie/js.cookie.js"></script>--}}
-{{--<script src="{{ asset('argon') }}/vendor/jquery.scrollbar/jquery.scrollbar.min.js"></script>--}}
-{{--<script src="{{ asset('argon') }}/vendor/jquery-scroll-lock/dist/jquery-scrollLock.min.js"></script>--}}
-{{--<script src="{{ asset('argon') }}/vendor/lavalamp/js/jquery.lavalamp.min.js"></script>--}}
-
-<!-- Optional JS -->
-{{--<script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.min.js"></script>--}}
-{{--<script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.extension.js"></script>--}}
-
 <!-- jquery colorbox JS -->
 <script src="{{ asset('argon') }}/vendor/colorbox/js/jquery.colorbox.js"></script>。
-
-{{--<script src="https://code.jquery.com/jquery-3.1.0.js"></script>--}}
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
@@ -380,7 +352,6 @@
 <script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.min.js"></script>
 <script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.extension.js"></script>
 
-{{--<script src="http://code.jquery.com/jquery-1.9.1.js"></script>--}}
 @stack('js')
 
 <!-- Argon CSS -->
@@ -395,106 +366,5 @@
                 // return false;
             });
         });
-
-        // $(document).bind('cbox_complete', function () {
-        //     $('button#inline_submit').hide();
-        //
-        //     $(document).on("click", "button#cancel_btn", function () {
-        //         // $.colorbox.close();
-        //         // parent.$.colorbox.close();
-        //
-        //         $('#cboxOverlay').remove();
-        //         $('#colorbox').remove();
-        //
-        //         // return false;
-        //     });
-        //
-        //     //edit function
-        //     $(document).on("click", "button#edit_btn", function () {
-        //         let shipped_date = $("div .inline_shipped_date").attr("data-attr");
-        //         let _token = $('meta[name="csrf-token"]').attr('content');
-        //         let supplier = $('div#supplier').attr('data-label');
-        //
-        //         $.ajax({
-        //             url: origin + '/orders/checkEditQualification',
-        //             data: {shipped_date: shipped_date, _token: _token, supplier: supplier},
-        //             type: 'post',
-        //             success: function (res) {
-        //                 if (res.status !== 'failed') {
-        //                     swal({
-        //                         icon: 'success',
-        //                         text: 'editable now'
-        //                     });
-        //                     $('input[type=text]').attr('readonly', false);
-        //                     $('button#inline_submit').show();
-        //                 } else {
-        //                     swal({
-        //                         icon: 'error',
-        //                         text: res.msg
-        //                     });
-        //                     $('button#inline_submit').hide();
-        //                 }
-        //             }
-        //         });
-        //     });
-        //
-        //     //submit function
-        //     $(document).on("click", "button#inline_submit", function () {
-        //         let data = {};
-        //
-        //         data.first_mile_shipping_fee = $("input[name='first_mile_shipping_fee']").val();
-        //         data.first_mile_tariff = $("input[name='first_mile_tariff']").val();
-        //         data.last_mile_shipping_fee = $("input[name='last_mile_shipping_fee']").val();
-        //         data.paypal_fee = $("input[name='paypal_fee']").val();
-        //         data.transaction_fee = $("input[name='transaction_fee']").val();
-        //         data.fba_fee = $("input[name='fba_fee']").val();
-        //         data.other_fee = $("input[name='other_fee']").val();
-        //         data.marketplace_tax = $("input[name='marketplace_tax']").val();
-        //         data.cost_of_point = $("input[name='cost_of_point']").val();
-        //         data.exclusives_referral_fee = $("input[name='exclusives_referral_fee']").val();
-        //         data.product_id = $("button#edit_btn").attr('data-attr');
-        //
-        //         $.ajaxSetup({
-        //             headers: {
-        //                 'X-CSRF-TOKEN': $('#csrf_token').val()
-        //             }
-        //         });
-        //
-        //         $.ajax({
-        //             url: origin + '/orders/edit/orderDetail',
-        //             data: data,
-        //             type: 'post',
-        //             success: function (res) {
-        //                 if (res.status === 'failed') {
-        //                     swal({
-        //                         icon: 'error',
-        //                         text: 'update failed'
-        //                     });
-        //                 } else {
-        //                     swal({
-        //                         icon: res.status,
-        //                         text: res.msg
-        //                     });
-        //                     $('input[type=text]').attr('readonly', false);
-        //                 }
-        //             }, error: function (error) {
-        //                 swal({
-        //                     icon: 'error',
-        //                     text: error
-        //                 });
-        //             }
-        //         });
-        //     });
-        // });
-
     </script>
-@endpush
-@push('css')
-    <style>
-        /*input[type=text] {*/
-        /*    background: transparent;*/
-        /*    border: none;*/
-        /*    border-bottom: 1px solid #000000;*/
-        /*}*/
-    </style>
 @endpush
