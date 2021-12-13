@@ -113,7 +113,7 @@
                             <td>{{ $item->product_sku }}</td>
                             <td>{{ $item->execution_status }}</td>
                             <td>{{ $item->exit_message }}</td>
-                            <td>{{ $item->created_at }}</td>
+                            <td>{{ \Carbon\Carbon::parse($item->created_at)->setTimezone(config('services.timezone.taipei'))}}</td>
                             <td>{{ $item->user_name }}</td>
                         </tr>
                     @endforeach
