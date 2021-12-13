@@ -8,7 +8,6 @@ use App\Models\SystemChangeLog;
 use App\Repositories\OrderSkuCostDetailRepository;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
@@ -51,8 +50,8 @@ class BulkUpdateImport implements
 
             //if order_code and sku match condition,then update OrderProduct and record as success
             $getOrderProduct = app(OrderSkuCostDetailRepository::class)->getProductId(
-                $item['erp_order_id'],
-                $item['sku']
+                preg_replace('/\s+/', '', $item['erp_order_id']),
+                preg_replace('/\s+/', '', $item['sku'])
             );
 
             if ($getOrderProduct) {
