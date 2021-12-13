@@ -62,9 +62,11 @@ class BulkUpdateImport implements
 
                 $originalOrderProduct = OrderProduct::selectRaw(collect($updateData)->keys()->implode(','))
                     ->find($getOrderProduct->id)->toArray();
-                OrderProduct::where('id', $getOrderProduct->id)->update($this->formOrderProductData($item));
+
+                OrderProduct::where('id', $getOrderProduct->id)->update($updateData);
 
                 $diff = array_diff($updateData, $originalOrderProduct);
+
                 collect($diff)->each(fn ($item, $key) => SystemChangeLog::insert(
                     [
                         'menu_path' => '/orders/bulkUpdate/index',
@@ -74,7 +76,7 @@ class BulkUpdateImport implements
                         'field_name' => $key,
                         'original_value' => $originalOrderProduct[$key],
                         'new_value' => $item,
-                        'created_by' => Auth::id(),
+                        'created_by' => $this->userID,
                         'created_at' => date('Y-m-d h:i:s')
                     ]
                 ));
@@ -83,6 +85,7 @@ class BulkUpdateImport implements
             //update OrderBulkUpdate table by id
             $BulkOrder = OrderBulkUpdate::find($bulkUpdateID);
             $BulkOrder->execution_status = $executionStatus;
+            ($getOrderProduct) ? $BulkOrder->order_product_id = $getOrderProduct->id : null;
             ($executionStatus === 'FAILURE') ? $BulkOrder->exit_message = 'No records match this find criteria' : null;
             $BulkOrder->save();
         });
@@ -126,24 +129,26 @@ class BulkUpdateImport implements
 
     public function formOrderProductData($row): array
     {
+        $otherTransaction = (float)$row['other_fee_original_currency'] +
+            (float)$row['cost_of_point_original_currency'] + (float)$row['marketplace_tax_original_currency'] +
+            (float)$row['exclusives_referral_fee_original_currency'];
+
         //other_transaction = 上傳數據Other Fee + marketpalce tax + cost of point + Exclusives Referral Fee
         return [
-            'sales_amount' => (float)$row['order_price_original_currency'],
-            'paypal_fee' => (float)$row['paypal_fee_original_currency'],
-            'transaction_fee' => (float)$row['transaction_fee_original_currency'],
-            'fba_fee' => (float)$row['fba_fee_original_currency'],
-            'first_mile_shipping_fee' => (float)$row['first_mile_shipping_fee_original_currency'],
-            'first_mile_tariff' => (float)$row['first_mile_tariff_original_currency'],
-            'last_mile_shipping_fee' => (float)$row['last_mile_shipping_fee_original_currency'],
-            'other_fee' => (float)$row['other_fee_original_currency'],
-            'purchase_shipping_fee' => (float)$row['purchase_shipping_fee_original_currency'],
-            'product_cost' => (float)$row['product_cost_original_currency'],
-            'marketplace_tax' => (float)$row['marketplace_tax_original_currency'],
-            'cost_of_point' => (float)$row['cost_of_point_original_currency'],
-            'exclusives_referral_fee' => (float)$row['exclusives_referral_fee_original_currency'],
-            'other_transaction' => (float)$row['other_fee_original_currency'] +
-                (float)$row['cost_of_point_original_currency'] + (float)$row['marketplace_tax_original_currency'] +
-                (float)$row['exclusives_referral_fee_original_currency'],
+            'sales_amount' => round($row['order_price_original_currency'], 4),
+            'paypal_fee' => round($row['paypal_fee_original_currency'], 4),
+            'transaction_fee' => round($row['transaction_fee_original_currency'], 4),
+            'fba_fee' => round($row['fba_fee_original_currency'], 4),
+            'first_mile_shipping_fee' => round($row['first_mile_shipping_fee_original_currency'], 4),
+            'first_mile_tariff' => round($row['first_mile_tariff_original_currency'], 4),
+            'last_mile_shipping_fee' => round($row['last_mile_shipping_fee_original_currency'], 4),
+            'other_fee' => round($row['other_fee_original_currency'], 4),
+            'purchase_shipping_fee' => round($row['purchase_shipping_fee_original_currency'], 4),
+            'product_cost' => round($row['product_cost_original_currency'], 4),
+            'marketplace_tax' => round($row['marketplace_tax_original_currency'], 4),
+            'cost_of_point' => round($row['cost_of_point_original_currency'], 4),
+            'exclusives_referral_fee' => round($row['exclusives_referral_fee_original_currency'], 4),
+            'other_transaction' => round($otherTransaction, 4),
         ];
     }
 
