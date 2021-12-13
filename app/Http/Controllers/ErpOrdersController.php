@@ -2,19 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use DateTime;
-use Carbon\Carbon;
-use App\Models\Order;
+use App\Exports\ErpOrderSampleExport;
+use App\Http\Requests\ErpOrder\BulkUpdateRequest;
+use App\Imports\BulkUpdateImport;
+use App\Models\BillingStatement;
 use App\Models\ExchangeRate;
+use App\Models\Order;
+use App\Models\OrderBulkUpdate;
 use App\Models\OrderProduct;
-use Illuminate\Http\Request;
 use App\Models\RmaRefundList;
 use App\Models\SystemChangeLog;
-use App\Models\BillingStatement;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ErpOrdersController extends Controller
 {
@@ -26,14 +31,13 @@ class ErpOrdersController extends Controller
     private $orderProduct;
 
     public function __construct(
-        RmaRefundList     $rmaRefundList,
-        Order             $order,
-        ExchangeRate      $exchangeRate,
-        SystemChangeLog   $systemChangeLog,
-        BillingStatement  $billingStatement,
-        OrderProduct      $orderProduct
-    )
-    {
+        RmaRefundList    $rmaRefundList,
+        Order            $order,
+        ExchangeRate     $exchangeRate,
+        SystemChangeLog  $systemChangeLog,
+        BillingStatement $billingStatement,
+        OrderProduct     $orderProduct
+    ) {
         $this->rmaRefundList = $rmaRefundList;
         $this->order = $order;
         $this->exchangeRate = $exchangeRate;
@@ -130,12 +134,15 @@ class ErpOrdersController extends Controller
             ->when($request->sku, fn ($q) => $q->where('p.sku', $request->sku))
             ->when($request->supplier, fn ($q) => $q->where('p.supplier', $request->supplier))
             ->when(
-                $request->shipped_date_from && $request->shipped_date_to, 
+                $request->shipped_date_from && $request->shipped_date_to,
                 fn ($q) => $q->whereBetween(
-                    'o.ship_time', [
+                    'o.ship_time',
+                    [
                         Carbon::parse($request->shipped_date_from)->startOfDay()->toDateTimeString(),
                         Carbon::parse($request->shipped_date_to)->endOfDay()->toDateTimeString(),
-                    ]))
+                    ]
+                )
+            )
             ->paginate(100)
             ->appends($request->query());
 
@@ -222,6 +229,7 @@ class ErpOrdersController extends Controller
         $formattedShippedDate = date("Ym", strtotime($data['shipped_date']));
 
         $data['exchange_rate'] = $this->exchangeRate->select('base_currency', 'exchange_rate')
+            ->active()
             ->wherein('base_currency', [$data['lists']['currency_code_org'], 'RMB'])
             ->where($formattedQuotedDate, $formattedShippedDate)
             ->pluck('exchange_rate', 'base_currency')
@@ -268,30 +276,38 @@ class ErpOrdersController extends Controller
             $data['exchange_rate'][$data['lists']['currency_code_org']],
             $data['lists']['other_transaction']
         ) : 0;
-//        $data['lists']['marketplace_tax_hkd'] = $data['lists']['marketplace_tax'] ? $this->getHkdRate(
-//            $data['exchange_rate'][$data['lists']['currency_code_org']],
-//            $data['lists']['marketplace_tax']
-//        ) : 0;
-//        $data['lists']['cost_of_point_hkd'] = $data['lists']['cost_of_point'] ? $this->getHkdRate(
-//            $data['exchange_rate'][$data['lists']['currency_code_org']],
-//            $data['lists']['cost_of_point']
-//        ) : 0;
-//        $data['lists']['exclusives_referral_fee_hkd'] = $data['lists']['exclusives_referral_fee'] ? $this->getHkdRate(
-//            $data['exchange_rate'][$data['lists']['currency_code_org']],
-//            $data['lists']['exclusives_referral_fee']
-//        ) : 0;
+
         $data['lists']['gross_profit'] = $this->getGrossProfit($data['lists']);
 
         return view('erpOrders/ordersEdit', $data);
     }
 
     //取得港幣匯率(取至小數點第二位)
+
+    public function getChangeLog($productID)
+    {
+        return $this->systemChangeLog->from('system_changelogs as s')
+            ->select(
+                's.field_name',
+                's.original_value',
+                's.new_value',
+                's.created_at',
+                'u.user_name'
+            )
+            ->join('users as u', 's.created_by', '=', 'u.id')//TODO
+            ->where('s.reference_id', $productID)
+            ->where('s.created_by', Auth::id())
+            ->orderBy('s.created_at', 'desc')
+            ->get();
+    }
+
+    //取得港幣匯率(取至小數點第二位)
+
     public function getHkdRate(float $rate, float $num): float
     {
         return substr(sprintf(" % .3f", $num * $rate), 0, -1);
     }
 
-    //取得港幣匯率(取至小數點第二位)
     public function getGrossProfit(array $lists): float
     {
         $keys = [
@@ -318,24 +334,7 @@ class ErpOrdersController extends Controller
         return $sum;
     }
 
-    public function getChangeLog($productID)
-    {
-        return $this->systemChangeLog->from('system_changelogs as s')
-            ->select(
-                's.field_name',
-                's.original_value',
-                's.new_value',
-                's.created_at',
-                'u.user_name'
-            )
-            ->join('users as u', 's.created_by', '=', 'u.id')//TODO
-            ->where('s.reference_id', $productID)
-            ->where('s.created_by', Auth::id())
-            ->orderBy('s.created_at', 'desc')
-            ->get();
-    }
-
-    public function editOrderDetail(): \Illuminate\Http\JsonResponse
+    public function editOrderDetail(): JsonResponse
     {
         $productID = request()->route('id');
         $inputs = request()->except(['product_id']);
@@ -367,7 +366,7 @@ class ErpOrdersController extends Controller
             }
 
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
             Log::error($e);
             return response()->json(['msg' => 'failed!', 'status' => 'failed']);
@@ -375,7 +374,7 @@ class ErpOrdersController extends Controller
         return response()->json(['msg' => 'UPDATED!', 'status' => 'success', 'icon' => 'success']);
     }
 
-    public function checkEditQualification(): \Illuminate\Http\JsonResponse
+    public function checkEditQualification(): JsonResponse
     {
         $supplier = request()->input('supplier');
 
@@ -397,7 +396,7 @@ class ErpOrdersController extends Controller
         return response()->json(['msg' => 'UPDATED!', 'status' => 'success', 'icon' => 'success']);
     }
 
-    public function checkRate(): \Illuminate\Http\JsonResponse
+    public function checkRate(): JsonResponse
     {
         $shippedDate = request()->input('shipped_date') ?? null;
         $currency = request()->input('currency') ?? null;
@@ -414,6 +413,7 @@ class ErpOrdersController extends Controller
         $formattedShippedDate = date("Ym", strtotime($shippedDate));
 
         $exchangeRate = $this->exchangeRate->select('base_currency', 'exchange_rate')
+            ->active()
             ->wherein('base_currency', [$currency, 'RMB'])
             ->where($formattedQuotedDate, $formattedShippedDate)
             ->count();
@@ -422,5 +422,47 @@ class ErpOrdersController extends Controller
             return response()->json(['msg' => $msg, 'status' => 'failed']);
         }
         return response()->json(['status' => 'success']);
+    }
+
+    public function bulkUpdateView(Request $request)
+    {
+        $data['lists'] = [];
+        if (count($request->all())) {
+            $data['lists'] = OrderBulkUpdate::from('order_bulk_updates as o')
+                ->join('users as u', 'u.id', '=', 'o.created_by')
+                ->select('u.user_name', 'o.*')
+                ->when($request->order_id, fn ($q) => $q->where('o.platform_order_id', $request->order_id))
+                ->when($request->status_type, fn ($q) => $q->where('o.execution_status', $request->status_type))
+                ->when(
+                    $request->upload_date,
+                    fn ($q) => $q->whereBetween(
+                        'o.created_at',
+                        [
+                            Carbon::parse($request->upload_date)->startOfDay()->toDateTimeString(),
+                            Carbon::parse($request->upload_date)->endOfDay()->toDateTimeString(),
+                        ]
+                    )
+                )
+                ->orderBy('o.id', 'desc')
+                ->paginate(50);
+        }
+
+        return view('erpOrders.bulkUpdate', $data);
+    }
+
+    public function bulkUpdate(BulkUpdateRequest $request)
+    {
+        Excel::queueImport(
+            new BulkUpdateImport(
+                Auth::id(),
+                now()->format('YmdHisu')
+            ),
+            $request->file('file')
+        )->allOnQueue('queue_excel');
+    }
+
+    public function exportSample()
+    {
+        return (new ErpOrderSampleExport)->download('bulkUpdateSampleFile.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 }

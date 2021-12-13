@@ -15,7 +15,7 @@ class PlatformAdFeesExport implements FromArray
         return [
             ['Client Code', 'Client Type', 'Platform', 'Account', 'Campagin Type', 'Campagin', 'Currency'
                 , 'Impressions', 'Clicks', 'CTR', 'Spendings', 'Spendings (HKD)', 'CPC', 'Sales Qty', 'Sales Amount',
-                'Sales Amount(HKD)', 'ACOS', 'Exchange Rate'
+                'Sales Amount (HKD)', 'ACOS', 'Exchange Rate'
             ]
         ];
     }

@@ -46,57 +46,63 @@
 
 </head>
 <body class="{{ $class ?? '' }}">
-    @auth()
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-            @csrf
-        </form>
-        @if (!in_array(request()->route()->getName(), ['welcome', 'page.pricing', 'page.lock']))
-            @include('layouts.navbars.sidebar')
-        @endif
-    @endauth
+@auth()
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+        @csrf
+    </form>
+    @if (!in_array(request()->route()->getName(), ['welcome', 'page.pricing', 'page.lock']))
+        @include('layouts.navbars.sidebar')
+    @endif
+@endauth
 
-    <div class="main-content">
-        @include('layouts.navbars.navbar')
-        @yield('content')
-    </div>
+<div class="main-content">
+    @include('layouts.navbars.navbar')
+    @yield('content')
+</div>
 
-    {{--        @if(!auth()->check() || in_array(request()->route()->getName(), ['welcome', 'page.pricing', 'page.lock']))--}}
-    {{--            @include('layouts.footers.guest')--}}
-    {{--        @endif--}}
+{{--        @if(!auth()->check() || in_array(request()->route()->getName(), ['welcome', 'page.pricing', 'page.lock']))--}}
+{{--            @include('layouts.footers.guest')--}}
+{{--        @endif--}}
 
-    <!-- sweetalert JS -->
-    <script src="{{ asset('js') }}/sweetalert.min.js"></script>
+<!-- sweetalert JS -->
+<script src="{{ asset('js') }}/sweetalert.min.js"></script>
 
-    <script src="{{ asset('argon') }}/vendor/jquery/dist/jquery-1.9.1.js"></script>
-    <script src="{{ asset('argon') }}/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ asset('argon') }}/vendor/js-cookie/js.cookie.js"></script>
-    <script src="{{ asset('argon') }}/vendor/jquery.scrollbar/jquery.scrollbar.min.js"></script>
-    <script src="{{ asset('argon') }}/vendor/jquery-scroll-lock/dist/jquery-scrollLock.min.js"></script>
+<script src="{{ asset('argon') }}/vendor/jquery/dist/jquery-1.9.1.js"></script>
+<script src="{{ asset('argon') }}/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ asset('argon') }}/vendor/js-cookie/js.cookie.js"></script>
+<script src="{{ asset('argon') }}/vendor/jquery.scrollbar/jquery.scrollbar.min.js"></script>
+<script src="{{ asset('argon') }}/vendor/jquery-scroll-lock/dist/jquery-scrollLock.min.js"></script>
 
-    <!-- Optional JS -->
-    <script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.min.js"></script>
-    <script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.extension.js"></script>
+<!-- Optional JS -->
+<script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.min.js"></script>
+<script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.extension.js"></script>
 
-    <!-- jquery colorbox JS -->
-    <script src="{{ asset('argon') }}/vendor/colorbox/js/jquery.colorbox.js"></script>
+<!-- jquery colorbox JS -->
+<script src="{{ asset('argon') }}/vendor/colorbox/js/jquery.colorbox.js"></script>
 
-    <!-- Argon JS -->
-    <script src="{{ asset('argon') }}/js/argon.js?v=1.0.1"></script>
-    <script src="{{ asset('argon') }}/js/demo.min.js"></script>
+<!-- Argon JS -->
+<script src="{{ asset('argon') }}/js/argon.js?v=1.0.1"></script>
+<script src="{{ asset('argon') }}/js/demo.min.js"></script>
 
-    <script src="{{ asset('argon') }}/js/jquery-ui_1.11.1.js"></script>
-    <script src="{{ asset('argon') }}/js/jquery-migrate-1.4.0.js"></script>
+<script src="{{ asset('argon') }}/js/jquery-ui_1.11.1.js"></script>
+<script src="{{ asset('argon') }}/js/jquery-migrate-1.4.0.js"></script>
 
-    <!-- jquery.form JS -->
-    <script src="{{ asset('argon') }}/js/jquery.form_4.3.0.js"></script>
+<!-- jquery.form JS -->
+<script src="{{ asset('argon') }}/js/jquery.form_4.3.0.js"></script>
 
-    <script src="{{ asset('argon') }}/vendor/select2/dist/js/select2.min.js"></script>
-    <script src="{{ asset('argon') }}/vendor/datatables.net/js/jquery.dataTables.min.js"></script>
-    <script src="{{ asset('argon') }}/vendor/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+<script src="{{ asset('argon') }}/vendor/select2/dist/js/select2.min.js"></script>
+<script src="{{ asset('argon') }}/vendor/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="{{ asset('argon') }}/vendor/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
 
-    <!-- dataTables JS -->
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.1/js/jquery.dataTables.js"></script>
-    @stack('js')
+<!-- dataTables JS -->
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.1/js/jquery.dataTables.js"></script>
+
+<!-- jquery-validation JS -->
+<script src="{{ asset('js') }}/jquery-validation_1.19.3.js"></script>
+
+<!-- moment JS -->
+<script src="{{ asset('js') }}/momentJS.js"></script>
+@stack('js')
 </body>
 </html>
 

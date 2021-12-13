@@ -5,14 +5,11 @@ namespace App\Exports;
 use App\Models\AmazonDateRangeReport;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Excel;
 use Throwable;
 
 class MisCellaneousExport implements WithTitle, FromQuery, WithHeadings, withMapping, WithStrictNullComparison
@@ -25,8 +22,7 @@ class MisCellaneousExport implements WithTitle, FromQuery, WithHeadings, withMap
         string $reportDate,
         string $clientCode,
         int    $insertInvoiceID
-    )
-    {
+    ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
@@ -51,52 +47,52 @@ class MisCellaneousExport implements WithTitle, FromQuery, WithHeadings, withMap
     public function query()
     {
         return AmazonDateRangeReport::query()
+            ->from('amazon_date_range_report as a')
             ->select(
-                "amazon_date_range_report.account",
-                "amazon_date_range_report.country",
-                "amazon_date_range_report.paid_date",
-                DB::raw("amazon_date_range_report.shipped_date AS dispatch_date"),
-                DB::raw("amazon_date_range_report.settlement_id AS transaction_ID"),
-                DB::raw("amazon_date_range_report.type AS transaction_type"),
-                DB::raw("amazon_date_range_report.description AS description"),
-                "amazon_date_range_report.order_id",
-                DB::raw("amazon_date_range_report.order_type AS type"),
-                "amazon_date_range_report.msku",
-                "amazon_date_range_report.asin",
-                DB::raw("amazon_date_range_report.product_name AS item_name"),
-                "amazon_date_range_report.sku",
-                DB::raw("amazon_date_range_report.supplier_type AS business_type"),
-                DB::raw("amazon_date_range_report.supplier AS brand"),
-                "amazon_date_range_report.marketplace",
-                "amazon_date_range_report.fulfillment",
-                "amazon_date_range_report.quantity",
-                "amazon_date_range_report.currency",
-                DB::raw("amazon_date_range_report.product_sales AS price"),
-                DB::raw("amazon_date_range_report.shipping_credits AS shipping_charge_back"),
-                DB::raw("amazon_date_range_report.gift_wrap_credits AS gift_wrap_charge_back"),
-                "amazon_date_range_report.promotional_rebates",
-                "amazon_date_range_report.cost_of_point",
-                "amazon_date_range_report.tax",
-                "amazon_date_range_report.marketplace_withheld_tax",
-                DB::raw("amazon_date_range_report.selling_fees AS platform_fee"),
-                "amazon_date_range_report.fba_fees",
-                "amazon_date_range_report.other_transaction_fees",
-                "amazon_date_range_report.other",
-                "amazon_date_range_report.amazon_total",
-                DB::raw("amazon_date_range_report.amazon_total AS total_amount"),
-                DB::raw("(amazon_date_range_report.amazon_total * r.exchange_rate ) AS total_amount_HKD"),
+                "a.account",
+                "a.country",
+                "a.paid_date",
+                DB::raw("a.shipped_date AS dispatch_date"),
+                DB::raw("a.settlement_id AS transaction_ID"),
+                DB::raw("a.type AS transaction_type"),
+                DB::raw("a.description AS description"),
+                "a.order_id",
+                DB::raw("a.order_type AS type"),
+                "a.msku",
+                "a.asin",
+                DB::raw("a.product_name AS item_name"),
+                "a.sku",
+                DB::raw("a.supplier_type AS business_type"),
+                DB::raw("a.supplier AS brand"),
+                "a.marketplace",
+                "a.fulfillment",
+                "a.quantity",
+                "a.currency",
+                DB::raw("a.product_sales AS price"),
+                DB::raw("a.shipping_credits AS shipping_charge_back"),
+                DB::raw("a.gift_wrap_credits AS gift_wrap_charge_back"),
+                "a.promotional_rebates",
+                "a.cost_of_point",
+                "a.tax",
+                "a.marketplace_withheld_tax",
+                DB::raw("a.selling_fees AS platform_fee"),
+                "a.fba_fees",
+                "a.other_transaction_fees",
+                "a.other",
+                "a.amazon_total",
+                DB::raw("a.amazon_total AS total_amount"),
+                DB::raw("(a.amazon_total * r.exchange_rate ) AS total_amount_HKD"),
                 "r.exchange_rate",
             )
             ->leftJoin('exchange_rates as r', function ($join) {
-                $join->on('amazon_date_range_report.currency', '=', 'r.base_currency');
-                $join->on('amazon_date_range_report.report_date', '=', 'r.quoted_date');
+                $join->on('a.currency', '=', 'r.base_currency');
+                $join->on('a.report_date', '=', 'r.quoted_date');
+                $join->where('r.active', 1);
             })
-            ->where('amazon_date_range_report.active', 1)
-//            ->where('amazon_date_range_report.supplier', 'S53A')
-//            ->where('amazon_date_range_report.report_date', '2021-07-01')
-            ->where('amazon_date_range_report.supplier', $this->clientCode)
-            ->where('amazon_date_range_report.report_date', $this->reportDate)
-            ->whereIn('amazon_date_range_report.type', ['FBA Customer Return Fee', 'Adjustment', 'other']);
+            ->where('a.active', 1)
+            ->where('a.supplier', $this->clientCode)
+            ->where('a.report_date', $this->reportDate)
+            ->whereIn('a.type', ['FBA Customer Return Fee', 'Adjustment', 'other']);
     }
 
     public function headings(): array

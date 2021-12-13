@@ -3,26 +3,8 @@
 namespace App\Exports;
 
 use Throwable;
-use App\Models\User;
 use App\Models\Invoice;
-use Maatwebsite\Excel\Excel;
-use App\Exports\FBADateExport;
-use App\Exports\PaymentExport;
-use App\Exports\StorageFeeExport;
-use App\Exports\OpexInvoiceExport;
-use Illuminate\Support\Facades\DB;
-use App\Exports\ADSPromotionExport;
-use App\Exports\SalesExpenseExport;
-use Illuminate\Support\Facades\Log;
-use App\Exports\MisCellaneousExport;
-use App\Exports\ReturnAndRefundExport;
-use Maatwebsite\Excel\Events\AfterSheet;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Events\BeforeSheet;
-use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use App\Exports\FBAFirstMileShipmentFeesExport;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 
@@ -40,8 +22,7 @@ class InvoiceExport implements WithMultipleSheets, WithEvents
         string $clientCode,
         int    $insertInvoiceID,
         int    $insertBillingID
-    )
-    {
+    ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
@@ -101,15 +82,4 @@ class InvoiceExport implements WithMultipleSheets, WithEvents
 
         return $sheets;
     }
-
-//    public function registerEvents(): array
-//    {
-//        return [
-//            AfterSheet::class => function (AfterSheet $event) {
-//                $invoice = Invoice::findOrFail($this->insertInvoiceID);
-//                $invoice->doc_status = "active!";
-//                $invoice->save();
-//            }
-//        ];
-//    }
 }
