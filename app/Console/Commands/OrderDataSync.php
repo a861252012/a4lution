@@ -2,15 +2,15 @@
 
 namespace App\Console\Commands;
 
-use Carbon\Carbon;
+use App\Repositories\AmazonReportListRepository;
+use App\Repositories\OrderProductRepository;
+use App\Repositories\OrderRepository;
+use App\Repositories\OrderSkuCostDetailRepository;
 use App\Support\ERPRequester;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Repositories\OrderRepository;
-use App\Repositories\OrderProductRepository;
-use App\Repositories\AmazonReportListRepository;
-use App\Repositories\OrderSkuCostDetailRepository;
 
 class OrderDataSync extends Command
 {
@@ -44,11 +44,11 @@ class OrderDataSync extends Command
      * @return void
      */
     public function __construct(
-        OrderRepository               $orderRepository,
-        OrderProductRepository        $orderProductRepository,
-        OrderSkuCostDetailRepository  $orderSkuCostDetailRepository,
-        AmazonReportListRepository    $amazonReportListRepository,
-        ERPRequester    $ERPRequest
+        OrderRepository              $orderRepository,
+        OrderProductRepository       $orderProductRepository,
+        OrderSkuCostDetailRepository $orderSkuCostDetailRepository,
+        AmazonReportListRepository   $amazonReportListRepository,
+        ERPRequester                 $ERPRequest
     ) {
         parent::__construct();
         $this->orderRepository = $orderRepository;
@@ -69,6 +69,9 @@ class OrderDataSync extends Command
 
         $endDateTime = $this->argument('date') ? Carbon::parse($this->argument('date'))
             ->endOfDay()->toDateTimeString() : now()->subDay()->endOfDay()->toDateTimeString();
+
+        $correlationID = $this->argument('date') ? Carbon::parse($this->argument('date'))->format('Ymd') :
+            now()->format('Ymd');
 
         $pageSize = 500;
         $orderCostParamsArr = array();//儲存請求getOrderCostDetailSku的參數.
@@ -128,6 +131,7 @@ class OrderDataSync extends Command
                     $productSkuArray['order_code'] = $v['order_code'];
                     $productSkuArray['weight'] = $productListItem['weight'];
                     $productSkuArray['active'] = 1;
+                    $productSkuArray['correlation_id'] = $correlationID;
                     $productSkuArray['supplier_type'] = $getProductInfo['data'][0]['procutCategoryName1'];
                     $productSkuArray['supplier'] = $getProductInfo['data'][0]['procutCategoryName2'];
 
@@ -162,6 +166,7 @@ class OrderDataSync extends Command
 
             $v['platform_ref_no'] = $v['platform_ref_no'][0] ?? null;
             $v['created_at'] = date('Y-m-d h:i:s');
+            $v['correlation_id'] = $correlationID;
 
             array_push($ordersData, $v);
         }
@@ -224,6 +229,7 @@ class OrderDataSync extends Command
                             $productSkuArr['order_code'] = $v['order_code'];
                             $productSkuArr['weight'] = $productListItem['weight'];
                             $productSkuArr['active'] = 1;
+                            $productSkuArr['correlation_id'] = $correlationID;
                             $productSkuArr['supplier_type'] = $getProductInfos['data'][0]['procutCategoryName1'];
                             $productSkuArr['supplier'] = $getProductInfos['data'][0]['procutCategoryName2'];
 
@@ -255,6 +261,7 @@ class OrderDataSync extends Command
 
                     $v['platform_ref_no'] = $v['platform_ref_no'][0] ?? null;
                     $v['created_at'] = date('Y-m-d h:i:s');
+                    $v['correlation_id'] = $correlationID;
 
                     array_push($restOrders, $v);
 
@@ -286,6 +293,7 @@ class OrderDataSync extends Command
                         $kNew = $this->camelToSnakeCase($k);
                         $tempCostDetailArr[$kNew] = $val;
                         $tempCostDetailArr['created_at'] = date('Y-m-d h:i:s');
+                        $tempCostDetailArr['correlation_id'] = $correlationID;
                     }
 
                     array_push($costDetailArray, $tempCostDetailArr);
@@ -361,6 +369,7 @@ class OrderDataSync extends Command
                 if (!empty($amazonReportList['data'])) {
                     foreach ($amazonReportList['data'] as $list) {
                         $list['created_at'] = date('Y-m-d h:i:s');
+                        $list['correlation_id'] = $correlationID;
 
                         array_push($amazonList, $list);
                     }
@@ -388,6 +397,7 @@ class OrderDataSync extends Command
 
                                 foreach ($amazonReportList['data'] as $lists) {
                                     $lists['created_at'] = date('Y-m-d h:i:s');
+                                    $lists['correlation_id'] = $correlationID;
 
                                     array_push($amazonList, $lists);
                                 }
