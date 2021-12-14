@@ -42,7 +42,7 @@ class OrderSkuCostDetailRepository extends BaseRepository
             ->exists();
     }
 
-    public function getProductId(string $orderId, string $sku)
+    public function getProductId($orderId = '', $sku = '')
     {
         return $this->model->select('order_products.id')
             ->join('order_products', function ($join) {
