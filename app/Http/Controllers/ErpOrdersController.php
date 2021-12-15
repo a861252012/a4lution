@@ -51,40 +51,44 @@ class ErpOrdersController extends Controller
 
     public function refundSearchView(Request $request)
     {
-        $data['shipped_date'] = $request->shipped_date ?? null;
-        $data['erp_order_ID'] = $request->erp_order_ID ?? null;
-        $data['sku'] = $request->sku ?? null;
-        $data['warehouse_order_id'] = $request->warehouse_order_id ?? null;
-        $data['supplier'] = $request->supplier ?? null;
+        $data['lists'] = [];
 
-        $data['lists'] = $this->rmaRefundList->select(
-            'create_date',
-            'warehouse_ref_no AS warehouse_order_id',
-            'ref_no AS refund_order_id',
-            'refrence_no_platform AS erp_order_id',
-            'warehouse_ship_date AS shipped_date',
-            'product_sku AS sku',
-            'pc_name AS supplier',
-            'amount_refund AS refund_price',
-            'amount_paid AS transaction_amount',
-            'amount_order AS sales_vloume'
-        )
-            ->when(
-                $request->shipped_date,
-                fn ($q, $shippedDate) => $q->whereBetween(
-                    'warehouse_ship_date',
-                    [
-                        Carbon::parse($shippedDate)->startOfDay()->toDateTimeString(),
-                        Carbon::parse($shippedDate)->endOfDay()->toDateTimeString(),
-                    ]
-                )
+        if (count($request->all())) {
+            $data['lists'] = $this->rmaRefundList->select(
+                'create_date',
+                'warehouse_ref_no AS warehouse_order_id',
+                'ref_no AS refund_order_id',
+                'refrence_no_platform AS erp_order_id',
+                'warehouse_ship_date AS shipped_date',
+                'product_sku AS sku',
+                'pc_name AS supplier',
+                'amount_refund AS refund_price',
+                'amount_paid AS transaction_amount',
+                'amount_order AS sales_vloume'
             )
-            ->when($request->erp_order_ID, fn ($q) => $q->where('refrence_no_platform', $request->erp_order_ID))
-            ->when($request->sku, fn ($q) => $q->where('product_sku', $request->sku))
-            ->when($request->warehouse_order_id, fn ($q) => $q->where('warehouse_ref_no', $request->warehouse_order_id))
-            ->when($request->supplier, fn ($q) => $q->where('pc_name', $request->supplier))
-            ->paginate(100)
-            ->appends($request->query());
+                ->when(
+                    $request->shipped_date_from && $request->shipped_date_to,
+                    fn ($q) => $q->whereBetween(
+                        'warehouse_ship_date',
+                        [
+                            Carbon::parse($request->shipped_date_from)->startOfDay()->toDateTimeString(),
+                            Carbon::parse($request->shipped_date_to)->endOfDay()->toDateTimeString(),
+                        ]
+                    )
+                )
+                ->when($request->erp_order_ID, fn ($q) => $q->where('refrence_no_platform', $request->erp_order_ID))
+                ->when($request->sku, fn ($q) => $q->where('product_sku', $request->sku))
+                ->when(
+                    $request->warehouse_order_id,
+                    fn ($q) => $q->where(
+                        'warehouse_ref_no',
+                        $request->warehouse_order_id
+                    )
+                )
+                ->when($request->supplier, fn ($q) => $q->where('pc_name', $request->supplier))
+                ->paginate(100)
+                ->appends($request->query());
+        }
 
         return view('erpOrders.refundSearch', ['data' => $data]);
     }
