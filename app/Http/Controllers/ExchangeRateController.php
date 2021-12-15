@@ -37,7 +37,7 @@ class ExchangeRateController extends Controller
         try {
             ExchangeRate::where('quoted_date', $date)->update(['active' => 0]);
 
-            $data = collect($request->exchange_rate)->map(fn($val, $currency) => [
+            $data = collect($request->exchange_rate)->map(fn ($val, $currency) => [
                 'quoted_date' => $date,
                 'base_currency' => $currency,
                 'quote_currency' => self::QUOTE_CURRENCY,
