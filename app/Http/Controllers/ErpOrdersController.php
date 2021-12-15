@@ -474,7 +474,7 @@ class ErpOrdersController extends Controller
         $headings = (new HeadingRowImport(2))->toCollection($request->file('file')) ?
             (new HeadingRowImport(2))->toCollection($request->file('file'))->collapse()->collapse() : null;
 
-        if ($headings) {
+        if (!$headings->isEmpty()) {
             if ($headings[0] === self::FILE_EXPECTED_HEADER) {
                 return response()->json(
                     [
