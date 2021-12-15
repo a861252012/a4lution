@@ -20,15 +20,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\HeadingRowImport;
 
 class ErpOrdersController extends Controller
 {
-    private $rmaRefundList;
-    private $order;
-    private $exchangeRate;
-    private $systemChangeLog;
-    private $billingStatement;
-    private $orderProduct;
+    private const FILE_EXPECTED_HEADER = 'platform';
+    private RmaRefundList $rmaRefundList;
+    private Order $order;
+    private ExchangeRate $exchangeRate;
+    private SystemChangeLog $systemChangeLog;
+    private BillingStatement $billingStatement;
+    private OrderProduct $orderProduct;
 
     public function __construct(
         RmaRefundList    $rmaRefundList,
@@ -464,5 +466,31 @@ class ErpOrdersController extends Controller
     public function exportSample()
     {
         return (new ErpOrderSampleExport)->download('bulkUpdateSampleFile.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
+
+    public function ajaxValidateFileHeadingRow(BulkUpdateRequest $request): JsonResponse
+    {
+        //validate excel title
+        $headings = (new HeadingRowImport(2))->toCollection($request->file('file')) ?
+            (new HeadingRowImport(2))->toCollection($request->file('file'))->collapse()->collapse() : null;
+
+        if ($headings) {
+            if ($headings[0] === self::FILE_EXPECTED_HEADER) {
+                return response()->json(
+                    [
+                        'status' => 200,
+                        'msg' => "OK"
+                    ]
+                );
+            }
+        }
+
+        return response()->json(
+            [
+                'status' => 200,
+                'msg' => "The second row in the table is the 'EN' field name of the table.
+                            Starting from the third row is the data in the table ."
+            ]
+        );
     }
 }
