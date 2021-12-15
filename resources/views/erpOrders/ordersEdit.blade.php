@@ -23,65 +23,65 @@
     <hr class="my-2">
     <div class="row">
         <div class="col-4 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Package Id:</label>{{$package_id}}
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Package Id:</label>{{ $lists['order_code'] }}
         </div>
 
         <div class="col-4 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Erp Order Id:</label>{{$erp_order_id}}
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Erp Order Id:</label>{{ $erp_order_id }}
         </div>
 
         <div class="col-4 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Platform:</label>{{$platform}}
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-4 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Acc Nick Name:</label>{{$acc_nick_name}}
-        </div>
-
-        <div class="col-4 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Acc Name:</label>{{$acc_name}}
-        </div>
-
-        <div class="col-4 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Site:</label>{{$site_id}}
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Platform:</label>{{ $platform }}
         </div>
     </div>
 
     <div class="row">
         <div class="col-4 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Warehouse:</label>{{$warehouse}}
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Acc Nick Name:</label>{{ $lists['seller_id'] }}
+        </div>
+
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Acc Name:</label>{{ $acc_name }}
+        </div>
+
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Site:</label>{{ $site_id }}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-4 form-group _fz-1">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Warehouse:</label>{{ $lists['warehouse'] }}
         </div>
 
         <div class="col-4 form-group _fz-1">
             <label class="form-control-label _fz-1" style="font-weight:bold;">Shipping Method:</label>
-            {{$lists['sm_code']}}
+            {{ $lists['sm_code'] }}
         </div>
 
         <div class="col-4 form-group _fz-1">
             <label class="form-control-label _fz-1"
-                   style="font-weight:bold;">Tracking:</label>{{$lists['tracking_number']}}
+                   style="font-weight:bold;">Tracking:</label>{{ $lists['tracking_number'] }}
         </div>
     </div>
 
     <div class="row">
         <div class="col-4 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Audit Date:</label>{{$lists['add_time']}}
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Audit Date:</label>{{ $lists['add_time'] }}
         </div>
 
         <div class="col-4 form-group _fz-1">
             <label class="form-control-label _fz-1" style="font-weight:bold;">Paid
-                Date:</label>{{$lists['order_paydate']}}
+                Date:</label>{{ $lists['order_paydate'] }}
         </div>
 
         <div class="col-4 form-group _fz-1">
             <label class="form-control-label _fz-1 inline_shipped_date" style="font-weight:bold;"
-                   data-attr="{{$shipped_date}}">Shipped Date:</label>{{$shipped_date}}
+                   data-attr="{{ $shipped_date }}">Shipped Date:</label>{{ $shipped_date }}
         </div>
     </div>
 
-    {{--   PRODUCT DETAILS     --}}
+    {{-- PRODUCT DETAILS --}}
     <div class="row">
         <div class="col">
             <div class="text-warning"><strong>Product Details</strong></div>
@@ -92,34 +92,34 @@
     <div class="row">
         <div class="col-12 form-group _fz-1">
             <label class="form-control-label _fz-1" style="font-weight:bold;">Product
-                Name:</label>{{$lists['product_title']}}
+                Name:</label>{{ $lists['product_title'] }}
         </div>
     </div>
 
     <div class="row">
         <div class="col-4 form-group _fz-1">
             <label class="form-control-label _fz-1" style="font-weight:bold;">Platform Sku:
-            </label>{{$lists['op_platform_sales_sku']}}
+            </label>{{ $lists['op_platform_sales_sku'] }}
         </div>
         <div class="col-4 form-group _fz-1">
             <label class="form-control-label _fz-1"
-                   style="font-weight:bold;">Item Id(ASIN):</label>{{$lists['asin_or_item']}}
+                   style="font-weight:bold;">Item Id(ASIN):</label>{{ $lists['asin_or_item'] }}
         </div>
-        <div class="col-4 form-group _fz-1" id="supplier" data-label="{{$supplier}}">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Supplier:</label>{{$supplier}}
+        <div class="col-4 form-group _fz-1" id="supplier" data-label="{{ $supplier }}">
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Supplier:</label>{{ $supplier }}
         </div>
     </div>
 
     <div class="row">
         <div class="col-4 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Sku:</label>{{$sku}}
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Sku:</label>{{ $sku }}
         </div>
         <div class="col-4 form-group _fz-1">
-            <label class="form-control-label _fz-1" style="font-weight:bold;">Qty:</label>{{$lists['quantity']}}
+            <label class="form-control-label _fz-1" style="font-weight:bold;">Qty:</label>{{ $lists['quantity'] }}
         </div>
         <div class="col-4 form-group _fz-1">
             <label class="form-control-label _fz-1" style="font-weight:bold;">Product
-                Weight:</label>{{$lists['weight']}}
+                Weight:</label>{{ $lists['weight'] }}
         </div>
     </div>
 
@@ -135,11 +135,11 @@
     <div class="row">
         <div class="col-4 form-group _fz-1">
             <label class="form-control-label _fz-1" style="font-weight:bold;">Order Original
-                Ccurrency:</label>{{$lists['currency_code_org']}}
+                Ccurrency:</label>{{ $lists['currency_code_org'] }}
         </div>
         <div class="col-4 form-group _fz-1">
             <label class="form-control-label _fz-1" style="font-weight:bold;">HKD Rate:</label>
-            {{$exchange_rate[$lists['currency_code_org']]}}
+            {{ $exchange_rate[$lists['currency_code_org']] }}
         </div>
     </div>
 
@@ -149,7 +149,7 @@
         </div>
         <div class="col-4 form-group _fz-1">
             <label class="form-control-label _fz-1" style="font-weight:bold;">HKD Rate:</label>
-            {{$exchange_rate['RMB']}}
+            {{ $exchange_rate['RMB'] }}
         </div>
     </div>
 
@@ -157,11 +157,11 @@
         <div class="col-6 form-group _fz-1">
             <label class="form-control-label _fz-1" style="font-weight:bold;">(AMAZON)Promotion Metadata Definition
                 Value:</label>
-            {{$lists['promotion_amount']}}
+            {{ $lists['promotion_amount'] }}
         </div>
         <div class="col-6 form-group _fz-1">
             <label class="form-control-label _fz-1" style="font-weight:bold;">Percentage Discount:</label>
-            {{$lists['promotion_discount_rate']}}
+            {{ $lists['promotion_discount_rate'] }}
         </div>
     </div>
 
@@ -182,7 +182,7 @@
             <th scope="col"></th>
             <th scope="col"></th>
             <th class="text-white" scope="col"><strong>RMB</strong></th>
-            <th class="text-white" scope="col"><strong>{{$lists['currency_code_org']}}</strong></th>
+            <th class="text-white" scope="col"><strong>{{ $lists['currency_code_org'] }}</strong></th>
             <th class="text-white" scope="col"><strong>HKD</strong></th>
         </tr>
         </thead>
@@ -193,23 +193,23 @@
             <th scope="row"><strong>Order Price</strong></th>
             <td>Order Price</td>
             <td></td>
-            <td>{{$order_price}}</td>
-            <td>{{$lists['order_price_hkd']}}</td>
+            <td>{{ $order_price }}</td>
+            <td>{{ $lists['order_price_hkd'] }}</td>
         </tr>
 
         {{--  PRODUCT COST  --}}
         <tr class="table-info">
             <th rowspan="2"><strong>Product Cost</strong></th>
             <td>Purchase Shipping Fee</td>
-            <td>{{$lists['purchase_shipping_fee']}}</td>
+            <td>{{ $lists['purchase_shipping_fee'] }}</td>
             <td></td>
-            <td>{{$lists['purchase_shipping_fee_hkd']}}</td>
+            <td>{{ $lists['purchase_shipping_fee_hkd'] }}</td>
         </tr>
         <tr class="table-info">
             <th scope="row">Product Cost</th>
-            <td>{{$lists['product_cost']}}</td>
+            <td>{{ $lists['product_cost'] }}</td>
             <td></td>
-            <td>{{$lists['product_cost_hkd']}}</td>
+            <td>{{ $lists['product_cost_hkd'] }}</td>
         </tr>
 
         {{-- SKIPPING FEE --}}
@@ -218,24 +218,24 @@
             <th>First Mile Shipping Fee</th>
             <td></td>
             <td><input type="text" class="editable" name="first_mile_shipping_fee"
-                       value="{{$lists['first_mile_shipping_fee']}}"
+                       value="{{ $lists['first_mile_shipping_fee'] }}"
                        readonly></td>
-            <td>{{$lists['first_mile_shipping_fee_hkd']}}</td>
+            <td>{{ $lists['first_mile_shipping_fee_hkd'] }}</td>
         </tr>
         <tr>
             <th scope="row">First Mile Tariff</th>
             <td></td>
-            <td><input type="text" class="editable" name="first_mile_tariff" value="{{$lists['first_mile_tariff']}}"
+            <td><input type="text" class="editable" name="first_mile_tariff" value="{{ $lists['first_mile_tariff'] }}"
                        readonly></td>
-            <td>{{$lists['first_mile_tariff_hkd']}}</td>
+            <td>{{ $lists['first_mile_tariff_hkd'] }}</td>
         </tr>
         <tr>
             <th scope="row">Last Mile Shipping Fee</th>
             <td></td>
             <td><input type="text" class="editable" name="last_mile_shipping_fee"
-                       value="{{$lists['last_mile_shipping_fee']}}"
+                       value="{{ $lists['last_mile_shipping_fee'] }}"
                        readonly></td>
-            <td>{{$lists['last_mile_shipping_fee_hkd']}}</td>
+            <td>{{ $lists['last_mile_shipping_fee_hkd'] }}</td>
         </tr>
 
         {{-- PLATFORM FEE --}}
@@ -243,16 +243,16 @@
             <th rowspan="2"><strong>Platform Fee</strong></th>
             <th>Paypal Fee</th>
             <td></td>
-            <td><input type="text" name="paypal_fee" class="editable" value="{{$lists['paypal_fee']}}"
+            <td><input type="text" name="paypal_fee" class="editable" value="{{ $lists['paypal_fee'] }}"
                        readonly></td>
-            <td>{{$lists['paypal_fee_hkd']}}</td>
+            <td>{{ $lists['paypal_fee_hkd'] }}</td>
         </tr>
         <tr class="table-info">
             <th scope="row">Transaction Fee</th>
             <td></td>
-            <td><input type="text" name="transaction_fee" class="editable" value="{{$lists['transaction_fee']}}"
+            <td><input type="text" name="transaction_fee" class="editable" value="{{ $lists['transaction_fee'] }}"
                        readonly></td>
-            <td>{{$lists['transaction_fee_hkd']}}</td>
+            <td>{{ $lists['transaction_fee_hkd'] }}</td>
         </tr>
 
         {{-- FBA FEE --}}
@@ -260,8 +260,8 @@
             <th scope="row"><strong>Fba Fee</strong></th>
             <td>Fba Fee</td>
             <td></td>
-            <td><input type="text" name="fba_fee" class="editable" value="{{$lists['fba_fee']}}" readonly></td>
-            <td>{{$lists['fba_fee_hkd']}}</td>
+            <td><input type="text" name="fba_fee" class="editable" value="{{ $lists['fba_fee'] }}" readonly></td>
+            <td>{{ $lists['fba_fee_hkd'] }}</td>
         </tr>
 
         {{-- OTHER TRANSACTION FEE --}}
@@ -269,10 +269,10 @@
             <th rowspan="4"><strong>Other Transaction</strong></th>
             <td>Other Transaction</td>
             <td></td>
-            <td><input type="text" name="other_transaction" class="editable" value="{{$lists['other_transaction']}}"
+            <td><input type="text" name="other_transaction" class="editable" value="{{ $lists['other_transaction'] }}"
                        readonly>
             </td>
-            <td>{{$lists['other_transaction_hkd']}}</td>
+            <td>{{ $lists['other_transaction_hkd'] }}</td>
         </tr>
         <tr class="table-info">
         </tr>
@@ -287,7 +287,7 @@
             <td></td>
             <td></td>
             <td><strong>Gross Profit</strong></td>
-            <td><strong>{{$lists['gross_profit']}}</strong></td>
+            <td><strong>{{ $lists['gross_profit'] }}</strong></td>
         </tr>
         </tbody>
     </table>
@@ -324,11 +324,11 @@
 
         @foreach ($sys_logs as $item)
             <tr>
-                <th rowspan="row">{{$item->field_name}}</th>
-                <td>{{$item->original_value}}</td>
-                <td>{{$item->new_value}}</td>
+                <th rowspan="row">{{ $item->field_name }}</th>
+                <td>{{ $item->original_value }}</td>
+                <td>{{ $item->new_value }}</td>
                 <td>{{ \Carbon\Carbon::parse($item->created_at)->setTimezone(config('services.timezone.taipei'))}}</td>
-                <td>{{$item->user_name}}</td>
+                <td>{{ $item->user_name }}</td>
             </tr>
         @endforeach
         </tbody>
@@ -338,7 +338,6 @@
 
 <!-- sweetalert JS -->
 <script src="{{ asset('js') }}/sweetalert.min.js"></script>
-
 <script src="{{ asset('argon') }}/vendor/jquery/dist/jquery-3.1.0.js"></script>
 
 <!-- jquery colorbox JS -->
@@ -363,7 +362,6 @@
         $(function () {
             $(document).on("click", "button#cancel_btn", function () {
                 $.colorbox.close();
-                // return false;
             });
         });
     </script>
