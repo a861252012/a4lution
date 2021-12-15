@@ -239,21 +239,29 @@
                     }
                 });
 
+                //validate file heading row
                 $.ajax({
-                    url: window.location.origin + '/orders/bulkUpdate',
+                    url: window.location.origin + '/orders/ajax/bulkUpdate',
                     type: 'post',
                     processData: false,
                     contentType: false,
                     data: data,
-                    success: function () {
-                        $('#inline_submit').prop('disabled', false)
+                    success: function (res) {
+                        console.log(res);
+                        if (res.msg !== 'OK') {
+                            swal({
+                                icon: 'error',
+                                text: res.msg
+                            });
+                        }
+
+                        bulkUpdate(data);
                     }, error: function (error) {
                         swal({
                             icon: 'error',
                             text: error
                         });
                         $('#inline_submit').prop('disabled', false)
-
                     }
                 });
             });
@@ -270,5 +278,26 @@
             })
 
         });
+
+        function bulkUpdate(data) {
+            $.ajax({
+                url: window.location.origin + '/orders/bulkUpdate',
+                type: 'post',
+                processData: false,
+                contentType: false,
+                data: data,
+                success: function () {
+                    $('#inline_submit').prop('disabled', false)
+                }, error: function (error) {
+                    swal({
+                        icon: 'error',
+                        text: error
+                    });
+                    $('#inline_submit').prop('disabled', false)
+
+                }
+            });
+
+        }
     </script>
 @endpush

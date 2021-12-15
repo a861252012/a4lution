@@ -70,6 +70,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/checkRate', 'ErpOrdersController@checkRate');
         Route::get('/bulkUpdate/index', 'ErpOrdersController@bulkUpdateView')->name('bulkUpdate.view');
         Route::post('/bulkUpdate', 'ErpOrdersController@bulkUpdate');
+        Route::post('/ajax/bulkUpdate', 'ErpOrdersController@ajaxValidateFileHeadingRow');
         Route::get('/exportSample', 'ErpOrdersController@exportSample')->name('orders.sample.download');
     });
 
