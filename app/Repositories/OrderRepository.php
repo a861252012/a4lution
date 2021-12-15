@@ -251,6 +251,7 @@ GROUP BY p.supplier";
             'orders.order_paydate',
             'orders.ship_time',
             'orders.order_code',
+            DB::raw("CONCAT(orders.warehouse_code,'[',orders.warehouse_name,']') as warehouse"),
             'order_sku_cost_details.product_title',
             'order_sku_cost_details.op_platform_sales_sku',
             'order_sku_cost_details.asin_or_item',
