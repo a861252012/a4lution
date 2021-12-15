@@ -147,15 +147,13 @@
 @push('js')
     <script type="text/javascript">
         $(function () {
-            let shippedDate = $('#shipped_date').val();
-
-            $('#shipped_date').datepicker({
-                format: 'yyyy-mm-dd',//日期時間格式
-                ignoreReadonly: false,  //禁止使用者輸入 啟用唯讀
-                autoclose: true
+            $('.input-daterange input').each(function () {
+                $(this).datepicker({
+                    format: 'yyyy-mm-dd',//日期時間格式
+                    ignoreReadonly: false,  //禁止使用者輸入 啟用唯讀
+                    autoclose: true
+                });
             });
-
-            $('#report_date').datepicker('update', shippedDate);
         });
 
         function validateForm() {
