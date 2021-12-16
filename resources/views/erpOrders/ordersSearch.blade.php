@@ -20,68 +20,66 @@
         <div class="card">
             <!-- Card header -->
             <div class="card-header py-2">
-                <div>
-                    <form method="GET" action="/orders/search" role="form" onsubmit="return validateForm()"
-                            class="form">
-                        <div class="row">
+                <form method="GET" action="{{route(('erpOrder.view'))}}" role="form"
+                      onsubmit="return validateForm()">
+                    <div class="row">
 
-                            {{-- ERP ORDER ID --}}
-                            <div class="col-lg-2 col-md-6 col-sm-6">
-                                <div class="form-group mb-0">
-                                    <label class="form-control-label _fz-1" for="erp_order_id">Erp Order Id</label>
-                                    <input class="form-control _fz-1" name="erp_order_id" id="erp_order_id"
-                                            type="text" placeholder="ERP ORDER ID"
-                                            value="{{$data['erp_order_id'] ?? ''}}">
-                                </div>
+                        {{-- ERP ORDER ID --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="erp_order_id">Erp Order Id</label>
+                                <input class="form-control _fz-1" name="erp_order_id" id="erp_order_id"
+                                       type="text" placeholder="ERP ORDER ID"
+                                       value="{{ request()->input('erp_order_id') }}">
                             </div>
-
-                            {{-- SHIPPED DATE --}}
-                            <div class="col-lg-4 col-md-12 col-sm-12">
-                                <label class="form-control-label _fz-1" for="shipped_date_from">Shipped Date</label>
-                                <div class="input-group input-daterange mb-0">
-                                    <input class="form-control _fz-1" name="shipped_date_from" id="shipped_date_from"
-                                            type="text"
-                                            placeholder="SHIPPED DATE FROM" value="{{ $data['shipped_date_from'] ?? '' }}">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text bg-secondary">to</span>
-                                    </div>
-                                    <input class="form-control _fz-1" name="shipped_date_to" id="shipped_date_to"
-                                            type="text"
-                                            placeholder="SHIPPED DATE TO" value="{{ $data['shipped_date_to'] ?? '' }}">
-                                </div>
-                            </div>
-
-                            {{-- SKU --}}
-                            <div class="col-lg-2 col-md-6 col-sm-6">
-                                <div class="form-group mb-0">
-                                    <label class="form-control-label _fz-1" for="sku">Sku</label>
-                                    <input class="form-control _fz-1" name="sku" id="sku" type="text"
-                                            placeholder="SKU" value="{{$data['sku'] ?? ''}}">
-                                </div>
-                            </div>
-
-                            {{-- Supplier --}}
-                            <div class="col-lg-2 col-md-6 col-sm-6">
-                                <div class="form-group mb-0">
-                                    <label class="form-control-label _fz-1" for="supplier">Supplier</label>
-                                    <input class="form-control _fz-1" name="supplier" id="supplier" type="text"
-                                            placeholder="SUPPLIER" value="{{$data['supplier'] ?? ''}}">
-                                </div>
-                            </div>
-
-                            {{-- SEARCH --}}
-                            <div class="col-lg-2 col-md-6 col-sm-6">
-                                <label class="form-control-label _fz-1" for="submit_btn"></label>
-                                <div class="form-group mb-0">
-                                    <button class="form-control _fz-1 btn btn-primary" id="submit_btn" type="submit"
-                                            style="margin-top: 6px;">SEARCH
-                                    </button>
-                                </div>
-                            </div>
-
                         </div>
-                    </form>
-                </div>
+
+                        {{-- SHIPPED DATE --}}
+                        <div class="col-lg-4 col-md-12 col-sm-12">
+                            <label class="form-control-label _fz-1" for="shipped_date_from">Shipped Date</label>
+                            <div class="input-group input-daterange mb-0">
+                                <input class="form-control _fz-1" name="shipped_date_from" id="shipped_date_from"
+                                       type="text" placeholder="SHIPPED DATE FROM"
+                                       value="{{ request()->input('shipped_date_from') }}">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-secondary">to</span>
+                                </div>
+                                <input class="form-control _fz-1" name="shipped_date_to" id="shipped_date_to"
+                                       type="text" placeholder="SHIPPED DATE TO"
+                                       value="{{ request()->input('shipped_date_to') }}">
+                            </div>
+                        </div>
+
+                        {{-- SKU --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="sku">Sku</label>
+                                <input class="form-control _fz-1" name="sku" id="sku" type="text"
+                                       placeholder="SKU" value="{{ request()->input('sku') }}">
+                            </div>
+                        </div>
+
+                        {{-- Supplier --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1" for="supplier">Supplier</label>
+                                <input class="form-control _fz-1" name="supplier" id="supplier" type="text"
+                                       placeholder="SUPPLIER" value="{{ request()->input('supplier') }}">
+                            </div>
+                        </div>
+
+                        {{-- SEARCH --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <label class="form-control-label _fz-1" for="submit_btn"></label>
+                            <div class="form-group mb-0">
+                                <button class="form-control _fz-1 btn btn-primary" id="submit_btn" type="submit"
+                                        style="margin-top: 6px;">SEARCH
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
             </div>
 
             {{-- data table --}}
@@ -98,14 +96,14 @@
                         <th>Sku</th>
                         <th>Order Price</th>
                         <th>Supplier</th>
-                        <th>Warehouse</th>
+                        <th>Last Updated</th>
                     </tr>
                     </thead>
 
                     <tbody>
                     @foreach ($data['lists'] as $item)
                         <tr>
-                            {{-- edit --}}
+                            {{-- edit  button --}}
                             <td>
                                 <a class="ajax_btn btn p-0">
                                     <i class="ni ni-settings"></i>
@@ -119,8 +117,9 @@
                             <td class="sku">{{ $item->sku }}</td>
                             <td class="order_price">{{ $item->order_price }}</td>
                             <td class="supplier">{{ $item->supplier }}</td>
-                            <td class="warehouse">{{ $item->warehouse }}</td>
-                            <input class="hidden" type="hidden" value="{{$item->currency_code_org}}">
+                            <td class="updated_at">{{ \Carbon\Carbon::parse($item->updated_at)
+                                                        ->setTimezone(config('services.timezone.taipei')) }}</td>
+                            <input class="hidden" type="hidden" value="{{ $item->currency_code_org }}">
                         </tr>
                     @endforeach
                     </tbody>
@@ -140,13 +139,9 @@
 @endsection
 
 @push('js')
-    <script src="{{ asset('argon') }}/vendor/select2/dist/js/select2.min.js"></script>
-    <script src="{{ asset('argon') }}/vendor/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
-
     <script type="text/javascript">
         $(function () {
-
-            $('.input-daterange input').each(function() {
+            $('.input-daterange input').each(function () {
                 $(this).datepicker({
                     format: 'yyyy-mm-dd',//日期時間格式
                     ignoreReadonly: false,  //禁止使用者輸入 啟用唯讀
@@ -299,7 +294,6 @@
                         });
                     }
                 });
-                // $.colorbox.resize();
             });
         });
 
@@ -317,14 +311,4 @@
             }
         }
     </script>
-@endpush
-
-@push('css')
-    <style>
-        /*input[type=text] {*/
-        /*    background: transparent;*/
-        /*    border: none;*/
-        /*    border-bottom: 1px solid #000000;*/
-        /*}*/
-    </style>
 @endpush

@@ -3,15 +3,17 @@
 namespace App\Repositories;
 
 use App\Models\Order;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-class OrderRepository
+class OrderRepository extends BaseRepository
 {
     protected $orders;
 
     public function __construct()
     {
+        parent::__construct(new Order);
     }
 
     public function insertData(array $data)
@@ -237,5 +239,57 @@ WHERE
 GROUP BY p.supplier";
 
         return DB::select($sql);
+    }
+
+    public function getOrderDetail(array $request)
+    {
+        return $this->model->select(
+            'orders.sm_code',
+            'orders.seller_id',
+            'orders.tracking_number',
+            'orders.add_time',
+            'orders.order_paydate',
+            'orders.ship_time',
+            'orders.order_code',
+            DB::raw("CONCAT(orders.warehouse_code,'[',orders.warehouse_name,']') as warehouse"),
+            'order_sku_cost_details.product_title',
+            'order_sku_cost_details.op_platform_sales_sku',
+            'order_sku_cost_details.asin_or_item',
+            'order_sku_cost_details.quantity',
+            'order_sku_cost_details.currency_code_org',
+            'order_products.id as product_id',
+            'order_products.weight',
+            'order_products.promotion_discount_rate',
+            'order_products.promotion_amount',
+            'order_products.purchase_shipping_fee',
+            'order_products.product_cost',
+            'order_products.first_mile_shipping_fee',
+            'order_products.first_mile_tariff',
+            'order_products.last_mile_shipping_fee',
+            'order_products.paypal_fee',
+            'order_products.transaction_fee',
+            'order_products.fba_fee',
+            'order_products.promotion_amount',
+            'order_products.promotion_discount_rate',
+            'order_products.other_transaction',
+        )
+            ->join('order_sku_cost_details', 'order_sku_cost_details.reference_no', '=', 'orders.order_code')
+            ->join('order_products', 'order_products.order_code', '=', 'orders.order_code')
+            ->when($request['acc_nick_name'], fn($q) => $q->where('orders.seller_id', $request['acc_nick_name']))
+            ->when($request['erp_order_id'], fn($q) => $q->where('orders.reference_no', $request['erp_order_id']))
+            ->when($request['package_id'], fn($q) => $q->where('orders.order_code', $request['package_id']))
+            ->when($request['sku'], fn($q) => $q->where('order_products.sku', $request['sku']))
+            ->when($request['shipped_date'], function ($q, $reportDate) {
+                return $q->whereBetween(
+                    'orders.ship_time',
+                    [
+                        Carbon::parse($reportDate)->startOfDay()->toDateTimeString(),
+                        Carbon::parse($reportDate)->endOfDay()->toDateTimeString()
+                    ]
+                );
+            })
+            ->where('order_products.active', 1)
+            ->first()
+            ->toArray();
     }
 }
