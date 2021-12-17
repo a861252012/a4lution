@@ -10,9 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\Importable;
-use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\ToCollection;
-use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
@@ -20,10 +18,9 @@ class BulkUpdateImport implements
     ToCollection,
     WithChunkReading,
     WithHeadingRow,
-    WithBatchInserts,
     ShouldQueue
 {
-    use Importable, RegistersEventListeners;
+    use Importable;
 
     private int $userID;
     private string $batchJobID;
@@ -149,11 +146,6 @@ class BulkUpdateImport implements
             'exclusives_referral_fee' => round($row['exclusives_referral_fee_original_currency'], 4),
             'other_transaction' => round($otherTransaction, 4),
         ];
-    }
-
-    public function batchSize(): int
-    {
-        return 1000;
     }
 
     public function chunkSize(): int
