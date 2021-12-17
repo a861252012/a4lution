@@ -151,7 +151,7 @@ return [
     |
     */
 
-    'memory_limit' => 64,
+    'memory_limit' => 256,
 
     /*
     |--------------------------------------------------------------------------
@@ -164,24 +164,11 @@ return [
     |
     */
 
-//    'defaults' => [
-//        'supervisor-1' => [
-//            'connection' => 'redis',
-//            'queue' => ['default'],
-//            'balance' => 'auto',
-//            'maxProcesses' => 1,
-//            'memory' => 256,
-//            'tries' => 3,
-//            'nice' => 0,
-//            'timeout' => 180,
-//        ],
-//    ],
-
     'environments' => [
         'production' => [
             'supervisor-1' => [
                 'connection' => 'redis',
-                'queue' => ['default', 'redis'],
+                'queue' => ['default'],
                 'balance' => 'auto',
                 'maxProcesses' => 1,
                 'processes' => 1,
@@ -192,7 +179,7 @@ return [
             ],
             'supervisor-2' => [
                 'connection' => 'redis',
-                'queue' => 'queue_excel',
+                'queue' => ['queue_excel'],
                 'balance' => 'simple',
                 'maxProcesses' => 1,
                 'processes' => 1,
@@ -205,7 +192,7 @@ return [
         'local' => [
             'supervisor-1' => [
                 'connection' => 'redis',
-                'queue' => ['default', 'redis'],
+                'queue' => ['default'],
                 'balance' => 'auto',
                 'maxProcesses' => 1,
                 'processes' => 1,
@@ -216,10 +203,11 @@ return [
             ],
             'supervisor-2' => [
                 'connection' => 'redis',
-                'queue' => 'queue_excel',
+                'queue' => ['queue_excel'],
                 'balance' => 'simple',
                 'maxProcesses' => 1,
                 'processes' => 1,
+                'memory' => 256,
                 'tries' => 3,
                 'timeout' => 180,
             ],
