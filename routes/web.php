@@ -101,10 +101,44 @@ Route::group(['middleware' => 'auth'], function () {
     });
 
     Route::get('/customers', 'CustomerController@index')->name('customer.index');
-    Route::post('/ajax/customers/edit', 'CustomerController@ajaxEdit')->name('ajax.customer.edit');
-    Route::patch('/ajax/customers', 'CustomerController@ajaxUpdate')->name('ajax.customer.update');
+    Route::post('/ajax/customers/{client_code}/edit', 'CustomerController@ajaxEdit')->name('ajax.customer.edit');
+    Route::patch('/ajax/customers/{client_code}', 'CustomerController@ajaxUpdate')->name('ajax.customer.update');
     
+    Route::get('/modify/commission_settings/calculate_type', function () {
+        
 
+        $commissionSettings = App\Models\CommissionSetting::all();
+        
+        foreach ($commissionSettings as $commissionSetting) {
+            dump($commissionSetting);
+            if ($commissionSetting->is_sku_level_commission === 'T') {
+                $commissionSetting->update(['calculate_type' => 1]);
+                dump('is_sku_level_commission');
+                continue;
+            }
+
+            // $maxDiscountRate = $orderProductRepository->getMaxDiscountRate($commissionSetting->client_code, $reportDate);
+
+            // if ((float)$commissionSetting->promotion_threshold >= (float)$maxDiscountRate) {
+            //     $commissionSetting->update(['calculate_type' => 2]);
+            //     continue;
+            // }
+
+            if ($commissionSetting->tier === 'T') {
+                $commissionSetting->update(['calculate_type' => 3]);
+                dump('tier');
+
+                continue;
+            }
+
+
+            dump('basic');
+            $commissionSetting->update(['calculate_type' => 4]);
+
+            // exit;
+        }
+        echo 'done';
+    });
 
     Route::get('{page}', 'PageController@index')->name('page.index');
 });

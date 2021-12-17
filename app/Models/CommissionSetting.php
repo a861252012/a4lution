@@ -2,28 +2,25 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 
 class CommissionSetting extends Model
 {
     protected $table = "commission_settings";
 
-    protected $primaryKey = null;
-
     protected $guarded = [];
 
-    public $incrementing = false;
-
-    ############
-    ## Others ##
-    ############
-    public function isSku(): bool
+    protected static function booted()
     {
-        return $this->is_sku_level_commission === 'T';
-    }
+        static::creating(function ($commissionSetting) {
+            $commissionSetting->updated_by = Auth::id();
+            $commissionSetting->created_by = Auth::id();
+            $commissionSetting->active = 1;
+        });
 
-    public function isTier(): bool
-    {
-        return $this->tier === 'T';
+        static::updating(function ($commissionSetting) {
+            $commissionSetting->updated_by = Auth::id();
+        });
     }
 }

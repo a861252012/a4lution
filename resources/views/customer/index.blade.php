@@ -36,7 +36,7 @@
                         <div class="col-lg-2 col-md-6 col-sm-6">
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="active">Status</label>
-                                <select class="form-control _fz-1" data-toggle="select" name="active" id="active">
+                                <select class="form-control _fz-1" data-toggle="select" name="active">
                                     <option value="">All</option>
                                     <option value="1" @if($query['active'] === '1') {{ 'selected' }} @endif>
                                         Active
@@ -138,7 +138,7 @@
 
                 $.colorbox({
                     iframe: false,
-                    href: origin + '/ajax/customers/edit',
+                    href: origin + '/ajax/customers/'+ client_code +'/edit',
                     width: "80%",
                     height: "90%",
                     returnFocus: false,
@@ -148,19 +148,24 @@
                     },
                     onComplete: function () {
 
+                        // TODO: 使用此方式關閉，在開啟一個 colorbox 就無法按 X 和 點選黑暗處關掉 colorbox
+                        $('#cancelBtn').click(function () {
+                            $('#cboxOverlay').remove();
+                            $('#colorbox').remove();
+                        });
+
                         // prepare Options Object
                         let options = {
-                            url: '/ajax/customers',
+                            url: '/ajax/customers/' + client_code,
                             responseType: 'blob', // important
                             type: 'PATCH',
-                            beforeSend: function (e) {
+                            success: function (res) {
                                 // 關閉 colorbox
+                                // TODO: 使用此方式關閉，在開啟一個 colorbox 就無法按 X 和 點選黑暗處關掉 colorbox
                                 $('#cboxOverlay').remove();
                                 $('#colorbox').remove();
                                 $.colorbox.close();
-
-                            },
-                            success: function (res) {
+                                
                                 let msg = "Changed Success";
 
                                 swal({
@@ -168,11 +173,20 @@
                                     text: msg,
                                 });
 
+                                // location.reload();
                             },
                             error: function (e) {
+
+                                console.log(e);
+                                // 顯示 Validate Error
+                                let errors = [];
+                                $.each(JSON.parse(e.responseText).errors, function(col, msg) {                    
+                                    errors.push(msg.toString());
+                                });
+
                                 swal({
-                                    icon: "error",
-                                    text: e
+                                    icon: 'error',
+                                    text: errors.join("\n")
                                 });
                             }
                         };

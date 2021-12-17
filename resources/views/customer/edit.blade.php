@@ -20,18 +20,25 @@
                 
                 <div class="row">
                     <div class="col-6 form-group mb-2">
-                        <label class="form-control-label _fz-1" for="client_contact">Client Contact</label>
-                        <input class="form-control _fz-1" name="client_contact" id="client_contact" 
-                            placeholder="client_contact" type="text" value="{{ $customer->contact_person }}">
+                        <label class="form-control-label _fz-1" for="client_code">
+                            Client Code <span class="text-red">*<span>
+                        </label>
+                        <input class="form-control _fz-1" name="client_code" id="client_code" 
+                            placeholder="client_code" type="text" value="{{ $customer->client_code }}">
                     </div>
-                    <div class="col-6">
+                    <div class="col-6 form-group mb-2">
+                        <label class="form-control-label _fz-1" for="company_name">
+                            Company Name
+                        </label>
+                        <input class="form-control _fz-1" name="company_name" id="company_name" 
+                            placeholder="company_name" type="text" value="{{ $customer->company_name }}">
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-6 form-group mb-2">
                         <label class="form-control-label _fz-1" for="company_contact">Company Contact</label>
                         <input class="form-control _fz-1" name="company_contact" id="company_contact" 
-                            placeholder="company_contact" type="text" value="{{ $customer->company_name }}">
+                            placeholder="company_contact" type="text" value="{{ $customer->contact_person }}">
                     </div>
                     <div class="col-6">
                     </div>
@@ -82,35 +89,49 @@
                 <h3>Advanced Setting</h3>
                 <hr class="my-2">
                 <div class="form-group mb-2">
-                    <label class="form-control-label _fz-1" for="sales_region">Sales Region</label>
+                    <label class="form-control-label _fz-1" for="sales_region">
+                        Sales Region <span class="text-red">*<span>
+                    </label>
                     <select class="form-control _fz-1" data-toggle="select" name="sales_region" id="sales_region">
-                        <option value="hk" @if($customer->sales_region === 'hk') {{ 'selected' }} @endif>
+                        <option value="HK" @if($customer->sales_region === 'HK') {{ 'selected' }} @endif>
                             HK
                         </option>
-                        <option value="tw" @if($customer->sales_region === 'tw') {{ 'selected' }} @endif>
+                        <option value="TW" @if($customer->sales_region === 'TW') {{ 'selected' }} @endif>
                             TW
                         </option>
                     </select>
                 </div>
                 <div class="form-group mb-2">
-                    <label class="form-control-label _fz-1" for="contract_date">Contract Date</label>
+                    <label class="form-control-label _fz-1" for="contract_date">
+                        Contract Date <span class="text-red">*<span>
+                    </label>
                     <input class="form-control _fz-1" name="contract_date" id="contract_date" 
                         placeholder="Contract Date" type="text" value="{{ optional($customer->contract_date)->format('Y-m-d') }}">
                 </div>
                 <div class="form-group mb-2">
-                    {{-- TODO: 畫面需要再調整 --}}
-                    <label class="form-control-label _fz-1" for="status">Status</label>
-                    <label class="custom-toggle d-block">
-                        <input type="checkbox" name="active" id='status'
-                            @if ($customer->active) checked @endif>
-                        <span class="custom-toggle-slider rounded-circle" data-label-off="InActive" data-label-on="Active"></span>
-                    </label>
+                    {{-- TODO: 畫面可能需要再調整 --}}
+                    <label class="form-control-label _fz-1">Status</label>
+                    <div>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <input type="radio" id="active" name="active" class="custom-control-input" value="1"
+                                {{ $customer->isActive() ? 'checked' : '' }}>
+                            <label class="custom-control-label" for="active">Active</label>
+                        </div>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <input type="radio" id="inActive" name="active" class="custom-control-input" value="0" 
+                                {{ $customer->isInActive() ? 'checked' : '' }}>
+                            <label class="custom-control-label" for="inActive">InActive</label>
+                        </div>
+                    </div>
                 </div>
                 <div class="form-group mb-2">
                     <label class="form-control-label _fz-1" for="">Sales Rep</label>
                     <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#salesRepModal">
                         Setting
                     </button>
+                    
+                    <input type="hidden" name="sales_reps" value="{{ implode('|', array_keys($selectedSalesReps)) }}">
+                    <p class="_fz-1 mt-1 _p-sales-reps">{{ implode('、', $selectedSalesReps) }}</p>
                 </div>
             </div>
             {{-- ./ Advanced Setting --}}
@@ -120,24 +141,42 @@
         <div class="d-flex flex-column mt-4">
             <h3>Commission Structure</h3>
             <hr class="my-2 w-100">
-            <h3>Calculate Type</h3>
+            <h3>Calculate Type <span class="text-red">*<span></h3>
             <hr class="my-2 w-100">
-            <div class="custom-control custom-checkbox mb-2">
-                <input class="custom-control-input" id="sku" type="checkbox" name='sku' 
-                    @if (optional($customer->commission)->isSku()) checked @endif>
-                <label class="custom-control-label" style="font-size: 0.65rem;" for="sku">SKU</label>
+            @inject('commission', 'App\Constants\Commission')
+            @php
+                $skuChecked = (optional($customer->commission)->calculate_type === $commission::CALCULATE_TYPE_SKU) ? 'checked' : '';
+                $promotionChecked = (optional($customer->commission)->calculate_type === $commission::CALCULATE_TYPE_PROMOTION) ? 'checked' : '';
+                $tierChecked = (optional($customer->commission)->calculate_type === $commission::CALCULATE_TYPE_TIER) ? 'checked' : '';
+                $basicChecked = (optional($customer->commission)->calculate_type === $commission::CALCULATE_TYPE_BASIC_RATE) ? 'checked' : '';
+            @endphp
+            <div class="custom-control custom-radio mb-2">
+                <input type="radio" id="is_sku" name="calculate_type" class="custom-control-input" value="{{ $commission::CALCULATE_TYPE_SKU }}" {{ $skuChecked }}>
+                <label class="custom-control-label" style="font-size: 0.65rem;" for="is_sku">SKU</label>
             </div>
-            <div class="custom-control custom-checkbox mb-2">
-                <input class="custom-control-input" id="basic_rate" type="checkbox">
-                {{-- TODO: 為什麼要 checkbox --}}
+            <div class="custom-control custom-radio mb-2">
+                <input type="radio" id="promotion" name="calculate_type" class="custom-control-input" value="{{ $commission::CALCULATE_TYPE_BASIC_RATE }}" {{ $promotionChecked }}>
+                <label class="custom-control-label" style="font-size: 0.65rem;" for="promotion">Promotion: </label>
+                <div class="d-inline ml-2">
+                    {{-- <p class="d-inline _fz-1">Promotion Threshold:</p> --}}
+                    <label class="d-inline form-control-label _fz-1" for="promotion_threshold">Promotion Threshold</label>
+                    <input class="form-control w-25 d-inline ml-2" name="promotion_threshold" id="promotion_threshold"
+                        type="text" value="{{ optional($customer->commission)->promotion_threshold }}">
+                    <label class="d-inline form-control-label _fz-1" for="tier_promotion">Tier Promotion</label>
+                    <input class="form-control w-25 d-inline ml-2" name="tier_promotion" id="tier_promotion"
+                        type="text" value="{{ optional($customer->commission)->tier_promotion }}">
+                </div>
+                
+            </div>
+            <div class="custom-control custom-radio mb-2">
+                <input type="radio" id="basic_rate" name="calculate_type" class="custom-control-input" value="{{ $commission::CALCULATE_TYPE_PROMOTION }}" {{ $basicChecked }}>
                 <label class="custom-control-label" style="font-size: 0.65rem;" for="basic_rate">Basic Rate</label>
                 <input class="form-control w-25 d-inline ml-2" name="basic_rate" 
                     id="" type="text" value="{{ optional($customer->commission)->basic_rate }}">
             </div>
-            <div class="custom-control custom-checkbox mb-2">
-                <input class="custom-control-input" id="tier_structure" type="checkbox" name="tier"
-                    @if (optional($customer->commission)->isTier()) checked @endif>
-                <label class="custom-control-label" style="font-size: 0.65rem;" for="tier_structure">Tier Structure</label>
+            <div class="custom-control custom-radio mb-2">
+                <input type="radio" id="tier" name="calculate_type" class="custom-control-input" value="{{ $commission::CALCULATE_TYPE_TIER }}" {{ $tierChecked }}>
+                <label class="custom-control-label" style="font-size: 0.65rem;" for="tier">Tier</label>
             </div>
             <hr class="my-2 w-100">
             <table class="_table table-hover table-sm">
@@ -228,8 +267,8 @@
 
         {{-- Button --}}
         <div class="d-flex justify-content-center my-2">
-            <button class="btn btn-primary _fz-1 mr-2" type="submit" id="save">Save</button>
-            <button class="btn btn-danger _fz-1" type="button" id="cancel">Cancel</button>
+            <button class="btn btn-primary _fz-1 mr-2" type="submit">Save</button>
+            <button class="btn btn-danger _fz-1" type="button" id="cancelBtn">Cancel</button>
         </div>
     </form>
 
@@ -244,20 +283,18 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form method="POST" action="" id="service_type_country" role="form" class="form create_white_form">
-                        <div class="row">
-                            <div class="form-group col-lg-12">
-                                <select class="_select-sales_rep" multiple="multiple" name="sales_rep">
-                                    @foreach ($selectedSalesReps as $id => $user_name)
-                                        <option value="{{ $id }}" selected>{{ $user_name }}</option>
-                                    @endforeach
-                                    @foreach ($unSelectedSalesReps as $id => $user_name)
-                                        <option value="{{ $id }}">{{ $user_name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                    <div class="row">
+                        <div class="form-group col-lg-12">
+                            <select class="_select-sales_rep" multiple="multiple" name="sales_rep">
+                                @foreach ($selectedSalesReps as $id => $user_name)
+                                    <option value="{{ $id }}" selected>{{ $user_name }}</option>
+                                @endforeach
+                                @foreach ($unSelectedSalesReps as $id => $user_name)
+                                    <option value="{{ $id }}">{{ $user_name }}</option>
+                                @endforeach
+                            </select>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -285,31 +322,32 @@
             selectedListLabel: 'Selected',
         });
 
+        // 箭頭 button 隱藏
         var dualListContainer = $("select[name='sales_rep']").bootstrapDualListbox('getContainer');
         dualListContainer.find('.btn-group').css('display', 'none');
 
-        // alert(dualListbox.val());
 
-        // sales_rep_helper1 名稱為套件自行命名的規則: 主select的name加上suffix「_helper1」
+        function showSalesReps() {
+            let sales_reps = [];
+            $("select[name='sales_rep'] option:selected").each(function() {
+                let $this = $(this);
+                if ($this.length) {
+                    sales_reps.push($this.text());
+                }
+            });
+
+            $('._p-sales-reps').html(sales_reps.join('、'));
+            $("input[name='sales_reps']").val(dualListbox.val().join('|'))
+        }
+
+        // sales_rep_helper1 名稱為 dualListbox 套件自行命名的規則: 主 select 的 name 加上suffix「_helper1」
         $("select[name='sales_rep_helper1']").change(function(e) {
-            $("select[name='sales_rep'] option:selected").each(function() {
-                var $this = $(this);
-                if ($this.length) {
-                    var selText = $this.text();
-                    alert(selText);
-                }
-            });
-        });
-        $("select[name='sales_rep_helper2']").change(function(e) {
-            $("select[name='sales_rep'] option:selected").each(function() {
-                var $this = $(this);
-                if ($this.length) {
-                    var selText = $this.text();
-                    alert(selText);
-                }
-            });
+            showSalesReps();
         });
 
+        $("select[name='sales_rep_helper2']").change(function(e) {
+            showSalesReps();
+        });
         
     });
 
