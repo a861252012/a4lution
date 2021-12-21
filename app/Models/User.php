@@ -38,6 +38,11 @@ class User extends Authenticatable
     ## Relationships ##
     ###################
 
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'role_assignment');
+    }
+
     public function roleAssignment(): HasOne
     {
         return $this->hasOne('App\Models\RoleAssignment', 'user_id', 'id');
