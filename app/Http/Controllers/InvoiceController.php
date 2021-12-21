@@ -2,34 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\Invoice\CreateZipToS3;
-use App\Jobs\Invoice\ExportInvoiceExcel;
-use App\Jobs\Invoice\ExportInvoicePDFs;
+use Carbon\Carbon;
+use App\Models\Role;
+use App\Models\Invoice;
+use App\Models\Customer;
+use Illuminate\Bus\Batch;
+use App\Models\OrderProduct;
+use Illuminate\Http\Request;
+use App\Constants\Commission;
+use App\Support\ERPRequester;
+use App\Models\RoleAssignment;
 use App\Jobs\Invoice\SetSaveDir;
 use App\Models\BillingStatement;
-use App\Models\CommissionSetting;
-use App\Models\Customer;
 use App\Models\CustomerRelation;
+use App\Services\InvoiceService;
+use App\Models\CommissionSetting;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use App\Jobs\Invoice\CreateZipToS3;
 use App\Models\FirstMileShipmentFee;
-use App\Models\Invoice;
-use App\Models\OrderProduct;
-use App\Models\Role;
-use App\Models\RoleAssignment;
+use Illuminate\Support\Facades\Auth;
+use App\Jobs\Invoice\ExportInvoicePDFs;
+use App\Repositories\InvoiceRepository;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Storage;
+use App\Jobs\Invoice\ExportInvoiceExcel;
+use App\Repositories\OrderProductRepository;
 use App\Repositories\AmazonReportListRepository;
 use App\Repositories\BillingStatementRepository;
 use App\Repositories\FirstMileShipmentFeeRepository;
-use App\Repositories\InvoiceRepository;
-use App\Repositories\OrderProductRepository;
-use App\Services\InvoiceService;
-use App\Support\ERPRequester;
-use Carbon\Carbon;
-use Illuminate\Bus\Batch;
-use Illuminate\Database\QueryException;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class InvoiceController extends Controller
 {
@@ -131,7 +132,7 @@ class InvoiceController extends Controller
 
         $settings = $commissionSetting->where('client_code', $clientCode)->first();
 
-        if ($settings->is_sku_level_commission === 'T') {
+        if ($settings->calculation_type === Commission::CALCULATION_TYPE_SKU) {
             //check unmatched record
             $haveUnmatchedRecord = $orderProductRepository->checkUnmatchedRecord($clientCode, $reportDate);
             if (!empty($haveUnmatchedRecord)) {
@@ -167,7 +168,7 @@ class InvoiceController extends Controller
         }
 
         //check if commission rate type is tiered
-        if ($settings->tier === 'T') {
+        if ($settings->calculation_type === Commission::CALCULATION_TYPE_TIER) {
             return $this->getTieredInfo($clientCode, $totalSalesAmount);
         }
         return ['type' => 'tiered', 'value' => $settings->basic_rate, 'status' => 'success'];
