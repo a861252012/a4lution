@@ -68,6 +68,10 @@ Route::group(['middleware' => 'auth'], function () {
         Route::put('/orderDetail/{id}', 'ErpOrdersController@editOrderDetail');
         Route::post('/checkEditQualification', 'ErpOrdersController@checkEditQualification');
         Route::post('/checkRate', 'ErpOrdersController@checkRate');
+        Route::get('/bulkUpdate/index', 'ErpOrdersController@bulkUpdateView')->name('bulkUpdate.view');
+        Route::post('/bulkUpdate', 'ErpOrdersController@bulkUpdate');
+        Route::post('/ajax/bulkUpdate', 'ErpOrdersController@ajaxValidateFileHeadingRow');
+        Route::get('/exportSample', 'ErpOrdersController@exportSample')->name('orders.sample.download');
     });
 
     Route::prefix('invoice')->group(function () {
@@ -98,6 +102,13 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/', 'AdminController@approvalAdminView')->name('admin.adminView');
         Route::put('/batch/{date}', 'AdminController@batchApprove');
         Route::put('/revoke/{date}', 'AdminController@revokeApprove');
+    });
+
+    Route::prefix('management')->group(function () {
+        Route::get('/exchangeRate', 'ExchangeRateController@index')->name('exchangeRate.view');
+        Route::post('/exchangeRate/create', 'ExchangeRateController@ajaxCreate');
+        Route::get('/exchangeRate/{date}', 'ExchangeRateController@ajaxShow');
+        Route::get('/exchangeRate/{currency}/{startDate}/{endDate}', 'ExchangeRateController@ajaxGetExchangeRate');
     });
 
     Route::get('/customers', 'CustomerController@index')->name('customer.index');

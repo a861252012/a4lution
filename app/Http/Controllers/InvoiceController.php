@@ -83,8 +83,7 @@ class InvoiceController extends Controller
         string $shipDate,
         float  $tieredParam,
         array  $commissionRate
-    )
-    {
+    ) {
         switch ($commissionRate['type']) {
             case 'sku':
                 $orderProductRepository = new OrderProductRepository();

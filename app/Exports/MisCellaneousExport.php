@@ -5,14 +5,11 @@ namespace App\Exports;
 use App\Models\AmazonDateRangeReport;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Excel;
 use Throwable;
 
 class MisCellaneousExport implements WithTitle, FromQuery, WithHeadings, withMapping, WithStrictNullComparison
@@ -25,8 +22,7 @@ class MisCellaneousExport implements WithTitle, FromQuery, WithHeadings, withMap
         string $reportDate,
         string $clientCode,
         int    $insertInvoiceID
-    )
-    {
+    ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
@@ -84,16 +80,15 @@ class MisCellaneousExport implements WithTitle, FromQuery, WithHeadings, withMap
                 "amazon_date_range_report.other",
                 "amazon_date_range_report.amazon_total",
                 DB::raw("amazon_date_range_report.amazon_total AS total_amount"),
-                DB::raw("(amazon_date_range_report.amazon_total * r.exchange_rate ) AS total_amount_HKD"),
-                "r.exchange_rate",
+                DB::raw("(amazon_date_range_report.amazon_total * exchange_rates.exchange_rate ) AS total_amount_HKD"),
+                "exchange_rates.exchange_rate",
             )
-            ->leftJoin('exchange_rates as r', function ($join) {
-                $join->on('amazon_date_range_report.currency', '=', 'r.base_currency');
-                $join->on('amazon_date_range_report.report_date', '=', 'r.quoted_date');
+            ->leftJoin('exchange_rates', function ($join) {
+                $join->on('amazon_date_range_report.currency', '=', 'exchange_rates.base_currency');
+                $join->on('amazon_date_range_report.report_date', '=', 'exchange_rates.quoted_date');
+                $join->where('exchange_rates.active', 1);
             })
             ->where('amazon_date_range_report.active', 1)
-//            ->where('amazon_date_range_report.supplier', 'S53A')
-//            ->where('amazon_date_range_report.report_date', '2021-07-01')
             ->where('amazon_date_range_report.supplier', $this->clientCode)
             ->where('amazon_date_range_report.report_date', $this->reportDate)
             ->whereIn('amazon_date_range_report.type', ['FBA Customer Return Fee', 'Adjustment', 'other']);

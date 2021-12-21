@@ -3,16 +3,17 @@
 namespace App\Repositories;
 
 use App\Models\Order;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use phpDocumentor\Reflection\Types\Boolean;
 
-class OrderRepository
+class OrderRepository extends BaseRepository
 {
     protected $orders;
 
     public function __construct()
     {
+        parent::__construct(new Order);
     }
 
     public function insertData(array $data)
@@ -48,6 +49,7 @@ FROM
         LEFT JOIN
     exchange_rates r ON d.currency_code_org = r.base_currency
     AND DATE_FORMAT(o.ship_time, '%Y%m') = DATE_FORMAT(r.quoted_date, '%Y%m')
+    AND r.active = 1
 WHERE
     DATE_FORMAT(o.ship_time, '%Y%m') = {$reportDate}
     AND p.supplier = '{$clientCode}'";
@@ -71,6 +73,7 @@ FROM
         LEFT JOIN
     exchange_rates r ON a.currency = r.base_currency
         AND DATE_FORMAT(a.create_date, '%Y%M') = DATE_FORMAT(r.quoted_date, '%Y%M')
+        AND r.active = 1
 WHERE
     a.pc_name = '{$clientCode}'
         AND DATE_FORMAT(a.create_date, '%Y%m') = {$reportDate}
@@ -99,6 +102,7 @@ FROM
         LEFT JOIN
     exchange_rates r ON d.currency_code_org = r.base_currency
         AND DATE_FORMAT(o.ship_time, '%Y%m') = DATE_FORMAT(r.quoted_date, '%Y%m')
+        AND r.active = 1
 WHERE
     DATE_FORMAT(o.ship_time, '%Y%m') = {$reportDate}
         AND p.supplier = '{$clientCode}'
@@ -121,6 +125,7 @@ FROM
         LEFT JOIN
     exchange_rates r ON d.currency = r.base_currency
         AND DATE_FORMAT(d.report_date, '%Y%M') = DATE_FORMAT(r.quoted_date, '%Y%M')
+        AND r.active = 1
 WHERE
     d.`type` = 'Refund'
         AND d.fulfillment = 'Amazon'
@@ -142,6 +147,7 @@ FROM
         LEFT JOIN
     exchange_rates r ON p.report_date = r.quoted_date
         AND p.currency = r.base_currency
+        AND r.active = 1
 WHERE
     p.active = 1 AND p.client_code = '{$clientCode}'
         AND p.report_date = '{$reportDate}'
@@ -165,6 +171,7 @@ FROM
         monthly_storage_fees m
     LEFT JOIN exchange_rates r ON m.report_date = r.quoted_date
         AND m.currency = r.base_currency
+        AND r.active = 1
     WHERE
         m.supplier = '{$clientCode}'
             AND m.report_date = '{$reportDate}'
@@ -178,6 +185,7 @@ FROM
         long_term_storage_fees t
     LEFT JOIN exchange_rates r ON t.report_date = r.quoted_date
         AND t.currency = r.base_currency
+        AND r.active = 1
     WHERE
         t.supplier = '{$clientCode}'
             AND t.report_date = '{$reportDate}'
@@ -224,11 +232,64 @@ FROM
         LEFT JOIN
     exchange_rates r ON d.currency_code_org = r.base_currency
         AND DATE_FORMAT(o.ship_time, '%Y%m') = DATE_FORMAT(r.quoted_date, '%Y%m')
+        AND r.active = 1
 WHERE
     DATE_FORMAT(o.ship_time, '%Y%m') = '{$reportDate}'
         AND p.supplier = '{$clientCode}'
 GROUP BY p.supplier";
 
         return DB::select($sql);
+    }
+
+    public function getOrderDetail(array $request)
+    {
+        return $this->model->select(
+            'orders.sm_code',
+            'orders.seller_id',
+            'orders.tracking_number',
+            'orders.add_time',
+            'orders.order_paydate',
+            'orders.ship_time',
+            'orders.order_code',
+            DB::raw("CONCAT(orders.warehouse_code,'[',orders.warehouse_name,']') as warehouse"),
+            'order_sku_cost_details.product_title',
+            'order_sku_cost_details.op_platform_sales_sku',
+            'order_sku_cost_details.asin_or_item',
+            'order_sku_cost_details.quantity',
+            'order_sku_cost_details.currency_code_org',
+            'order_products.id as product_id',
+            'order_products.weight',
+            'order_products.promotion_discount_rate',
+            'order_products.promotion_amount',
+            'order_products.purchase_shipping_fee',
+            'order_products.product_cost',
+            'order_products.first_mile_shipping_fee',
+            'order_products.first_mile_tariff',
+            'order_products.last_mile_shipping_fee',
+            'order_products.paypal_fee',
+            'order_products.transaction_fee',
+            'order_products.fba_fee',
+            'order_products.promotion_amount',
+            'order_products.promotion_discount_rate',
+            'order_products.other_transaction',
+        )
+            ->join('order_sku_cost_details', 'order_sku_cost_details.reference_no', '=', 'orders.order_code')
+            ->join('order_products', 'order_products.order_code', '=', 'orders.order_code')
+            ->when($request['acc_nick_name'], fn($q) => $q->where('orders.seller_id', $request['acc_nick_name']))
+            ->when($request['erp_order_id'], fn($q) => $q->where('orders.reference_no', $request['erp_order_id']))
+            ->when($request['package_id'], fn($q) => $q->where('orders.order_code', $request['package_id']))
+            ->when($request['sku'], fn($q) => $q->where('order_products.sku', $request['sku']))
+            ->when($request['shipped_date'], function ($q, $reportDate) {
+                return $q->whereBetween(
+                    'orders.ship_time',
+                    [
+                        Carbon::parse($reportDate)->startOfDay()->toDateTimeString(),
+                        Carbon::parse($reportDate)->endOfDay()->toDateTimeString()
+                    ]
+                );
+            })
+            ->where('order_products.active', 1)
+            ->first()
+            ->toArray();
     }
 }

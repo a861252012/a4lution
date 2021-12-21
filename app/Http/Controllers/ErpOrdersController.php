@@ -2,38 +2,45 @@
 
 namespace App\Http\Controllers;
 
-use DateTime;
-use Carbon\Carbon;
-use App\Models\Order;
+use App\Exports\ErpOrderSampleExport;
+use App\Http\Requests\ErpOrder\BulkUpdateRequest;
+use App\Imports\BulkUpdateImport;
+use App\Models\BillingStatement;
 use App\Models\ExchangeRate;
+use App\Models\Order;
+use App\Models\OrderBulkUpdate;
 use App\Models\OrderProduct;
-use Illuminate\Http\Request;
 use App\Models\RmaRefundList;
 use App\Models\SystemChangeLog;
-use App\Models\BillingStatement;
+use App\Repositories\OrderRepository;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\HeadingRowImport;
 
 class ErpOrdersController extends Controller
 {
-    private $rmaRefundList;
-    private $order;
-    private $exchangeRate;
-    private $systemChangeLog;
-    private $billingStatement;
-    private $orderProduct;
+    private const FILE_EXPECTED_HEADER = 'platform';
+    private RmaRefundList $rmaRefundList;
+    private Order $order;
+    private ExchangeRate $exchangeRate;
+    private SystemChangeLog $systemChangeLog;
+    private BillingStatement $billingStatement;
+    private OrderProduct $orderProduct;
 
     public function __construct(
-        RmaRefundList     $rmaRefundList,
-        Order             $order,
-        ExchangeRate      $exchangeRate,
-        SystemChangeLog   $systemChangeLog,
-        BillingStatement  $billingStatement,
-        OrderProduct      $orderProduct
-    )
-    {
+        RmaRefundList    $rmaRefundList,
+        Order            $order,
+        ExchangeRate     $exchangeRate,
+        SystemChangeLog  $systemChangeLog,
+        BillingStatement $billingStatement,
+        OrderProduct     $orderProduct
+    ) {
         $this->rmaRefundList = $rmaRefundList;
         $this->order = $order;
         $this->exchangeRate = $exchangeRate;
@@ -44,186 +51,132 @@ class ErpOrdersController extends Controller
 
     public function refundSearchView(Request $request)
     {
-        $data['shipped_date'] = $request->input('shipped_date') ?? null;
-        $data['erp_order_ID'] = $request->input('erp_order_ID') ?? null;
-        $data['sku'] = $request->input('sku') ?? null;
-        $data['warehouse_order_id'] = $request->input('warehouse_order_id') ?? null;
-        $data['supplier'] = $request->input('supplier') ?? null;
+        $data['lists'] = [];
 
-        $query = $this->rmaRefundList->select(
-            'create_date',
-            'warehouse_ref_no AS warehouse_order_id',
-            'ref_no AS refund_order_id',
-            'refrence_no_platform AS erp_order_id',
-            'warehouse_ship_date AS shipped_date',
-            'product_sku AS sku',
-            'pc_name AS supplier',
-            'amount_refund AS refund_price',
-            'amount_paid AS transaction_amount',
-            'amount_order AS sales_vloume'
-        );
-
-        if ($data['shipped_date']) {
-            $shippedDateFrom = date('Y-m-d 00:00:00', strtotime($data['shipped_date']));
-
-            $shippedDateTo = date('Y-m-d 23:59:59', strtotime($data['shipped_date']));
-
-            $query->whereBetween('warehouse_ship_date', [$shippedDateFrom, $shippedDateTo]);
+        if (count($request->all())) {
+            $data['lists'] = $this->rmaRefundList->select(
+                'create_date',
+                'warehouse_ref_no AS warehouse_order_id',
+                'ref_no AS refund_order_id',
+                'refrence_no_platform AS erp_order_id',
+                'warehouse_ship_date AS shipped_date',
+                'product_sku AS sku',
+                'pc_name AS supplier',
+                'amount_refund AS refund_price',
+                'amount_paid AS transaction_amount',
+                'amount_order AS sales_vloume'
+            )
+                ->when(
+                    $request->shipped_date_from && $request->shipped_date_to,
+                    fn ($q) => $q->whereBetween(
+                        'warehouse_ship_date',
+                        [
+                            Carbon::parse($request->shipped_date_from)->startOfDay()->toDateTimeString(),
+                            Carbon::parse($request->shipped_date_to)->endOfDay()->toDateTimeString(),
+                        ]
+                    )
+                )
+                ->when($request->erp_order_ID, fn ($q) => $q->where('refrence_no_platform', $request->erp_order_ID))
+                ->when($request->sku, fn ($q) => $q->where('product_sku', $request->sku))
+                ->when(
+                    $request->warehouse_order_id,
+                    fn ($q) => $q->where(
+                        'warehouse_ref_no',
+                        $request->warehouse_order_id
+                    )
+                )
+                ->when($request->supplier, fn ($q) => $q->where('pc_name', $request->supplier))
+                ->paginate(100)
+                ->appends($request->query());
         }
-
-        if ($data['erp_order_ID']) {
-            $query->where('refrence_no_platform', '=', $data['erp_order_ID']);
-        }
-
-        if ($data['sku']) {
-            $query->where('product_sku', '=', $data['sku']);
-        }
-
-        if ($data['warehouse_order_id']) {
-            $query->where('warehouse_ref_no', '=', $data['warehouse_order_id']);
-        }
-
-        if ($data['supplier']) {
-            $query->where('pc_name', '=', $data['supplier']);
-        }
-
-        $data['lists'] = $query->paginate(100)
-            ->appends($request->query());
 
         return view('erpOrders.refundSearch', ['data' => $data]);
     }
 
     public function ordersSearchView(Request $request)
     {
+        $data['lists'] = [];
         $data['erp_order_id'] = $request->erp_order_id;
         $data['shipped_date_from'] = $request->shipped_date_from;
         $data['shipped_date_to'] = $request->shipped_date_to;
         $data['sku'] = $request->sku;
         $data['supplier'] = $request->supplier;
 
-        $data['lists'] = $this->order::from('orders as o')
-            ->join('order_products as p', function ($join) {
-                $join->on('p.order_code', '=', 'o.order_code')
-                    ->where('p.active', '=', 1);
+        if (count($request->all())) {
+            $data['lists'] = $this->order->join('order_products', function ($join) {
+                $join->on('order_products.order_code', '=', 'orders.order_code')
+                    ->where('order_products.active', 1);
             })
-            ->join('order_sku_cost_details as d', function ($join) {
-                $join->on('p.order_code', '=', 'd.reference_no');
-                $join->on('p.sku', '=', 'd.product_barcode');
-            })
-            ->select(
-                'd.currency_code_org',
-                'o.platform',
-                'o.seller_id AS acc_nick_name',
-                'o.platform_user_name AS acc_name',
-                'o.order_type',
-                'o.reference_no AS erp_order_id',
-                'p.sku',
-                'p.supplier',
-                'p.id as product_id',
-                'o.order_code AS package_id',
-                'd.site_id',
-                'p.sales_amount AS order_price',
-                DB::raw("date_format(o.ship_time,'%Y-%m-%d') as 'shipped_date'"),
-                DB::raw("CONCAT(o.warehouse_code,'[',o.warehouse_name,']') AS 'warehouse'"),
-            )
-            ->when($request->erp_order_id, fn ($q) => $q->where('o.reference_no', $request->erp_order_id))
-            ->when($request->sku, fn ($q) => $q->where('p.sku', $request->sku))
-            ->when($request->supplier, fn ($q) => $q->where('p.supplier', $request->supplier))
-            ->when(
-                $request->shipped_date_from && $request->shipped_date_to, 
-                fn ($q) => $q->whereBetween(
-                    'o.ship_time', [
-                        Carbon::parse($request->shipped_date_from)->startOfDay()->toDateTimeString(),
-                        Carbon::parse($request->shipped_date_to)->endOfDay()->toDateTimeString(),
-                    ]))
-            ->paginate(100)
-            ->appends($request->query());
+                ->join('order_sku_cost_details', function ($join) {
+                    $join->on('order_products.order_code', '=', 'order_sku_cost_details.reference_no');
+                    $join->on('order_products.sku', '=', 'order_sku_cost_details.product_barcode');
+                })
+                ->select(
+                    'orders.platform',
+                    'orders.seller_id AS acc_nick_name',
+                    'orders.platform_user_name AS acc_name',
+                    'orders.order_type',
+                    'orders.reference_no AS erp_order_id',
+                    'orders.order_code AS package_id',
+                    DB::raw("date_format(orders.ship_time,'%Y-%m-%d') as 'shipped_date'"),
+                    DB::raw("CONCAT(orders.warehouse_code,'[',orders.warehouse_name,']') AS 'warehouse'"),
+                    'order_products.sku',
+                    'order_products.supplier',
+                    'order_products.id as product_id',
+                    'order_products.sales_amount AS order_price',
+                    'order_products.updated_at',
+                    'order_sku_cost_details.site_id',
+                    'order_sku_cost_details.currency_code_org'
+                )
+                ->when($request->erp_order_id, fn ($q) => $q->where('orders.reference_no', $request->erp_order_id))
+                ->when($request->sku, fn ($q) => $q->where('order_products.sku', $request->sku))
+                ->when($request->supplier, fn ($q) => $q->where('order_products.supplier', $request->supplier))
+                ->when(
+                    $request->shipped_date_from && $request->shipped_date_to,
+                    fn ($q) => $q->whereBetween(
+                        'orders.ship_time',
+                        [
+                            Carbon::parse($request->shipped_date_from)->startOfDay()->toDateTimeString(),
+                            Carbon::parse($request->shipped_date_to)->endOfDay()->toDateTimeString(),
+                        ]
+                    )
+                )
+                ->paginate(100)
+                ->appends($request->query());
+        }
 
         return view('erpOrders.ordersSearch', ['data' => $data]);
     }
 
     public function editOrders(Request $request)
     {
-        $data['platform'] = $request->input('platform') ?? null;
-        $data['acc_nick_name'] = $request->input('acc_nick_name') ?? null;
-        $data['acc_name'] = $request->input('acc_name') ?? null;
-        $data['site_id'] = $request->input('site_id') ?? null;
-        $data['shipped_date'] = $request->input('shipped_date') ?? null;
-        $data['package_id'] = $request->input('package_id') ?? null;
-        $data['erp_order_id'] = $request->input('erp_order_id') ?? null;
-        $data['sku'] = $request->input('sku') ?? null;
-        $data['order_price'] = $request->input('order_price') ?? null;
-        $data['supplier'] = $request->input('supplier') ?? null;
-        $data['warehouse'] = $request->input('warehouse') ?? null;
+        $data['lists'] = [];
+        $data['platform'] = $request->platform ?? null;
+        $data['acc_nick_name'] = $request->acc_nick_name ?? null;
+        $data['acc_name'] = $request->acc_name ?? null;
+        $data['site_id'] = $request->site_id ?? null;
+        $data['shipped_date'] = $request->shipped_date ?? null;
+        $data['package_id'] = $request->package_id ?? null;
+        $data['erp_order_id'] = $request->erp_order_id ?? null;
+        $data['sku'] = $request->sku ?? null;
+        $data['order_price'] = $request->order_price ?? null;
+        $data['supplier'] = $request->supplier ?? null;
+        $data['warehouse'] = $request->warehouse ?? null;
 
-        $query = $this->order::from('orders as o')
-            ->join('order_sku_cost_details as d', 'd.reference_no', '=', 'o.order_code')
-            ->join('order_products as p', 'p.order_code', '=', 'o.order_code')
-            ->select(
-                'o.sm_code',
-                'o.seller_id',
-                'o.tracking_number',
-                'o.add_time',
-                'o.order_paydate',
-                'o.ship_time',
-                'd.product_title',
-                'd.op_platform_sales_sku',
-                'd.asin_or_item',
-                'd.quantity',
-                'p.id as product_id',
-                'p.weight',
-                'p.promotion_discount_rate',
-                'p.promotion_amount',
-                'p.purchase_shipping_fee',
-                'p.product_cost',
-                'p.first_mile_shipping_fee',
-                'p.first_mile_tariff',
-                'p.last_mile_shipping_fee',
-                'p.paypal_fee',
-                'p.transaction_fee',
-                'p.fba_fee',
-                'p.promotion_amount',
-                'p.promotion_discount_rate',
-                'p.other_transaction',
-                'd.currency_code_org'
-            )
-            ->where('p.active', 1);
-
-        if ($data['acc_nick_name']) {
-            $query->where('o.seller_id', $data['acc_nick_name']);
+        if (count(request()->all())) {
+            $data['lists'] = app(OrderRepository::class)->getOrderDetail($data);
         }
-
-        if ($data['erp_order_id']) {
-            $query->where('o.reference_no', $data['erp_order_id']);
-        }
-
-        if ($data['package_id']) {
-            $query->where('o.order_code', $data['package_id']);
-        }
-
-        if ($data['sku']) {
-            $query->where('p.sku', $data['sku']);
-        }
-
-        if ($data['shipped_date']) {
-            $shippedDateFrom = date('Y-m-d 00:00:00', strtotime($data['shipped_date']));
-            $shippedDateTo = date('Y-m-d 23:59:59', strtotime($data['shipped_date']));
-
-            $query->whereBetween('o.ship_time', [$shippedDateFrom, $shippedDateTo]);
-        }
-
-        $data['lists'] = $query->first()->toArray();
 
         $data['sys_logs'] = $this->getChangeLog($data['lists']['product_id']);
 
         //取得匯率
-        $formattedQuotedDate = DB::raw("date_format(quoted_date,'%Y%m')");
-
-        $formattedShippedDate = date("Ym", strtotime($data['shipped_date']));
-
         $data['exchange_rate'] = $this->exchangeRate->select('base_currency', 'exchange_rate')
+            ->active()
             ->wherein('base_currency', [$data['lists']['currency_code_org'], 'RMB'])
-            ->where($formattedQuotedDate, $formattedShippedDate)
+            ->where(
+                DB::raw("date_format(quoted_date,'%Y%m')"),
+                Carbon::parse($data['shipped_date'])->format('Ym')
+            )
             ->pluck('exchange_rate', 'base_currency')
             ->toArray();
 
@@ -268,30 +221,38 @@ class ErpOrdersController extends Controller
             $data['exchange_rate'][$data['lists']['currency_code_org']],
             $data['lists']['other_transaction']
         ) : 0;
-//        $data['lists']['marketplace_tax_hkd'] = $data['lists']['marketplace_tax'] ? $this->getHkdRate(
-//            $data['exchange_rate'][$data['lists']['currency_code_org']],
-//            $data['lists']['marketplace_tax']
-//        ) : 0;
-//        $data['lists']['cost_of_point_hkd'] = $data['lists']['cost_of_point'] ? $this->getHkdRate(
-//            $data['exchange_rate'][$data['lists']['currency_code_org']],
-//            $data['lists']['cost_of_point']
-//        ) : 0;
-//        $data['lists']['exclusives_referral_fee_hkd'] = $data['lists']['exclusives_referral_fee'] ? $this->getHkdRate(
-//            $data['exchange_rate'][$data['lists']['currency_code_org']],
-//            $data['lists']['exclusives_referral_fee']
-//        ) : 0;
+
         $data['lists']['gross_profit'] = $this->getGrossProfit($data['lists']);
 
         return view('erpOrders/ordersEdit', $data);
     }
 
     //取得港幣匯率(取至小數點第二位)
+
+    public function getChangeLog($productID)
+    {
+        return $this->systemChangeLog->from('system_changelogs as s')
+            ->select(
+                's.field_name',
+                's.original_value',
+                's.new_value',
+                's.created_at',
+                'u.user_name'
+            )
+            ->join('users as u', 's.created_by', '=', 'u.id')//TODO
+            ->where('s.reference_id', $productID)
+            ->where('s.created_by', Auth::id())
+            ->orderBy('s.created_at', 'desc')
+            ->get();
+    }
+
+    //取得港幣匯率(取至小數點第二位)
+
     public function getHkdRate(float $rate, float $num): float
     {
         return substr(sprintf(" % .3f", $num * $rate), 0, -1);
     }
 
-    //取得港幣匯率(取至小數點第二位)
     public function getGrossProfit(array $lists): float
     {
         $keys = [
@@ -318,24 +279,7 @@ class ErpOrdersController extends Controller
         return $sum;
     }
 
-    public function getChangeLog($productID)
-    {
-        return $this->systemChangeLog->from('system_changelogs as s')
-            ->select(
-                's.field_name',
-                's.original_value',
-                's.new_value',
-                's.created_at',
-                'u.user_name'
-            )
-            ->join('users as u', 's.created_by', '=', 'u.id')//TODO
-            ->where('s.reference_id', $productID)
-            ->where('s.created_by', Auth::id())
-            ->orderBy('s.created_at', 'desc')
-            ->get();
-    }
-
-    public function editOrderDetail(): \Illuminate\Http\JsonResponse
+    public function editOrderDetail(): JsonResponse
     {
         $productID = request()->route('id');
         $inputs = request()->except(['product_id']);
@@ -367,7 +311,7 @@ class ErpOrdersController extends Controller
             }
 
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
             Log::error($e);
             return response()->json(['msg' => 'failed!', 'status' => 'failed']);
@@ -375,7 +319,7 @@ class ErpOrdersController extends Controller
         return response()->json(['msg' => 'UPDATED!', 'status' => 'success', 'icon' => 'success']);
     }
 
-    public function checkEditQualification(): \Illuminate\Http\JsonResponse
+    public function checkEditQualification(): JsonResponse
     {
         $supplier = request()->input('supplier');
 
@@ -397,7 +341,7 @@ class ErpOrdersController extends Controller
         return response()->json(['msg' => 'UPDATED!', 'status' => 'success', 'icon' => 'success']);
     }
 
-    public function checkRate(): \Illuminate\Http\JsonResponse
+    public function checkRate(): JsonResponse
     {
         $shippedDate = request()->input('shipped_date') ?? null;
         $currency = request()->input('currency') ?? null;
@@ -409,18 +353,86 @@ class ErpOrdersController extends Controller
         }
 
         //取得匯率
-        $formattedQuotedDate = DB::raw("date_format(quoted_date,'%Y%m')");
-
-        $formattedShippedDate = date("Ym", strtotime($shippedDate));
-
         $exchangeRate = $this->exchangeRate->select('base_currency', 'exchange_rate')
+            ->active()
             ->wherein('base_currency', [$currency, 'RMB'])
-            ->where($formattedQuotedDate, $formattedShippedDate)
+            ->where(
+                DB::raw("date_format(quoted_date,'%Y%m')"),
+                Carbon::parse($shippedDate)->format('Ym')
+            )
             ->count();
 
         if ($exchangeRate !== 2) {
             return response()->json(['msg' => $msg, 'status' => 'failed']);
         }
         return response()->json(['status' => 'success']);
+    }
+
+    public function bulkUpdateView(Request $request)
+    {
+        $data['lists'] = [];
+        if (count($request->all())) {
+            $data['lists'] = OrderBulkUpdate::from('order_bulk_updates as o')
+                ->join('users as u', 'u.id', '=', 'o.created_by')
+                ->select('u.user_name', 'o.*')
+                ->when($request->order_id, fn ($q) => $q->where('o.platform_order_id', $request->order_id))
+                ->when($request->status_type, fn ($q) => $q->where('o.execution_status', $request->status_type))
+                ->when(
+                    $request->upload_date,
+                    fn ($q) => $q->whereBetween(
+                        'o.created_at',
+                        [
+                            Carbon::parse($request->upload_date)->startOfDay()->toDateTimeString(),
+                            Carbon::parse($request->upload_date)->endOfDay()->toDateTimeString(),
+                        ]
+                    )
+                )
+                ->orderBy('o.id', 'desc')
+                ->paginate(50);
+        }
+
+        return view('erpOrders.bulkUpdate', $data);
+    }
+
+    public function bulkUpdate(BulkUpdateRequest $request)
+    {
+        Excel::queueImport(
+            new BulkUpdateImport(
+                Auth::id(),
+                now()->format('YmdHisu')
+            ),
+            $request->file('file')
+        )->allOnQueue('queue_excel')->delay(1);
+    }
+
+    public function exportSample()
+    {
+        return (new ErpOrderSampleExport)->download('bulkUpdateSampleFile.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
+
+    public function ajaxValidateFileHeadingRow(BulkUpdateRequest $request): JsonResponse
+    {
+        //validate excel title
+        $headings = (new HeadingRowImport(2))->toCollection($request->file('file')) ?
+            (new HeadingRowImport(2))->toCollection($request->file('file'))->collapse()->collapse() : null;
+
+        if (!$headings->isEmpty()) {
+            if ($headings[0] === self::FILE_EXPECTED_HEADER) {
+                return response()->json(
+                    [
+                        'status' => 200,
+                        'msg' => "OK"
+                    ]
+                );
+            }
+        }
+
+        return response()->json(
+            [
+                'status' => 200,
+                'msg' => "The second row in the table is the 'EN' field name of the table.
+                            Starting from the third row is the data in the table ."
+            ]
+        );
     }
 }
