@@ -21,10 +21,8 @@ class AjaxUpdateRequest extends BaseFormRequest
             'sales_region' => 'required',
             'contract_date' => 'required',
             'active' => 'nullable',
-            'sales_reps' => 'nullable',
-            'calculate_type' => 'nullable',
-            'promotion_threshold' => 'nullable',
-            'tier_promotion' => 'nullable',
+            'staff_members' => 'nullable',
+            'calculation_type' => 'nullable',
             'basic_rate' => 'nullable',
             'tier_1_threshold' => 'nullable',
             'tier_1_amount' => 'nullable',
@@ -40,6 +38,8 @@ class AjaxUpdateRequest extends BaseFormRequest
             'tier_4_rate' => 'nullable',
             'tier_top_amount' => 'nullable',
             'tier_top_rate' => 'nullable',
+            'percentage_of_promotion' => 'nullable',
+            'tier_promotion' => 'nullable',
         ];
     }
 }

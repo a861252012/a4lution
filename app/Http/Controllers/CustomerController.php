@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Customer;
 use App\Http\Requests\Customer\IndexRequest;
 use App\Http\Requests\Customer\AjaxUpdateRequest;
+use App\Models\CommissionSetting;
 
 class CustomerController extends Controller
 {
@@ -24,7 +25,7 @@ class CustomerController extends Controller
         }
 
         $customers = Customer::query()
-            ->with('salesReps')
+            ->with('salesReps', 'accountServices')
             ->when($request->client_code, fn($q) => $q->where('client_code', $request->client_code))
             ->when($request->active, fn($q) => $q->where('active', $request->active))
             ->when($request->sales_region, fn($q) => $q->where('sales_region', $request->sales_region))
@@ -37,25 +38,29 @@ class CustomerController extends Controller
     public function ajaxEdit(string $client_code)
     {
         $customer = Customer::query()
-            ->with('salesReps', 'commission')
+            ->with('users.roles', 'commission')
             ->where('client_code', $client_code)
             ->first();
 
-        // dd($customer);
+        $callback = function($user) {
+            return [
+                'id' => $user->id,
+                'user_name' => $user->user_name,
+                'role_id' => optional($user->roles->first())->id,
+                'role_desc' => optional($user->roles->first())->role_desc,
+            ];
+        };
 
-        $selectedSalesReps = $customer->salesReps->pluck('user_name', 'id')->toArray();
-        $unSelectedSalesReps = array_diff_key(
-            User::all()->pluck('user_name', 'id')->toArray(), 
-            $selectedSalesReps
-        );
+        $selectedUsers = $customer->users->map($callback);
+        $unSelectedUsers = User::with('roles')->get()
+            ->diff($customer->users)
+            ->map($callback);
 
-        return view('customer.edit', compact('customer', 'selectedSalesReps', 'unSelectedSalesReps'));
+        return view('customer.edit', compact('customer', 'selectedUsers', 'unSelectedUsers'));
     }
 
     public function ajaxUpdate(AjaxUpdateRequest $request, string $client_code)
     {
-        // dd(request()->all());
-
         // 更新 customer
         $result = Customer::find($client_code)
             ->update([
@@ -79,19 +84,19 @@ class CustomerController extends Controller
 
         // 更新 customer_relations
         $customerRelationsData = [];
-        if ($request->sales_reps) {
-            foreach (explode('|', $request->sales_reps) as $user_id) {
+        if ($request->staff_members) {
+            foreach (explode('|', $request->staff_members) as $user_id) {
                 $customerRelationsData[$user_id] = [
-                    'role_id' => $customerRelationsData[$user_id] = User::find($user_id)->roles->first->id
+                    'role_id' => $customerRelationsData[$user_id] = User::find($user_id)->roles->first()->id
                 ];
             }
         }
         $customer = Customer::find($client_code);
-        $customer->salesReps()->sync($customerRelationsData);
+        $customer->users()->sync($customerRelationsData);
 
         // 更新 commission_settings
         $commissionData = collect([
-            'calculate_type' => $request->calculate_type ?? Commission::CALCULATE_TYPE_BASIC_RATE,
+            'calculation_type' => $request->calculation_type ?? Commission::CALCULATION_TYPE_BASIC_RATE,
             'basic_rate' => $request->basic_rate,
             'promotion_threshold' => $request->promotion_threshold,
             'tier_promotion' => $request->tier_promotion,
@@ -109,13 +114,14 @@ class CustomerController extends Controller
             'tier_4_rate' => $request->tier_4_rate,
             'tier_top_amount' => $request->tier_top_amount,
             'tier_top_rate' => $request->tier_top_rate,
+            'promotion_threshold' => $request->percentage_of_promotion ? (100 - $request->percentage_of_promotion)/100 : '',
+            'tier_promotion' => $request->tier_promotion ? $request->tier_promotion/100 : '',
         ])->filter()->toArray();
 
-        if ($customer->commission()->exists()) {
-            $customer->commission()->update($commissionData);
-        } else {
-            $customer->commission()->create($commissionData);
-        }
+        CommissionSetting::updateOrCreate(
+            ['client_code' => $customer->client_code, 'active' => 1],
+            $commissionData,
+        );
 
     }
 }

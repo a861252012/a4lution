@@ -87,6 +87,7 @@
                         <th>Status</th>
                         <th>Sales Region</th>
                         <th>Sales Rep</th>
+                        <th>Account Service</th>
                         <th>Action</th>
                     </tr>
                     </thead>
@@ -99,6 +100,7 @@
                                 <td>{{ $customer->active ? 'Active' : 'Inactive' }}</td>
                                 <td>{{ $customer->sales_region }}</td>
                                 <td>{{ $customer->salesReps->pluck('user_name')->implode(',') }}</td>
+                                <td>{{ $customer->accountServices->pluck('user_name')->implode(',') }}</td>
                                 <td class="py-1">
                                     <div class="dropdown">
                                         <a class="btn btn-sm btn-icon-only text-light" href="#" role="button" data-toggle="dropdown">

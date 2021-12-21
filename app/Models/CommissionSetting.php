@@ -23,4 +23,26 @@ class CommissionSetting extends Model
             $commissionSetting->updated_by = Auth::id();
         });
     }
+
+    ############
+    ## Scopes ##
+    ############
+
+    public function getPercentageOfPromotionAttribute()
+    {
+        if (!$this->promotion_threshold) {
+            return '';
+        }
+
+        return (1 - $this->promotion_threshold) * 100;
+    }
+
+    public function getTierPromotionPercentageAttribute()
+    {
+        if (!$this->tier_promotion) {
+            return '';
+        }
+
+        return $this->tier_promotion * 100;
+    }
 }

@@ -112,20 +112,21 @@ Route::group(['middleware' => 'auth'], function () {
         foreach ($commissionSettings as $commissionSetting) {
             dump($commissionSetting);
             if ($commissionSetting->is_sku_level_commission === 'T') {
-                $commissionSetting->update(['calculate_type' => 1]);
+                $commissionSetting->update(['calculation_type' => 1]);
                 dump('is_sku_level_commission');
                 continue;
             }
 
+            // 處理 Promotion
             // $maxDiscountRate = $orderProductRepository->getMaxDiscountRate($commissionSetting->client_code, $reportDate);
 
             // if ((float)$commissionSetting->promotion_threshold >= (float)$maxDiscountRate) {
-            //     $commissionSetting->update(['calculate_type' => 2]);
+            //     $commissionSetting->update(['calculation_type' => 2]);
             //     continue;
             // }
 
             if ($commissionSetting->tier === 'T') {
-                $commissionSetting->update(['calculate_type' => 3]);
+                $commissionSetting->update(['calculation_type' => 2]);
                 dump('tier');
 
                 continue;
@@ -133,7 +134,7 @@ Route::group(['middleware' => 'auth'], function () {
 
 
             dump('basic');
-            $commissionSetting->update(['calculate_type' => 4]);
+            $commissionSetting->update(['calculation_type' => 3]);
 
             // exit;
         }
