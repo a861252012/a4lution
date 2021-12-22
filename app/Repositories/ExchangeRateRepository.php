@@ -81,7 +81,6 @@ class ExchangeRateRepository extends BaseRepository
                         Carbon::parse($endDate)->endOfDay()->toDateTimeString()
                     ]
                 )
-                ->where('exchange_rates.active', 1)
                 ->where('exchange_rates.base_currency', $currency)
                 ->orderBy('exchange_rates.quoted_date', 'desc')
                 ->take(18)
