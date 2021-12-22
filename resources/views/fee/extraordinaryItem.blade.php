@@ -27,7 +27,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="client_code">Client Code</label>
                                 <input class="form-control _fz-1" name="client_code" id="client_code"
-                                       type="text" placeholder="Client Code" value="{{$clientCode ?? ''}}">
+                                    type="text" placeholder="Client Code" value="{{$clientCode ?? ''}}">
                             </div>
                         </div>
 
