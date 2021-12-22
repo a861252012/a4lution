@@ -376,9 +376,7 @@ class BillingStatementService
             $feesCollection = collect($fees)->only($keys);
         }
 
-        return $feesCollection->map(function ($val) {
-            return round($val, 2);
-        })->sum();
+        return $feesCollection->map(fn ($val) => round($val, 2))->sum();
     }
 
     public function getCommissionRate(string $clientCode, string $reportDate, float $totalSalesAmount)
@@ -435,8 +433,7 @@ class BillingStatementService
         string $shipDate,
         float  $tieredParam,
         array  $commissionRate
-    )
-    {
+    ) {
         switch ($commissionRate['type']) {
             case 'sku':
                 $orderProductRepository = new OrderProductRepository();
