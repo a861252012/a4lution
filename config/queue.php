@@ -66,14 +66,6 @@ return [
             'block_for' => null,
         ],
 
-        'queue_excel' => [
-            'driver' => 'redis',
-            'connection' => 'default',
-            'queue' => 'default',
-            'retry_after' => 90,
-            'block_for' => null,
-        ],
-
     ],
 
     /*

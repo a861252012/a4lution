@@ -19,21 +19,45 @@
         <!-- Table -->
         <div class="card">
             <!-- Card header -->
-            <div class="card-header py-2">
-                <div class="row">
-                    <div class="col-lg-9 col-md-9 col-sm-9 text-left">
-                        <div class="h2 text-muted mb-0">
-                            Currencies
-                        </div>
-                    </div>
 
-                    <div class="col-lg-3 col-md-3 col-sm-3 text-right">
-                        <a class="_fz-1 btn btn-sm btn-success" href="#inline_content" id="create_btn">
-                            <i class="ni ni-fat-add"></i>
-                            Add Currency Exchange
-                        </a>
+            <div class="card-header py-2">
+                <form method="GET" action="{{ route('exchangeRate.view') }}" role="form" class="form">
+                    <div class="row">
+                        {{-- QUOTED DATE --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <div class="form-group mb-0">
+                                <label class="form-control-label _fz-1 required" for="quoted_date">Quoted Date</label>
+                                <input class="form-control _fz-1" name="quoted_date" id="quoted_date" type="text"
+                                       placeholder="Quoted Date" value="{{ Request()->get('quoted_date') }}" required>
+                            </div>
+                        </div>
+
+                        {{-- SEARCH --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <label class="form-control-label _fz-1" for="submit_btn"></label>
+                            <div class="form-group mb-0">
+                                <button class="form-control btn btn-primary _fz-1 _btn" id="submit_btn" type="submit"
+                                        style="margin-top: 6px;">Search
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Add Currency Exchange --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <label class="form-control-label" for="create_btn"></label>
+                            <div class="form-group mb-0">
+                                <a id="create_btn" href="#inline_content">
+                                    <button class="form-control _fz-1 btn _btn btn-success" type="button"
+                                            style="margin-top: 6px;">
+                                        <i class="ni ni-fat-add"></i>
+                                        Add Currency Exchange
+                                    </button>
+                                </a>
+                            </div>
+                        </div>
+
                     </div>
-                </div>
+                </form>
             </div>
 
             <div class="table-responsive">
@@ -55,14 +79,13 @@
                             <td>{{ $item->base_currency }}</td>
                             <td>{{ $item->quote_currency }}</td>
                             <td>{{ $item->exchange_rate }}</td>
-                            <td>{{ \Carbon\Carbon::parse($item->updated_at)->setTimezone(config('services.timezone.taipei'))}}</td>
+                            <td>{{ \Carbon\Carbon::parse($item->updated_at)
+                                    ->setTimezone(config('services.timezone.taipei'))}}</td>
                             <td>
-                                <div class="col-lg-8 col-md-3 col-sm-3 text-right">
-                                    <a class="btn btn-success _fz-1 text-white historical_rate_btn btn-sm"
-                                       data-attr="{{$item->base_currency}}">
-                                        Historical Exchange Rates
-                                    </a>
-                                </div>
+                                <a class="_fz-1 historical_rate_btn" data-attr="{{$item->base_currency}}">
+                                    Historical Exchange Rates
+                                    <i class="fa fa-chevron-down"></i>
+                                </a>
                             </td>
                         </tr>
                     @empty
@@ -82,10 +105,10 @@
 
                 <div class="row">
                     <div class="col-3">
-                        <label class="form-control-label required" for="quoted_date">Quoted Date</label>
+                        <label class="form-control-label required" for="cbx_quoted_date">Quoted Date</label>
                     </div>
                     <div class="col-3">
-                        <input type="text" name="quoted_date" class="form-control form-control-sm" id="quoted_date"
+                        <input type="text" name="quoted_date" class="form-control form-control-sm" id="cbx_quoted_date"
                                required>
                     </div>
                 </div>
@@ -124,7 +147,7 @@
                 <div class="row">
                     <div class="col-4">Quote Currency</div>
                     <div class="col-4">Current Amount</div>
-                    <div class="col-4" id="historical_date">Historical Rates(2021-11-04)</div>
+                    <div class="col-4" id="historical_date"></div>
                 </div>
 
                 <div class="row">
@@ -337,20 +360,20 @@
                     </div>
 
                     <!-- PHP -->
-                    <div class="col-4  text-right">
+                    <div class="col-4 text-right">
                         <label class="form-control-label" for="PHP">PHP</label>
                     </div>
-                    <div class="col-4 ">
+                    <div class="col-4">
                         <input type="number" min="0" name="exchange_rate[PHP]" class="form-control form-control-sm"
                                id="PHP" required>
                     </div>
-                    <div class="col-4 ">
+                    <div class="col-4">
                         <input type="number" class="form-control form-control-sm" name="old_val" id="PHP_old_val"
                                disabled>
                     </div>
 
                     <!-- VND -->
-                    <div class="col-4  text-right">
+                    <div class="col-4 text-right">
                         <label class="form-control-label" for="VND">VND</label>
                     </div>
                     <div class="col-4 ">
@@ -360,6 +383,18 @@
                     <div class="col-4 ">
                         <input type="number" class="form-control form-control-sm" name="old_val" id="VND_old_val"
                                disabled>
+                    </div>
+
+                    <!-- HKD -->
+                    <div class="col-4 text-right">
+                        <label class="form-control-label" for="HKD">HKD</label>
+                    </div>
+                    <div class="col-4">
+                        <input type="number" name="exchange_rate[HKD]" class="form-control form-control-sm"
+                               id="HKD" value="1" readonly>
+                    </div>
+                    <div class="col-4">
+                        <input type="number" class="form-control form-control-sm" value="1" disabled>
                     </div>
 
                 </div>
@@ -471,7 +506,18 @@
                     closeButton: true,
                     onComplete: function () {
                         //datepicker changeDate event
-                        $('#quoted_date').datepicker('update', new Date()).on('changeDate', function (e) {
+                        $('#cbx_quoted_date').datepicker({
+                            format: 'yyyy-mm',//日期時間格式
+                            viewMode: "months",
+                            minViewMode: "months",
+                            defaultDate: new Date(),
+                            ignoreReadonly: true,  //禁止使用者輸入 啟用唯讀
+                            autoclose: true
+                        });
+
+                        $('#cbx_quoted_date').datepicker('update', new Date()).on('changeDate', function (e) {
+
+                            console.log('on change');
                             getLastUpdateExchangeRate();
                         });
 
@@ -577,11 +623,12 @@
             });
 
             $.ajax({
-                url: origin + '/management/exchangeRate/' + $('#quoted_date').val(),
+                url: origin + '/management/exchangeRate/' + $('#cbx_quoted_date').val(),
                 type: 'get',
                 success: function (res) {
                     let date = (res.data.length) ? moment(new Date(Date.parse(res.data[0].created_at)))
                         .format('YYYY-MM-DD') : '0000-00-00';
+                    console.log(date);
 
                     $("#historical_date").text('Historical Rates (' + date + ')');
 
@@ -635,4 +682,13 @@
             });
         }
     </script>
+@endpush
+
+@push('css')
+    <style>
+        a,
+        a label {
+            cursor: pointer;
+        }
+    </style>
 @endpush
