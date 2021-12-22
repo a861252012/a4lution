@@ -79,17 +79,8 @@
                             <td>{{ $item->base_currency }}</td>
                             <td>{{ $item->quote_currency }}</td>
                             <td>{{ $item->exchange_rate }}</td>
-                            <td>{{ \Carbon\Carbon::parse($item->updated_at)->setTimezone(config('services.timezone.taipei'))}}</td>
-
-{{--                            <td>--}}
-{{--                                <div class="col-lg-8 col-md-3 col-sm-3 text-right">--}}
-{{--                                    <a class="btn btn-success _fz-1 text-white historical_rate_btn btn-sm"--}}
-{{--                                       data-attr="{{$item->base_currency}}">--}}
-{{--                                        Historical Exchange Rates--}}
-{{--                                    </a>--}}
-{{--                                </div>--}}
-{{--                            </td>--}}
-
+                            <td>{{ \Carbon\Carbon::parse($item->updated_at)
+                                    ->setTimezone(config('services.timezone.taipei'))}}</td>
                             <td>
                                 <a class="_fz-1 historical_rate_btn" data-attr="{{$item->base_currency}}">
                                     Historical Exchange Rates
