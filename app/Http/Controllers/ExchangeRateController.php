@@ -20,12 +20,15 @@ class ExchangeRateController extends Controller
         $this->exchangeRateRepository = $exchangeRateRepository;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         return view(
             'exchangeRate.index',
             [
-                'lists' => $this->exchangeRateRepository->getNewestActiveRate('quoted_date')
+                'lists' => $this->exchangeRateRepository->getNewestActiveRate(
+                    'quoted_date',
+                    $request->quoted_date
+                )
             ]
         );
     }
