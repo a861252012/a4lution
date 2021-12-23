@@ -63,7 +63,9 @@ class ExchangeRateRepository extends BaseRepository
     {
         try {
             $exchangeRates = ExchangeRate::from('exchange_rates')
-                ->join('users', 'users.id', '=', 'exchange_rates.updated_by')
+                ->leftJoin('users', function ($join) {
+                    $join->on('users.id', '=', 'exchange_rates.updated_by');
+                })
                 ->select(
                     'exchange_rates.quoted_date',
                     'exchange_rates.base_currency',
@@ -82,7 +84,7 @@ class ExchangeRateRepository extends BaseRepository
                     ]
                 )
                 ->where('exchange_rates.base_currency', $currency)
-                ->orderBy('exchange_rates.quoted_date', 'desc')
+                ->orderByRaw("exchange_rates.quoted_date desc, exchange_rates.created_at desc")
                 ->get();
         } catch (\Throwable $e) {
             LaravelLoggerUtil::loggerException($e);
