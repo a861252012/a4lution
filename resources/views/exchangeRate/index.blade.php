@@ -590,7 +590,7 @@
                             return false;
                         });
 
-                        $('#search_btn').click({currency: currency}, function (e) {
+                        $('#search_btn').off('click').click({currency: currency}, function (e) {
                             let historicalStart = $('#historicalStart').val();
                             let historicalEnd = $('#historicalEnd').val();
 
@@ -601,6 +601,7 @@
                                 });
                                 return;
                             }
+                            console.log('currency:' + currency);
 
                             getHistoricalRate(historicalStart, historicalEnd, e.data.currency);
                         });
