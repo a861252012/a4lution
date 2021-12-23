@@ -88,7 +88,7 @@ class ExchangeRateController extends Controller
     {
         return response()->json(
             [
-                'data' => $this->exchangeRateRepository->getSpecificRateByDateRange(
+                'data' => $this->exchangeRateRepository->getHistoryRateByDateRange(
                     $request->currency,
                     $request->startDate,
                     $request->endDate,
