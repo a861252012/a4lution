@@ -59,7 +59,7 @@ class ExchangeRateRepository extends BaseRepository
         return $exchangeRates;
     }
 
-    public function getSpecificRateByDateRange($currency, $startDate, $endDate): ?Collection
+    public function getHistoryRateByDateRange($currency, $startDate, $endDate): ?Collection
     {
         try {
             $exchangeRates = ExchangeRate::from('exchange_rates')
@@ -83,7 +83,6 @@ class ExchangeRateRepository extends BaseRepository
                 )
                 ->where('exchange_rates.base_currency', $currency)
                 ->orderBy('exchange_rates.quoted_date', 'desc')
-                ->take(18)
                 ->get();
         } catch (\Throwable $e) {
             LaravelLoggerUtil::loggerException($e);
