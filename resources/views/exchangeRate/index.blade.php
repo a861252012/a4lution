@@ -660,6 +660,7 @@
 
                     res.data.forEach((item) => {
                         let closeTime = (item.active) ? '-' : item.updated_at;
+                        let userName = (item.user_name) ? (item.user_name) : 'system';
 
                         html += '<tr>';
                         html += '<td>' + moment(new Date(Date.parse(item.quoted_date))).format('MMMM-Y') + '</td>';
@@ -668,7 +669,7 @@
                         html += '<td>' + item.exchange_rate + '</td>';
                         html += '<td>' + moment(new Date(Date.parse(item.created_at))).add(8, 'hours').format('YYYY-MM-DD H:i:s') + '</td>';
                         html += '<td>' + closeTime + '</td>';
-                        html += '<td>' + item.user_name + '</td>';
+                        html += '<td>' + userName + '</td>';
                         html += '</tr>';
                     })
 

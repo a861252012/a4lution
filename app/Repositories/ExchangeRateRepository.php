@@ -63,7 +63,9 @@ class ExchangeRateRepository extends BaseRepository
     {
         try {
             $exchangeRates = ExchangeRate::from('exchange_rates')
-                ->join('users', 'users.id', '=', 'exchange_rates.updated_by')
+                ->leftJoin('users', function ($join) {
+                    $join->on('users.id', '=', 'exchange_rates.updated_by');
+                })
                 ->select(
                     'exchange_rates.quoted_date',
                     'exchange_rates.base_currency',
