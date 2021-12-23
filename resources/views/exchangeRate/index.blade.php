@@ -659,15 +659,16 @@
                     let html = '';
 
                     res.data.forEach((item) => {
-                        let closeTime = (item.active) ? '-' : item.updated_at;
+                        let closeTime = (item.active) ? '-' : moment(new Date(Date.parse(item.updated_at))).add(8, 'hours').format('YYYY-MM-DD HH:mm:ss');
                         let userName = (item.user_name) ? (item.user_name) : 'system';
+                        let localOpenTime = moment(new Date(Date.parse(item.created_at))).add(8, 'hours').format('YYYY-MM-DD HH:mm:ss');
 
                         html += '<tr>';
                         html += '<td>' + moment(new Date(Date.parse(item.quoted_date))).format('MMMM-Y') + '</td>';
                         html += '<td>' + item.base_currency + '</td>';
                         html += '<td>' + item.quote_currency + '</td>';
                         html += '<td>' + item.exchange_rate + '</td>';
-                        html += '<td>' + moment(new Date(Date.parse(item.created_at))).add(8, 'hours').format('YYYY-MM-DD H:i:s') + '</td>';
+                        html += '<td>' + localOpenTime + '</td>';
                         html += '<td>' + closeTime + '</td>';
                         html += '<td>' + userName + '</td>';
                         html += '</tr>';
