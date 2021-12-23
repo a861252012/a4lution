@@ -19,13 +19,14 @@ class OrderDataSync extends Command
     private const GET_ORDER_DETAIL = 'getOrderCostDetailSku';
     private const AMZ_REPORT = 'amazonReportList';
     private const LOG_CHANNEL = 'daily_order_sync';
+    private const PAGE_SIZE = 500;
 
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'order_data_sync {date? : Y-m-d}';
+    protected $signature = 'order_data_sync {startDate? : Y-m-d} {endDate? : Y-m-d}';
     /**
      * The console command description.
      *
@@ -60,426 +61,425 @@ class OrderDataSync extends Command
 
     /**
      * Execute the console command.
-     *
      */
     public function handle()
     {
-        $startDateTime = $this->argument('date') ? Carbon::parse($this->argument('date'))
-            ->startOfDay()->toDateTimeString() : now()->subDay()->startOfDay()->toDateTimeString();
+        $startDate = $this->argument('startDate') ? Carbon::parse($this->argument('startDate')) :
+            now()->copy()->subMonth()->startOfMonth();
 
-        $endDateTime = $this->argument('date') ? Carbon::parse($this->argument('date'))
-            ->endOfDay()->toDateTimeString() : now()->subDay()->endOfDay()->toDateTimeString();
+        $endDate = $this->argument('endDate') ? Carbon::parse($this->argument('endDate')) :
+            now()->copy()->subMonth()->endOfMonth();
+        $diffDay = $endDate->diffInDays($startDate);
 
-        $correlationID = $this->argument('date') ? Carbon::parse($this->argument('date'))->format('Ymd') :
-            now()->format('Ymd');
-
-        $pageSize = 500;
-        $orderCostParamsArr = array();//儲存請求getOrderCostDetailSku的參數.
-        $orderProductParamsArr = array();//儲存sku和訂單編號以便後續update order_products剩餘欄位.
-        $ordersData = array();//儲存要 insert orders 的訂單資訊
-        $getAVOSellerID = array();//儲存當日不重複的AVO seller_id
-
-        $res = $this->erpRequest->send(
-            config('services.erp.wmsUrl'),
-            self::GET_ORDER,
-            [
-                'shipDateFor' => $startDateTime,
-                'shipDateTo' => $endDateTime,
-                "pagination" => [
-                    "page" => 1,
-                    "pageSize" => $pageSize
-                ]
-            ],
-            self::LOG_CHANNEL
-        );
-
-        $ordersWhiteList = $this->orderRepository->getTableColumns();
-
-        if (!$res['data']) {
+        if ($diffDay < 0) {
+            $this->error('wrong date range');
             return false;
         }
 
-        DB::beginTransaction();
-        foreach ($res['data'] as $v) {
-            //逐一透過商品sku取得商品詳細內容
-            foreach ($v['productList'] as $productListItem) {
-                $getProductInfo = $this->erpRequest->send(
-                    config('services.erp.wmsUrl'),
-                    self::GET_PRODUCT_BY_SKU,
-                    ['productSku' => $productListItem['sku']],
-                    self::LOG_CHANNEL
-                );
+        for ($i = 0; $i <= $diffDay; $i++) {
+            $orderCostParamsArr = [];//儲存請求getOrderCostDetailSku的參數.
+            $orderProductParamsArr = [];//儲存sku和訂單編號以便後續update order_products剩餘欄位.
+            $ordersData = [];//儲存要 insert orders 的訂單資訊
+            $getAVOSellerID = [];//儲存當日不重複的AVO seller_id
+            $startDateTime = $startDate->copy()->addDays($i)->startOfDay()->toDateTimeString();
+            $endDateTime = $startDate->copy()->addDays($i)->endOfDay()->toDateTimeString();
+            $correlationID = Carbon::parse($startDateTime)->format('Ymd');
 
-                //如果回傳的 procutCategoryName1 是 AVO,則儲存產品資訊到 order_products
-                if ($getProductInfo['code'] === 500002) {
-                    sleep(60);
-                }
+            $this->info($i);
+            $this->info($correlationID);
+            $this->info($startDateTime);
+            $this->info($endDateTime);
 
-                //回傳值可能為空
-                if (!isset($getProductInfo['data']) || empty($getProductInfo['data'])) {
-                    Log::channel('daily_order_sync')
-                        ->info("[daily_order_sync.getProductInfo]" . json_encode($getProductInfo));
-
-                    continue;
-                }
-
-                if (str_contains($getProductInfo['data'][0]['defaultSupplierCode'], 'AVO')) {
-                    $productSkuArray = array();
-
-                    //組建要寫入order_products的資訊 start
-                    $productSkuArray['sku'] = $productListItem['sku'];
-                    $productSkuArray['order_code'] = $v['order_code'];
-                    $productSkuArray['weight'] = $productListItem['weight'];
-                    $productSkuArray['active'] = 1;
-                    $productSkuArray['correlation_id'] = $correlationID;
-                    $productSkuArray['supplier_type'] = $getProductInfo['data'][0]['procutCategoryName1'];
-                    $productSkuArray['supplier'] = $getProductInfo['data'][0]['procutCategoryName2'];
-
-                    //TODO
-                    $this->orderProductRepository->insertData($productSkuArray);
-
-                    //組建要request 給 getOrderCostDetailSku的參數
-                    $orderCostParams = [
-                        'productSku' => $productSkuArray['sku'],
-                        'orderCode' => $productSkuArray['order_code']
-                    ];
-
-                    $orderProductParams = [
-                        'order_code' => $productSkuArray['order_code'],
-                        'sku' => $productSkuArray['sku']
-                    ];
-
-                    //組建要request 給 getOrderCostDetailSku的參數
-                    array_push($orderCostParamsArr, $orderCostParams);
-
-                    //組建要update order_products剩餘欄位的sku和訂單編號
-                    array_push($orderProductParamsArr, $orderProductParams);
-
-                    //儲存當日AVO seller_id
-                    array_push($getAVOSellerID, $v['seller_id']);
-
-                    unset($productSkuArray);
-                }
-            }
-            //for loop end here
-            $v = array_intersect_key($v, array_flip($ordersWhiteList));//只留下 orders table的欄位
-
-            $v['platform_ref_no'] = $v['platform_ref_no'][0] ?? null;
-            $v['created_at'] = date('Y-m-d h:i:s');
-            $v['correlation_id'] = $correlationID;
-
-            array_push($ordersData, $v);
-        }
-
-        $total = (int)$res['count'];
-
-        $totalPage = (int)ceil($total / $pageSize);
-
-        $restOrders = array();
-
-        Log::channel('daily_order_sync')
-            ->info("[daily_order_sync.getOrders.count]" . $total);
-
-        //如果回傳成功且資料不止一頁
-        if ($totalPage > 1 && $res['message'] == "Success") {
-            sleep(1);//避免請求太頻繁被擋
-
-            for ($i = 2; $i <= $totalPage; $i++) {
-                $content = $this->erpRequest->send(
-                    config('services.erp.wmsUrl'),
-                    self::GET_ORDER,
-                    [
-                        'shipDateFor' => $startDateTime,
-                        'shipDateTo' => $endDateTime,
-                        "pagination" => [
-                            "page" => $i,
-                            "pageSize" => $pageSize
-                        ]
+            $res = $this->erpRequest->send(
+                config('services.erp.wmsUrl'),
+                self::GET_ORDER,
+                [
+                    'shipDateFor' => $startDateTime,
+                    'shipDateTo' => $endDateTime,
+                    'pagination' => [
+                        'page' => 1,
+                        'pageSize' => self::PAGE_SIZE,
                     ],
-                    self::LOG_CHANNEL
-                )['data'];
+                ],
+                self::LOG_CHANNEL
+            );
 
-                foreach ($content as $v) {
-                    //如果回傳的procutCategoryName1 是 AVO,則儲存產品資訊到 order_products
-                    foreach ($v['productList'] as $productListItem) {
-                        $getProductInfos = $this->erpRequest->send(
-                            config('services.erp.wmsUrl'),
-                            self::GET_PRODUCT_BY_SKU,
-                            ['productSku' => $productListItem['sku']],
-                            self::LOG_CHANNEL
-                        );
+            $ordersWhiteList = $this->orderRepository->getTableColumns();
 
-                        //如果回傳的 procutCategoryName1 是 AVO,則儲存產品資訊到 order_products
-                        if ($getProductInfos['code'] === 500002) {
-                            sleep(60);
-                        }
-
-                        //回傳值可能為空
-                        if (!isset($getProductInfos['data']) || empty($getProductInfos['data'])) {
-                            Log::channel('daily_order_sync')
-                                ->info("[daily_order_sync.getProductInfos]" . json_encode($getProductInfos));
-
-                            continue;
-                        }
-
-                        if (str_contains($getProductInfos['data'][0]['defaultSupplierCode'], 'AVO')) {
-                            $productSkuArr = array();
-                            //組建要寫入order_products的資訊
-                            $productSkuArr['sku'] = $productListItem['sku'];
-                            $productSkuArr['order_code'] = $v['order_code'];
-                            $productSkuArr['weight'] = $productListItem['weight'];
-                            $productSkuArr['active'] = 1;
-                            $productSkuArr['correlation_id'] = $correlationID;
-                            $productSkuArr['supplier_type'] = $getProductInfos['data'][0]['procutCategoryName1'];
-                            $productSkuArr['supplier'] = $getProductInfos['data'][0]['procutCategoryName2'];
-
-                            $this->orderProductRepository->insertData($productSkuArr);
-
-                            //組建要request 給 getOrderCostDetailSku的參數
-                            $orderCostParams = [
-                                'productSku' => $productSkuArr['sku'],
-                                'orderCode' => $productSkuArr['order_code']
-                            ];
-
-                            //組建要update order_products剩餘欄位的sku和訂單編號
-                            $orderProductParams = [
-                                'order_code' => $productSkuArr['order_code'],
-                                'sku' => $productSkuArr['sku']
-                            ];
-
-                            unset($productSkuArr);
-
-                            array_push($orderCostParamsArr, $orderCostParams);
-
-                            array_push($orderProductParamsArr, $orderProductParams);
-
-                            //儲存當日AVO seller_id
-                            array_push($getAVOSellerID, $v['seller_id']);
-                        }
-                    }
-                    $v = array_intersect_key($v, array_flip($ordersWhiteList));
-
-                    $v['platform_ref_no'] = $v['platform_ref_no'][0] ?? null;
-                    $v['created_at'] = date('Y-m-d h:i:s');
-                    $v['correlation_id'] = $correlationID;
-
-                    array_push($restOrders, $v);
-
-                    unset($productSkuParams);
-                }
-
-                //TODO 確切限制比數以及秒數待確認
-                sleep(1);
-            }
-        }
-
-        //取得 費用/SKU維度的訂單費用和成本明细,並寫入DB
-        //TODO 可一次傳最多1000筆 sku
-        if (!empty($orderCostParamsArr)) {
-            //將回傳的駝峰參數轉成蛇形式 再insert DB
-            $costDetailArray = array();
-
-            foreach ($orderCostParamsArr as $v) {
-                $getCostDetail = $this->erpRequest->send(
-                    config('services.erp.wmsUrl'),
-                    self::GET_ORDER_DETAIL,
-                    $v,
-                    self::LOG_CHANNEL
-                );
-
-                if ($getCostDetail['data']) {
-                    $tempCostDetailArr = array();
-                    foreach ($getCostDetail['data'][0] as $k => $val) {
-                        $kNew = $this->camelToSnakeCase($k);
-                        $tempCostDetailArr[$kNew] = $val;
-                        $tempCostDetailArr['created_at'] = date('Y-m-d h:i:s');
-                        $tempCostDetailArr['correlation_id'] = $correlationID;
-                    }
-
-                    array_push($costDetailArray, $tempCostDetailArr);
-
-                    unset($tempCostDetailArr);
-                }
-            }
-
-            foreach ($costDetailArray as $items) {
-                $isDuplicated = $this->orderSkuCostDetailRepository->checkIfSkuDetailDuplicated(
-                    $items['product_barcode'],
-                    $items['reference_no']
-                );
-
-                if ($isDuplicated) {
-                    Log::channel('daily_order_sync')
-                        ->info("[daily_order_sync.isDuplicated]" . json_encode($items));
-                } else {
-                    $insertCostDetail = $this->orderSkuCostDetailRepository->insertData($items);
-
-                    if (!$insertCostDetail) {
-                        Log::channel('daily_order_sync')
-                            ->info("[daily_order_sync.insertCostDetailFailed]");
-                        DB::rollBack();
-
-                        return false;
-                    }
-                }
-            }
-        }
-
-        if (!empty($restOrders)) {
-            $ordersData = array_merge($ordersData, $restOrders);
-        }
-
-        //分批insert訂單到orders
-        foreach ($ordersData as $item) {
-            $insertOrdersList = $this->orderRepository->insertData($item);
-
-            if (!$insertOrdersList) {
-                Log::channel('daily_order_sync')
-                    ->info("[daily_order_sync.insertOrdersList]" . $insertOrdersList);
-                DB::rollBack();
-
+            if (!$res['data']) {
                 return false;
             }
-        }
 
-        //如有當日的AVO seller_id,則作為參數request amazonReportList 以獲取獲取结算報告列表
-        if (!empty($getAVOSellerID)) {
-            $getAVOSellerID = array_filter(array_unique($getAVOSellerID));
+            DB::beginTransaction();
+            foreach ($res['data'] as $v) {
+                //逐一透過商品sku取得商品詳細內容
+                foreach ($v['productList'] as $productListItem) {
+                    $getProductInfo = $this->erpRequest->send(
+                        config('services.erp.wmsUrl'),
+                        self::GET_PRODUCT_BY_SKU,
+                        ['productSku' => $productListItem['sku']],
+                        self::LOG_CHANNEL
+                    );
 
-            $page = 1;
-
-            $amazonList = array();
-
-            foreach ($getAVOSellerID as $item) {
-                $getAmazonReportParams = [
-                    "userAccount" => $item,
-                    "shipTimeFrom" => $startDateTime,
-                    "shipTimeTo" => $endDateTime,
-                    "page" => $page,
-                    "pageSize" => $pageSize
-                ];
-
-                $amazonReportList = $this->erpRequest->send(
-                    config('services.erp.ebUrl'),
-                    self::AMZ_REPORT,
-                    $getAmazonReportParams,
-                    self::LOG_CHANNEL
-                );
-
-                if (!empty($amazonReportList['data'])) {
-                    foreach ($amazonReportList['data'] as $list) {
-                        $list['created_at'] = date('Y-m-d h:i:s');
-                        $list['correlation_id'] = $correlationID;
-
-                        array_push($amazonList, $list);
+                    //如果回傳的 procutCategoryName1 是 AVO,則儲存產品資訊到 order_products
+                    if ($getProductInfo['code'] === 500002) {
+                        sleep(60);
                     }
 
-                    $amazonTotalPage = (int)ceil((int)$amazonReportList['totalCount'] / $pageSize);
+                    //回傳值可能為空
+                    if (empty($getProductInfo['data'])) {
+                        Log::channel('daily_order_sync')
+                            ->info('[order_sync.getProductInfo]' . json_encode($getProductInfo));
 
-                    if ($amazonTotalPage > 1) {
-                        for ($x = 2; $x <= $amazonTotalPage; $x++) {
-                            $getAmazonReportParam = [
-                                "userAccount" => $item,
-                                "shipTimeFrom" => $startDateTime,
-                                "shipTimeTo" => $endDateTime,
-                                "page" => $x,
-                                "pageSize" => $pageSize
-                            ];
+                        continue;
+                    }
 
-                            //TODO
-                            if ($item) {
-                                $amazonReportList = $this->erpRequest->send(
-                                    config('services.erp.ebUrl'),
-                                    self::AMZ_REPORT,
-                                    $getAmazonReportParam,
-                                    self::LOG_CHANNEL
-                                );
+                    if (str_contains($getProductInfo['data'][0]['defaultSupplierCode'], 'AVO')) {
+                        $productSkuArray = [];
 
-                                foreach ($amazonReportList['data'] as $lists) {
-                                    $lists['created_at'] = date('Y-m-d h:i:s');
-                                    $lists['correlation_id'] = $correlationID;
+                        //組建要寫入order_products的資訊 start
+                        $productSkuArray['sku'] = $productListItem['sku'];
+                        $productSkuArray['order_code'] = $v['order_code'];
+                        $productSkuArray['weight'] = $productListItem['weight'];
+                        $productSkuArray['active'] = 1;
+                        $productSkuArray['correlation_id'] = $correlationID;
+                        $productSkuArray['supplier_type'] = $getProductInfo['data'][0]['procutCategoryName1'];
+                        $productSkuArray['supplier'] = $getProductInfo['data'][0]['procutCategoryName2'];
 
-                                    array_push($amazonList, $lists);
+                        //TODO
+                        $this->orderProductRepository->insertData($productSkuArray);
+
+                        //組建要request 給 getOrderCostDetailSku的參數
+                        $orderCostParams = [
+                            'productSku' => $productSkuArray['sku'],
+                            'orderCode' => $productSkuArray['order_code'],
+                        ];
+
+                        $orderProductParams = [
+                            'order_code' => $productSkuArray['order_code'],
+                            'sku' => $productSkuArray['sku'],
+                        ];
+
+                        //組建要request 給 getOrderCostDetailSku的參數
+                        $orderCostParamsArr[] = $orderCostParams;
+
+                        //組建要update order_products剩餘欄位的sku和訂單編號
+                        $orderProductParamsArr[] = $orderProductParams;
+
+                        //儲存當日AVO seller_id
+                        $getAVOSellerID[] = $v['seller_id'];
+
+                        unset($productSkuArray);
+                    }
+                }
+                //for loop end here
+                $v = array_intersect_key($v, array_flip($ordersWhiteList));//只留下 orders table的欄位
+
+                $v['platform_ref_no'] = $v['platform_ref_no'][0] ?? null;
+                $v['created_at'] = date('Y-m-d h:i:s');
+                $v['correlation_id'] = $correlationID;
+
+                $ordersData[] = $v;
+            }
+
+            $total = (int)$res['count'];
+
+            $totalPage = (int)ceil($total / self::PAGE_SIZE);
+
+            $restOrders = [];
+
+            Log::channel('daily_order_sync')->info('[order_sync.getOrders.count]' . $total);
+
+            //如果回傳成功且資料不止一頁
+            if ($totalPage > 1 && $res['message'] === 'Success') {
+                for ($i = 2; $i <= $totalPage; $i++) {
+                    $content = $this->erpRequest->send(
+                        config('services.erp.wmsUrl'),
+                        self::GET_ORDER,
+                        [
+                            'shipDateFor' => $startDateTime,
+                            'shipDateTo' => $endDateTime,
+                            'pagination' => [
+                                'page' => $i,
+                                'pageSize' => self::PAGE_SIZE,
+                            ],
+                        ],
+                        self::LOG_CHANNEL
+                    )['data'];
+
+                    foreach ($content as $v) {
+                        //如果回傳的procutCategoryName1 是 AVO,則儲存產品資訊到 order_products
+                        foreach ($v['productList'] as $productListItem) {
+                            $getProductInfos = $this->erpRequest->send(
+                                config('services.erp.wmsUrl'),
+                                self::GET_PRODUCT_BY_SKU,
+                                ['productSku' => $productListItem['sku']],
+                                self::LOG_CHANNEL
+                            );
+
+                            //如果回傳的 procutCategoryName1 是 AVO,則儲存產品資訊到 order_products
+                            if ($getProductInfos['code'] === 500002) {
+                                sleep(60);
+                            }
+
+                            //回傳值可能為空
+                            if (empty($getProductInfos['data'])) {
+                                Log::channel('daily_order_sync')
+                                    ->info('[order_sync.getProductInfos]' . json_encode($getProductInfos));
+                                continue;
+                            }
+
+                            if (str_contains($getProductInfos['data'][0]['defaultSupplierCode'], 'AVO')) {
+                                $productSkuArr = [];
+                                //組建要寫入order_products的資訊
+                                $productSkuArr['sku'] = $productListItem['sku'];
+                                $productSkuArr['order_code'] = $v['order_code'];
+                                $productSkuArr['weight'] = $productListItem['weight'];
+                                $productSkuArr['active'] = 1;
+                                $productSkuArr['correlation_id'] = $correlationID;
+                                $productSkuArr['supplier_type'] = $getProductInfos['data'][0]['procutCategoryName1'];
+                                $productSkuArr['supplier'] = $getProductInfos['data'][0]['procutCategoryName2'];
+
+                                $this->orderProductRepository->insertData($productSkuArr);
+
+                                //組建要request 給 getOrderCostDetailSku的參數
+                                $orderCostParams = [
+                                    'productSku' => $productSkuArr['sku'],
+                                    'orderCode' => $productSkuArr['order_code'],
+                                ];
+
+                                //組建要update order_products剩餘欄位的sku和訂單編號
+                                $orderProductParams = [
+                                    'order_code' => $productSkuArr['order_code'],
+                                    'sku' => $productSkuArr['sku'],
+                                ];
+
+                                unset($productSkuArr);
+
+                                $orderCostParamsArr[] = $orderCostParams;
+
+                                $orderProductParamsArr[] = $orderProductParams;
+
+                                //儲存當日AVO seller_id
+                                $getAVOSellerID[] = $v['seller_id'];
+                            }
+                        }
+                        $v = array_intersect_key($v, array_flip($ordersWhiteList));
+
+                        $v['platform_ref_no'] = $v['platform_ref_no'][0] ?? null;
+                        $v['created_at'] = date('Y-m-d h:i:s');
+                        $v['correlation_id'] = $correlationID;
+
+                        $restOrders[] = $v;
+
+                        unset($productSkuParams);
+                    }
+                }
+            }
+
+            //取得 費用/SKU維度的訂單費用和成本明细,並寫入DB
+            //TODO 可一次傳最多1000筆 sku
+            if (!empty($orderCostParamsArr)) {
+                //將回傳的駝峰參數轉成蛇形式 再insert DB
+                $costDetailArray = [];
+
+                foreach ($orderCostParamsArr as $v) {
+                    $getCostDetail = $this->erpRequest->send(
+                        config('services.erp.wmsUrl'),
+                        self::GET_ORDER_DETAIL,
+                        $v,
+                        self::LOG_CHANNEL
+                    );
+
+                    if ($getCostDetail['data']) {
+                        $tempCostDetailArr = [];
+                        foreach ($getCostDetail['data'][0] as $k => $val) {
+                            $kNew = $this->camelToSnakeCase($k);
+                            $tempCostDetailArr[$kNew] = $val;
+                            $tempCostDetailArr['created_at'] = date('Y-m-d h:i:s');
+                            $tempCostDetailArr['correlation_id'] = $correlationID;
+                        }
+
+                        $costDetailArray[] = $tempCostDetailArr;
+
+                        unset($tempCostDetailArr);
+                    }
+                }
+
+                foreach ($costDetailArray as $items) {
+                    $isDuplicated = $this->orderSkuCostDetailRepository->checkIfSkuDetailDuplicated(
+                        $items['product_barcode'],
+                        $items['reference_no']
+                    );
+
+                    if ($isDuplicated) {
+                        Log::channel('daily_order_sync')
+                            ->info('[order_sync.isDuplicated]' . json_encode($items));
+                    } else {
+                        $insertCostDetail = $this->orderSkuCostDetailRepository->insertData($items);
+
+                        if (!$insertCostDetail) {
+                            Log::channel('daily_order_sync')
+                                ->info('[order_sync.insertCostDetailFailed]');
+                            DB::rollBack();
+
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            if (!empty($restOrders)) {
+                $ordersData = array_merge($ordersData, $restOrders);
+            }
+
+            //分批insert訂單到orders
+            foreach ($ordersData as $item) {
+                $insertOrdersList = $this->orderRepository->insertData($item);
+
+                if (!$insertOrdersList) {
+                    Log::channel('daily_order_sync')
+                        ->info('[order_sync.insertOrdersList]' . $insertOrdersList);
+                    DB::rollBack();
+
+                    return false;
+                }
+            }
+
+            //如有當日的AVO seller_id,則作為參數request amazonReportList 以獲取獲取结算報告列表
+            if (!empty($getAVOSellerID)) {
+                $getAVOSellerID = array_filter(array_unique($getAVOSellerID));
+
+                $amazonList = [];
+
+                foreach ($getAVOSellerID as $item) {
+                    $getAmazonReportParams = [
+                        'userAccount' => $item,
+                        'shipTimeFrom' => $startDateTime,
+                        'shipTimeTo' => $endDateTime,
+                        'page' => 1,
+                        'pageSize' => self::PAGE_SIZE,
+                    ];
+
+                    $amazonReportList = $this->erpRequest->send(
+                        config('services.erp.ebUrl'),
+                        self::AMZ_REPORT,
+                        $getAmazonReportParams,
+                        self::LOG_CHANNEL
+                    );
+
+                    if (!empty($amazonReportList['data'])) {
+                        foreach ($amazonReportList['data'] as $list) {
+                            $list['created_at'] = date('Y-m-d h:i:s');
+                            $list['correlation_id'] = $correlationID;
+
+                            $amazonList[] = $list;
+                        }
+
+                        $amazonTotalPage = (int)ceil((int)$amazonReportList['totalCount'] / self::PAGE_SIZE);
+
+                        if ($amazonTotalPage > 1) {
+                            for ($x = 2; $x <= $amazonTotalPage; $x++) {
+                                $getAmazonReportParam = [
+                                    'userAccount' => $item,
+                                    'shipTimeFrom' => $startDateTime,
+                                    'shipTimeTo' => $endDateTime,
+                                    'page' => $x,
+                                    'pageSize' => self::PAGE_SIZE,
+                                ];
+
+                                if ($item) {
+                                    $amazonReportList = $this->erpRequest->send(
+                                        config('services.erp.ebUrl'),
+                                        self::AMZ_REPORT,
+                                        $getAmazonReportParam,
+                                        self::LOG_CHANNEL
+                                    );
+
+                                    foreach ($amazonReportList['data'] as $lists) {
+                                        $lists['created_at'] = date('Y-m-d h:i:s');
+                                        $lists['correlation_id'] = $correlationID;
+
+                                        $amazonList[] = $lists;
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
 
-        if (!empty($amazonList)) {
-            foreach ($amazonList as $items) {
-                $insertAmazonList = $this->amazonReportListRepository->insertData($items);
+            if (!empty($amazonList)) {
+                foreach ($amazonList as $items) {
+                    $insertAmazonList = $this->amazonReportListRepository->insertData($items);
 
-                if (!$insertAmazonList) {
-                    Log::channel('daily_order_sync')
-                        ->info("[daily_order_sync.insertAmazonList]" . $insertAmazonList);
-                    DB::rollBack();
+                    if (!$insertAmazonList) {
+                        Log::channel('daily_order_sync')
+                            ->info('[order_sync.insertAmazonList]' . $insertAmazonList);
+                        DB::rollBack();
 
-                    return false;
+                        return false;
+                    }
                 }
             }
-        }
 
-        //TODO 作法待優化
-        //補齊 order_products其餘的欄位
-        if (!empty($orderProductParamsArr)) {
-            foreach ($orderProductParamsArr as $v) {
-                $item = $this->orderSkuCostDetailRepository->getSkuDetail($v['order_code'], $v['sku']);
+            //TODO 作法待優化
+            //補齊 order_products其餘的欄位
+            if (!empty($orderProductParamsArr)) {
+                foreach ($orderProductParamsArr as $v) {
+                    $item = $this->orderSkuCostDetailRepository->getSkuDetail($v['order_code'], $v['sku']);
 
-                $countCol = $this->orderProductRepository->countReportColumns($v['order_code'], $v['sku']);
+                    $countCol = $this->orderProductRepository->countReportColumns($v['order_code'], $v['sku']);
 
-                $v['sales_amount'] = 0;
-                $v['fba_fee'] = (float)abs($countCol[0]->fba_fee) ?? 0;
-                $v['marketplace_tax'] = (float)abs($countCol[0]->marketplace_tax) ?? 0;
-                $v['cost_of_point'] = (float)abs($countCol[0]->cost_of_point) ?? 0;
-                $v['exclusives_referral_fee'] = (float)abs($countCol[0]->exclusives_referral_fee) ?? 0;
-                if (!empty($item)) {
-                    $v['currency_code'] = $item['currency_code_org'];
-                    $v['sales_amount'] = $item['order_total_amount_org'] ?? 0;
-                    $v['transaction_fee'] = $item['platform_cost_org'];
-                    $v['first_mile_shipping_fee'] = $item['first_carrier_freight'];
-                    $v['first_mile_tariff'] = $item['tariff_fee'];
-                    $v['last_mile_shipping_fee'] = $item['shipping_fee_org'];
-                    $v['paypal_fee'] = $item['payment_platform_fee_org'];
-                    $v['other_fee'] = $item['other_fee_org'] - $v['marketplace_tax'] - $v['cost_of_point']
-                        - $v['exclusives_referral_fee'];
-                    $v['other_transaction'] = $item['other_fee_org'];
-                }
+                    $v['sales_amount'] = 0;
+                    $v['fba_fee'] = (float)abs($countCol[0]->fba_fee) ?? 0;
+                    $v['marketplace_tax'] = (float)abs($countCol[0]->marketplace_tax) ?? 0;
+                    $v['cost_of_point'] = (float)abs($countCol[0]->cost_of_point) ?? 0;
+                    $v['exclusives_referral_fee'] = (float)abs($countCol[0]->exclusives_referral_fee) ?? 0;
+                    if (!empty($item)) {
+                        $v['currency_code'] = $item['currency_code_org'];
+                        $v['sales_amount'] = $item['order_total_amount_org'] ?? 0;
+                        $v['transaction_fee'] = $item['platform_cost_org'];
+                        $v['first_mile_shipping_fee'] = $item['first_carrier_freight'];
+                        $v['first_mile_tariff'] = $item['tariff_fee'];
+                        $v['last_mile_shipping_fee'] = $item['shipping_fee_org'];
+                        $v['paypal_fee'] = $item['payment_platform_fee_org'];
+                        $v['other_fee'] = $item['other_fee_org'] - $v['marketplace_tax'] - $v['cost_of_point']
+                            - $v['exclusives_referral_fee'];
+                        $v['other_transaction'] = $item['other_fee_org'];
+                    }
 
-                $getPromotion = $this->orderProductRepository->countPromotionAmount(
-                    $v['order_code'],
-                    $v['sku']
-                );
+                    $getPromotion = $this->orderProductRepository->countPromotionAmount(
+                        $v['order_code'],
+                        $v['sku']
+                    );
 
-                $v['promotion_amount'] = $getPromotion[0]->promotion_amount ? abs($getPromotion[0]->promotion_amount)
-                    : 0;
+                    $v['promotion_amount'] = $getPromotion[0]->promotion_amount ?
+                        abs($getPromotion[0]->promotion_amount) : 0;
 
-                $principal = $getPromotion[0]->principal ? abs($getPromotion[0]->principal) : 0;
+                    $principal = $getPromotion[0]->principal ? abs($getPromotion[0]->principal) : 0;
 
-                $v['promotion_discount_rate'] = $this->getPromotionDiscount(
-                    (float)$v['promotion_amount'],
-                    (float)$principal
-                );
+                    $v['promotion_discount_rate'] = $this->getPromotionDiscount(
+                        (float)$v['promotion_amount'],
+                        (float)$principal
+                    );
 
-                $res = $this->orderProductRepository->updateData($v, $v['order_code'], $v['sku']);
+                    $res = $this->orderProductRepository->updateData($v, $v['order_code'], $v['sku']);
 
-                if (!$res) {
-                    Log::channel('daily_order_sync')
-                        // TODO: Mark By Yong 不確定哪個 info 才是正確的
-                        // ->info("[daily_order_sync.updateOrderProduct]" . $res)
-                        ->info("[order_code:{$v['order_code']}, sku:{$v['sku']}");
-                    DB::rollBack();
+                    if (!$res) {
+                        Log::channel('daily_order_sync')
+                            ->info("[order_sync.updateOrderProduct.order_code:{$v['order_code']}, sku:{$v['sku']}");
+                        DB::rollBack();
 
-                    return false;
+                        return false;
+                    }
                 }
             }
-        }
-        DB::commit();
+            DB::commit();
 
-        Log::channel('daily_order_sync')
-            ->info("[daily_order_sync.endTime]" . date("Y-m-d H:i:s"));
+            Log::channel('daily_order_sync')
+                ->info('[order_sync.endTime]' . date('Y-m-d H:i:s'));
+        }
     }
 
     public function camelToSnakeCase(string $string): string
@@ -497,14 +497,12 @@ class OrderDataSync extends Command
 
     public function getPromotionDiscount(float $promotionAmount, float $principal): float
     {
-        if ($promotionAmount == 0 || $principal == 0) {
-            return 0;
-        }
-        return $this->getFloatVal(($principal - $promotionAmount) / $principal);
+        return ($promotionAmount == 0 || $principal == 0) ? 0 :
+            $this->getFloatVal(($principal - $promotionAmount) / $principal);
     }
 
     public function getFloatVal(float $num): float
     {
-        return substr(sprintf(" % .3f", $num), 0, -1);
+        return substr(sprintf(' % .3f', $num), 0, -1);
     }
 }
