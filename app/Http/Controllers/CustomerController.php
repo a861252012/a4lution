@@ -62,7 +62,7 @@ class CustomerController extends Controller
 
     public function ajaxUpdate(AjaxUpdateRequest $request, string $client_code)
     {
-        dd($request->all());
+        // dd($request->all());
         // 更新 customer
         $result = Customer::find($client_code)
             ->update([
