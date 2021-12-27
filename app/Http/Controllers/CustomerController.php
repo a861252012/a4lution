@@ -25,7 +25,7 @@ class CustomerController extends Controller
         }
 
         $customers = Customer::query()
-            ->with('salesReps', 'accountServices')
+            ->with('salesReps', 'accountServices', 'updater')
             ->when($request->client_code, fn($q) => $q->where('client_code', $request->client_code))
             ->when($request->active, fn($q) => $q->where('active', $request->active))
             ->when($request->sales_region, fn($q) => $q->where('sales_region', $request->sales_region))
