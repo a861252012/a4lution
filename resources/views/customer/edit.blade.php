@@ -141,7 +141,7 @@
         <div class="d-flex flex-column mt-4">
             <h3>Sales Commission Calculator</h3>
             <hr class="my-2 w-100">
-            <h3>(Standard) Calculate Type <span class="text-red">*<span></h3>
+            <h3>(Standard) Calculation Type <span class="text-red">*<span></h3>
             <hr class="my-2 w-100">
             @inject('commission', 'App\Constants\Commission')
             @php
@@ -157,7 +157,7 @@
                 <input type="radio" id="basic_rate" name="calculation_type" class="custom-control-input" value="{{ $commission::CALCULATION_TYPE_BASIC_RATE }}" {{ $basicChecked }}>
                 <label class="custom-control-label" style="font-size: 0.65rem;" for="basic_rate">Basic Rate</label>
                 <input class="form-control w-25 d-inline ml-2" name="basic_rate" 
-                    id="" type="text" value="{{ optional($customer->commission)->basic_rate }}">
+                    type="text" value="{{ optional($customer->commission)->basic_rate }}">
             </div>
             <div class="custom-control custom-radio mb-2">
                 <input type="radio" id="tier" name="calculation_type" class="custom-control-input" value="{{ $commission::CALCULATION_TYPE_TIER }}" {{ $tierChecked }}>
@@ -175,7 +175,7 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <th>1</th>
+                        <th>1<span class="text-red">*<span></th>
                         <td>
                             <input class="form-control _fz-1" type="text" name='tier_1_threshold' 
                                 value='{{ optional($customer->commission)->tier_1_threshold }}'>
@@ -240,7 +240,7 @@
                     </tr>
                     <tr>
                         <th></th>
-                        <th class="text-center">Maximum Amount</th>
+                        <th class="text-center">Maximum Amount<span class="text-red">*<span></th>
                         <td>
                             <input class="form-control _fz-1" type="text" name='tier_top_amount' 
                                 value='{{ optional($customer->commission)->tier_top_amount }}'>
@@ -352,6 +352,24 @@
 
         $("select[name='sales_rep_helper2']").change(function(e) {
             showSalesReps();
+        });
+
+
+        // basic_rate 限制只能輸入小數點後兩位
+        $('input[name=basic_rate]').on('input', function () {
+            let num = $(this).val();
+            if(num.indexOf(".") !== 0){
+                num = num.replace(/[^\d.]/g, "");  // 清除'數字'和 '.' 以外的字元  
+                num = num.replace(/\.{2,}/g, "."); // 只保留第一個 '.' 清除多餘的  
+                num = num.replace(".", "$#$").replace(/\./g, "").replace("$#$", ".");
+                num = num.replace(/^(\-)*(\d+)\.(\d\d).*$/, '$1$2.$3'); // 只能輸入兩個小數  
+                if (num.indexOf(".") < 0 && num != "") { // 以上已經過濾，此處控制的是如果沒有小數點，首位不能為類似於 01、02的金額 
+                    num = parseFloat(num);
+                }  
+            }else{
+                num = "";
+            }
+            $(this).val(num);
         });
         
     });

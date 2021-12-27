@@ -54,10 +54,10 @@
                                 <label class="form-control-label _fz-1" for="sales_region">Sales Region</label>
                                 <select class="form-control _fz-1" data-toggle="select" name="sales_region" id="sales_region">
                                     <option value="">All</option>
-                                    <option value="hk" @if($query['sales_region'] === 'hk') {{ 'selected' }} @endif>
+                                    <option value="HK" @if($query['sales_region'] === 'hk') {{ 'selected' }} @endif>
                                         HK
                                     </option>
-                                    <option value="tw" @if($query['sales_region'] === 'tw') {{ 'selected' }} @endif>
+                                    <option value="TW" @if($query['sales_region'] === 'tw') {{ 'selected' }} @endif>
                                         TW
                                     </option>
                                 </select>
@@ -70,6 +70,16 @@
                             <div class="form-group mb-0">
                                 <button class="form-control _fz-1 btn _btn btn-primary" id="submit_btn" type="submit"
                                         style="margin-top: 6px;">Search
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Create --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <label class="form-control-label" for="create_btn"></label>
+                            <div class="form-group mb-0">
+                                <button class="form-control _fz-1 btn _btn btn-primary" id="create_btn"
+                                        style="margin-top: 6px;">Create
                                 </button>
                             </div>
                         </div>
@@ -88,6 +98,8 @@
                         <th>Sales Region</th>
                         <th>Sales Rep</th>
                         <th>Account Service</th>
+                        <th>Updated At</th>
+                        <th>Updated By</th>
                         <th>Action</th>
                     </tr>
                     </thead>
@@ -101,6 +113,8 @@
                                 <td>{{ $customer->sales_region }}</td>
                                 <td>{{ $customer->salesReps->pluck('user_name')->implode(',') }}</td>
                                 <td>{{ $customer->accountServices->pluck('user_name')->implode(',') }}</td>
+                                <td>{{ $customer->updated_at }}</td>
+                                <td>{{ $customer->updater->user_name }}</td>
                                 <td class="py-1">
                                     <div class="dropdown">
                                         <a class="btn btn-sm btn-icon-only text-light" href="#" role="button" data-toggle="dropdown">
@@ -179,8 +193,6 @@
                             },
                             error: function (e) {
 
-                                console.log(e);
-                                // 顯示 Validate Error
                                 let errors = [];
                                 $.each(JSON.parse(e.responseText).errors, function(col, msg) {                    
                                     errors.push(msg.toString());
