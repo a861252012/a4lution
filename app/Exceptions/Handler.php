@@ -4,9 +4,11 @@ namespace App\Exceptions;
 
 use Log;
 use Throwable;
+use Illuminate\Support\Arr;
 use App\Support\LaravelLoggerUtil;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
 class Handler extends ExceptionHandler
@@ -74,17 +76,25 @@ class Handler extends ExceptionHandler
             );
         }
 
+        // Http
+        if ($exception instanceof HttpException) {
+            return $this->exceptionResponse(
+                $exception, 
+                $exception->getStatusCode(), 
+                $exception->getMessage(),
+            );
+        }
+
         // Other issues
         return $this->exceptionResponse(
             $exception, 
             Response::HTTP_INTERNAL_SERVER_ERROR, 
             'Server Error',
-            ['Server Error']
         );
     }
 
     // 統一回覆格式
-    private function exceptionResponse(Throwable $e, int $code, string $message, array $errors)
+    private function exceptionResponse(Throwable $e, int $code, string $message, array $errors = [])
     {
         if($code === Response::HTTP_INTERNAL_SERVER_ERROR) {
             LaravelLoggerUtil::loggerException($e);
@@ -93,7 +103,7 @@ class Handler extends ExceptionHandler
         $data = [
             'code'    => $code,
             'message' => $message,
-            'errors' => $errors,
+            'errors' => $errors ?: Arr::wrap($message)
         ];
 
         if (!app()->isProduction()) {
