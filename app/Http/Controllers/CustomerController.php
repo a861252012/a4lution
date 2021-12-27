@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Constants\Commission;
 use App\Models\User;
 use App\Models\Customer;
-use App\Http\Requests\Customer\IndexRequest;
-use App\Http\Requests\Customer\AjaxUpdateRequest;
+use App\Constants\Commission;
 use App\Models\CommissionSetting;
+use App\Http\Requests\Customer\IndexRequest;
+use Symfony\Component\HttpFoundation\Response;
+use App\Http\Requests\Customer\AjaxUpdateRequest;
 
 class CustomerController extends Controller
 {
@@ -81,7 +82,7 @@ class CustomerController extends Controller
             ]);
 
         if (!$result) {
-            // abort();
+            abort(Response::HTTP_INTERNAL_SERVER_ERROR, 'Updated Failed');
         }
 
         // 更新 customer_relations
