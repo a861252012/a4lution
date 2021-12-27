@@ -54,10 +54,10 @@
                                 <label class="form-control-label _fz-1" for="sales_region">Sales Region</label>
                                 <select class="form-control _fz-1" data-toggle="select" name="sales_region" id="sales_region">
                                     <option value="">All</option>
-                                    <option value="hk" @if($query['sales_region'] === 'hk') {{ 'selected' }} @endif>
+                                    <option value="HK" @if($query['sales_region'] === 'hk') {{ 'selected' }} @endif>
                                         HK
                                     </option>
-                                    <option value="tw" @if($query['sales_region'] === 'tw') {{ 'selected' }} @endif>
+                                    <option value="TW" @if($query['sales_region'] === 'tw') {{ 'selected' }} @endif>
                                         TW
                                     </option>
                                 </select>
@@ -70,6 +70,16 @@
                             <div class="form-group mb-0">
                                 <button class="form-control _fz-1 btn _btn btn-primary" id="submit_btn" type="submit"
                                         style="margin-top: 6px;">Search
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Create --}}
+                        <div class="col-lg-2 col-md-6 col-sm-6">
+                            <label class="form-control-label" for="create_btn"></label>
+                            <div class="form-group mb-0">
+                                <button class="form-control _fz-1 btn _btn btn-primary" id="create_btn"
+                                        style="margin-top: 6px;">Create
                                 </button>
                             </div>
                         </div>
@@ -183,8 +193,6 @@
                             },
                             error: function (e) {
 
-                                console.log(e);
-                                // 顯示 Validate Error
                                 let errors = [];
                                 $.each(JSON.parse(e.responseText).errors, function(col, msg) {                    
                                     errors.push(msg.toString());
