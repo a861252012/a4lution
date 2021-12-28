@@ -187,6 +187,16 @@ return [
                 'tries' => 3,
                 'timeout' => 180,
             ],
+            'supervisor-3' => [
+                'connection' => 'redis',
+                'queue' => ['order_sync'],
+                'balance' => 'simple',
+                'maxProcesses' => 1,
+                'processes' => 1,
+                'memory' => 512,
+                'tries' => 3,
+                'timeout' => 10800,
+            ],
         ],
 
         'local' => [
@@ -210,6 +220,16 @@ return [
                 'memory' => 256,
                 'tries' => 3,
                 'timeout' => 180,
+            ],
+            'supervisor-3' => [
+                'connection' => 'redis',
+                'queue' => ['order_sync'],
+                'balance' => 'simple',
+                'maxProcesses' => 1,
+                'processes' => 1,
+                'memory' => 512,
+                'tries' => 3,
+                'timeout' => 10800,
             ],
         ],
     ],

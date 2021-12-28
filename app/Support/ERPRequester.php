@@ -37,9 +37,8 @@ class ERPRequester
             $serviceName
         );
 
-//        usleep(500000);//sleep for 0.5 second
-        sleep(1);
-        
+        usleep(100000);//sleep for 0.1 second
+
         $res = $this->client->request(
             'POST',
             $url,

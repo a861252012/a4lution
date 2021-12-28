@@ -13,5 +13,9 @@ class Order extends Model
 
     public $incrementing = false;
 
+    protected $guarded = [];
+
+    public $timestamps = false;
+
     protected $keyType = 'string';
 }

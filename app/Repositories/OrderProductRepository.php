@@ -6,24 +6,16 @@ namespace App\Repositories;
 use App\Models\OrderProduct;
 use Illuminate\Support\Facades\DB;
 
-//use Illuminate\Support\Facades\Schema;
-
-class OrderProductRepository
+class OrderProductRepository extends BaseRepository
 {
     public function __construct()
     {
-    }
-
-    public function insertData(array $data)
-    {
-        return DB::transaction(function () use ($data) {
-            return OrderProduct::insert($data);
-        });
+        parent::__construct(new OrderProduct);
     }
 
     public function updateData(array $data, string $orderCode, string $sku)
     {
-        return OrderProduct::where('order_code', '=', $orderCode)
+        return $this->model->where('order_code', '=', $orderCode)
             ->where('sku', '=', $sku)
             ->update($data);
     }
