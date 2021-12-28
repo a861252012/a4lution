@@ -10,9 +10,11 @@ class CustomerRelation extends Model
 
     protected $primaryKey = null;
 
-//    public $timestamps = false;
-
     public $incrementing = false;
+
+    ###################
+    ## Relationships ##
+    ###################
 
     public function users()
     {

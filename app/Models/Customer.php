@@ -39,7 +39,15 @@ class Customer extends Model
     public function users()
     {
         return $this->belongsToMany(User::class, 'customer_relations', 'client_code', 'user_id', 'client_code')
-            ->where('users.active', 1);
+            ->where('users.active', 1)
+            ->where('customer_relations.active', 1)
+            ->withTimestamps();
+    }
+
+    public function customerRelation()
+    {
+        return $this->hasMany(CustomerRelation::class, 'client_code', 'client_code')
+            ->where('active', 1);
     }
 
     // 業務人員
