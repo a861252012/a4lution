@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Customer;
 use App\Constants\Commission;
 use App\Models\CommissionSetting;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Customer\IndexRequest;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\Customer\AjaxUpdateRequest;
@@ -90,12 +91,17 @@ class CustomerController extends Controller
         if ($request->staff_members) {
             foreach (explode('|', $request->staff_members) as $user_id) {
                 $customerRelationsData[$user_id] = [
-                    'role_id' => $customerRelationsData[$user_id] = User::find($user_id)->roles->first()->id
+                    'role_id' => $customerRelationsData[$user_id] = User::find($user_id)->roles->first()->id,
+                    'active' => 1,
+                    'created_by' => Auth::id(),
+                    'updated_by' => Auth::id(),
                 ];
             }
         }
+
         $customer = Customer::find($client_code);
-        $customer->users()->sync($customerRelationsData);
+        $customer->customerRelation()->update(['active' => 0]);
+        $customer->users()->syncWithoutDetaching($customerRelationsData);
 
         // 更新 commission_settings
         $commissionData = collect([
