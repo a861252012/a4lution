@@ -157,7 +157,7 @@
                 <input type="radio" id="basic_rate" name="calculation_type" class="custom-control-input" value="{{ $commission::CALCULATION_TYPE_BASIC_RATE }}" {{ $basicChecked }}>
                 <label class="custom-control-label" style="font-size: 0.65rem;" for="basic_rate">Basic Rate</label>
                 <input class="form-control w-25 d-inline ml-2" name="basic_rate" 
-                    type="text" value="{{ optional($customer->commission)->basic_rate }}">
+                    type="text" value="{{ optional($customer->commission)->basic_rate_percentage }}"> %
             </div>
             <div class="custom-control custom-radio mb-2">
                 <input type="radio" id="tier" name="calculation_type" class="custom-control-input" value="{{ $commission::CALCULATION_TYPE_TIER }}" {{ $tierChecked }}>
@@ -186,7 +186,7 @@
                         </td>
                         <td>
                             <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_1_rate' 
-                                value='{{ optional($customer->commission)->tier_1_rate }}'>
+                                value='{{ optional($customer->commission)->tier_1_rate_percentage }}'>
                             <span>%</span>
                         </td>
                     </tr>
@@ -202,7 +202,7 @@
                         </td>
                         <td>
                             <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_2_rate' 
-                                value='{{ optional($customer->commission)->tier_2_rate }}'>
+                                value='{{ optional($customer->commission)->tier_2_rate_percentage }}'>
                             <span>%</span>
                         </td>
                     </tr>
@@ -218,7 +218,7 @@
                         </td>
                         <td>
                             <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_3_rate' 
-                                value='{{ optional($customer->commission)->tier_3_rate }}'>
+                                value='{{ optional($customer->commission)->tier_3_rate_percentage }}'>
                             <span>%</span>
                         </td>
                     </tr>
@@ -234,7 +234,7 @@
                         </td>
                         <td>
                             <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_4_rate' 
-                                value='{{ optional($customer->commission)->tier_4_rate }}'>
+                                value='{{ optional($customer->commission)->tier_4_rate_percentage }}'>
                             <span>%</span>
                         </td>
                     </tr>
@@ -247,7 +247,7 @@
                         </td>
                         <td>
                             <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_top_rate' 
-                                value='{{ optional($customer->commission)->tier_top_rate }}'>
+                                value='{{ optional($customer->commission)->tier_top_rate_percentage }}'>
                             <span>%</span>
                         </td>
                     </tr>
@@ -259,7 +259,7 @@
             <div class="form-group mb-2">
                 <label class="form-control-label _fz-1" for="percentage_of_promotion">Percentage Off Promotion</label>
                 <input class="form-control _fz-1 d-inline w-25" name="percentage_of_promotion" id="percentage_of_promotion" 
-                    type="text" value="{{ optional($customer->commission)->percentage_of_promotion }}">
+                    type="text" value="{{ optional($customer->commission)->percentage_off_promotion }}">
                 <span>%</span>
             </div>
             <div class="form-group mb-2">
