@@ -28,7 +28,61 @@ class CommissionSetting extends Model
     ## Scopes ##
     ############
 
-    public function getPercentageOfPromotionAttribute()
+    public function getBasicRatePercentageAttribute()
+    {
+        if (!$this->basic_rate) {
+            return '';
+        }
+
+        return $this->basic_rate * 100;
+    }
+
+    public function getTier1RatePercentageAttribute()
+    {
+        if (!$this->tier_1_rate) {
+            return '';
+        }
+
+        return $this->tier_1_rate * 100;
+    }
+
+    public function getTier2RatePercentageAttribute()
+    {
+        if (!$this->tier_2_rate) {
+            return '';
+        }
+
+        return $this->tier_2_rate * 100;
+    }
+
+    public function getTier3RatePercentageAttribute()
+    {
+        if (!$this->tier_3_rate) {
+            return '';
+        }
+
+        return $this->tier_3_rate * 100;
+    }
+
+    public function getTier4RatePercentageAttribute()
+    {
+        if (!$this->tier_4_rate) {
+            return '';
+        }
+
+        return $this->tier_4_rate * 100;
+    }
+
+    public function getTierTopRatePercentageAttribute()
+    {
+        if (!$this->tier_top_rate) {
+            return '';
+        }
+
+        return $this->tier_top_rate * 100;
+    }
+
+    public function getPercentageOffPromotionAttribute()
     {
         if (!$this->promotion_threshold) {
             return '';
