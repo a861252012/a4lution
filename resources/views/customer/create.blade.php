@@ -329,9 +329,8 @@
         });
 
 
-        // basic_rate 限制只能輸入小數點後兩位
-        $('input[name=basic_rate]').on('input', function () {
-            let num = $(this).val();
+        // 設定小數點後兩位
+        function setTwoDecimal(num) {
             if(num.indexOf(".") !== 0){
                 num = num.replace(/[^\d.]/g, "");  // 清除'數字'和 '.' 以外的字元  
                 num = num.replace(/\.{2,}/g, "."); // 只保留第一個 '.' 清除多餘的  
@@ -343,7 +342,44 @@
             }else{
                 num = "";
             }
-            $(this).val(num);
+
+            return num;
+        }
+
+        $('input[name=basic_rate]').on('input', function () {
+            $(this).val(
+                setTwoDecimal($(this).val())
+            );
+        });
+
+        $('input[name=tier_1_amount]').on('input', function () {
+            $(this).val(
+                setTwoDecimal($(this).val())
+            );
+        });
+
+        $('input[name=tier_2_amount]').on('input', function () {
+            $(this).val(
+                setTwoDecimal($(this).val())
+            );
+        });
+
+        $('input[name=tier_3_amount]').on('input', function () {
+            $(this).val(
+                setTwoDecimal($(this).val())
+            );
+        });
+
+        $('input[name=tier_4_amount]').on('input', function () {
+            $(this).val(
+                setTwoDecimal($(this).val())
+            );
+        });
+
+        $('input[name=tier_top_amount]').on('input', function () {
+            $(this).val(
+                setTwoDecimal($(this).val())
+            );
         });
         
     });

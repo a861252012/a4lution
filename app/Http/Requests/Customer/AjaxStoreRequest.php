@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Customer;
 
 use App\Constants\Commission;
+use App\Rules\CheckCalculationType;
 use App\Http\Requests\BaseFormRequest;
 
 class AjaxStoreRequest extends BaseFormRequest
