@@ -51,7 +51,7 @@ class AjaxUpdateRequest extends BaseFormRequest
             'tier_1_threshold.required_if' => 'The [ Amount Threshold 1 ] field is required when calculation type is [ Tier ].',
             'tier_2_threshold.gt' => 'The [ Amount Threshold 2 ] amount must be greater than [ Amount Threshold 1 ].',
             'tier_3_threshold.gt' => 'The [ Amount Threshold 3 ] amount must be greater than [ Amount Threshold 2 ].',
-            'tier_4_threshold.gt' => 'The [ Amount Threshold 2 ] amount must be greater than [ Amount Threshold 3 ].',
+            'tier_4_threshold.gt' => 'The [ Amount Threshold 4 ] amount must be greater than [ Amount Threshold 3 ].',
             'tier_1_amount.required_if' => 'The [ Commission Amount 1 ] field is required when calculation type is [ Tier ].',
             'tier_2_amount.gt' => 'The [ Commission Amount 2 ] amount must be greater than [ Commission Amount 1 ].',
             'tier_3_amount.gt' => 'The [ Commission Amount 3 ] amount must be greater than [ Commission Amount 2 ].',
