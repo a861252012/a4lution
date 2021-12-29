@@ -77,11 +77,13 @@
                         {{-- Create --}}
                         <div class="col-lg-2 col-md-6 col-sm-6">
                             <label class="form-control-label" for="create_btn"></label>
-                            <div class="form-group mb-0">
-                                <button class="form-control _fz-1 btn _btn btn-primary" id="create_btn"
-                                        style="margin-top: 6px;">Create
-                                </button>
-                            </div>
+                            <a id="create_btn">
+                                <div class="form-control _fz-1 btn _btn btn-primary text-white 
+                                    mb-0 d-flex justify-content-center align-items-center"
+                                    style="margin-top: 6px;">
+                                    Create
+                                </div>
+                            </a>
                         </div>
                     </div>
                 </form>
@@ -206,7 +208,79 @@
                         };
 
                         // pass options to ajaxForm
-                        $('#customer_form').ajaxForm(options);
+                        $('#customerUpdateForm').ajaxForm(options);
+                    },
+                    onClosed:function(e){
+                        // 隱藏 modal
+                        $('#SetupCountry').modal('hide');
+                        $(document.body).removeClass('modal-open');
+                        $('.modal-backdrop').remove();
+                        
+                    }
+                    .bind(this)
+                });
+            });
+
+
+            $('#create_btn').click(function () {
+
+                let _token = $('meta[name="csrf-token"]').attr('content');
+
+                $.colorbox({
+                    iframe: false,
+                    href: origin + '/ajax/customers/create',
+                    width: "80%",
+                    height: "90%",
+                    returnFocus: false,
+                    data: {
+                        _token: _token,
+                    },
+                    onComplete: function () {
+
+                        // TODO: 使用此方式關閉，在開啟一個 colorbox 就無法按 X 和 點選黑暗處關掉 colorbox
+                        $('#cancelBtn').click(function () {
+                            $('#cboxOverlay').remove();
+                            $('#colorbox').remove();
+                        });
+
+                        // prepare Options Object
+                        let options = {
+                            url: '/ajax/customers/store',
+                            responseType: 'blob',
+                            type: 'POST',
+                            success: function (res) {
+                                // 關閉 colorbox
+                                // TODO: 使用此方式關閉，在開啟一個 colorbox 就無法按 X 和 點選黑暗處關掉 colorbox
+                                $('#cboxOverlay').remove();
+                                $('#colorbox').remove();
+                                $.colorbox.close();
+                                
+                                let msg = "Created Success";
+
+                                swal({
+                                    icon: 'success',
+                                    text: msg,
+                                });
+
+                                // location.reload();
+                            },
+                            error: function (e) {
+
+                                let errors = [];
+                                $.each(JSON.parse(e.responseText).errors, function(col, msg) {                    
+                                    errors.push(msg.toString());
+                                });
+
+                                swal({
+                                    icon: 'error',
+                                    text: errors.join("\n")
+                                });
+                            }
+                        };
+
+                        
+                        // pass options to ajaxForm
+                        $('#customerCreateForm').ajaxForm(options);
                     },
                     onClosed:function(e){
                         // 隱藏 modal

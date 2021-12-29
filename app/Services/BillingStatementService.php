@@ -425,7 +425,7 @@ class BillingStatementService
         if ($settings->calculation_type === Commission::CALCULATION_TYPE_TIER) {
             return $this->getTieredInfo($clientCode, $totalSalesAmount);
         }
-        return ['type' => 'tiered', 'value' => $settings->basic_rate, 'status' => 'success'];
+        return ['type' => 'base rate', 'value' => $settings->basic_rate, 'status' => 'success'];
     }
 
     public function getAvolutionCommission(
@@ -441,7 +441,9 @@ class BillingStatementService
                 return round($orderProductRepository->getSkuAvolutionCommission($clientCode, $shipDate), 2);
             case 'promotion':
                 return $commissionRate['value'];
-            case 'tiered':
+
+            // tier rate、 base rate、tier amount
+            default:
                 return round($tieredParam * $commissionRate['value'], 2);
         }
     }
@@ -471,7 +473,7 @@ class BillingStatementService
             //如有amount則先取amount
             $amountKey = "tier_{$newLevel}_amount";
             if (!empty((float)$setting->$amountKey)) {
-                return ['type' => 'tiered', 'value' => $setting->$amountKey, 'status' => 'success'];
+                return ['type' => 'tiered amount', 'value' => $setting->$amountKey, 'status' => 'success'];
             }
 
             $rateKey = "tier_{$newLevel}_rate";
