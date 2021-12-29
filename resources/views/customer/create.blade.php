@@ -234,8 +234,8 @@
             <h3>(Optional) Promo Commission <span class="text-red">*<span></h3>
             <hr class="my-2 w-100">
             <div class="form-group mb-2">
-                <label class="form-control-label _fz-1" for="percentage_of_promotion">Percentage Off Promotion</label>
-                <input class="form-control _fz-1 d-inline w-25" name="percentage_of_promotion" id="percentage_of_promotion" 
+                <label class="form-control-label _fz-1" for="percentage_off_promotion">Percentage Off Promotion</label>
+                <input class="form-control _fz-1 d-inline w-25" name="percentage_off_promotion" id="percentage_off_promotion" 
                     type="text">
                 <span>%</span>
             </div>

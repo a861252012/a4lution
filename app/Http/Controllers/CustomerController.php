@@ -42,30 +42,19 @@ class CustomerController extends Controller
 
     public function ajaxCreate()
     {
-        $callback = function($user) {
-            return [
+        $unSelectedUsers = User::with('roles')->get()
+            ->map(fn($user) => [
                 'id' => $user->id,
                 'user_name' => $user->user_name,
                 'role_id' => optional($user->roles->first())->id,
                 'role_desc' => optional($user->roles->first())->role_desc,
-            ];
-        };
-
-        $unSelectedUsers = User::with('roles')->get()
-            ->map($callback);
+            ]);
 
         return view('customer.create', compact('unSelectedUsers'));
     }
 
     public function ajaxStore(AjaxStoreRequest $request)
     {
-        if ($request->calculation_type == Commission::CALCULATION_TYPE_SKU) {
-            if (!CommissionSkuSetting::where('client_code', $request->client_code)->exists()) {
-                abort(Response::HTTP_INTERNAL_SERVER_ERROR, ' Once the SKU commission(s) is created, you are able to select the "SKU".
-                Go to: Setting > SKU Commission > Upload SKU');
-            }
-        }
-
         // 建立 customer
         $customer = Customer::create([
             'client_code' => $request->client_code,
@@ -122,7 +111,7 @@ class CustomerController extends Controller
             'tier_4_rate' => $request->tier_4_rate  ? $request->tier_4_rate/100 : '',
             'tier_top_amount' => $request->tier_top_amount,
             'tier_top_rate' => $request->tier_top_rate  ? $request->tier_top_rate/100 : '',
-            'promotion_threshold' => $request->percentage_of_promotion ? (100 - $request->percentage_of_promotion)/100 : '',
+            'promotion_threshold' => $request->percentage_off_promotion ? (100 - $request->percentage_off_promotion)/100 : '',
             'tier_promotion' => $request->tier_promotion ? $request->tier_promotion/100 : '',
         ])->filter()->toArray();
 
@@ -155,15 +144,6 @@ class CustomerController extends Controller
 
     public function ajaxUpdate(AjaxUpdateRequest $request, string $client_code)
     {
-        // dd($request->all());
-
-        if ($request->calculation_type == Commission::CALCULATION_TYPE_SKU) {
-            if (!CommissionSkuSetting::where('client_code', $request->client_code)->exists()) {
-                abort(Response::HTTP_INTERNAL_SERVER_ERROR, ' Once the SKU commission(s) is created, you are able to select the "SKU".
-                Go to: Setting > SKU Commission > Upload SKU');
-            }
-        }
-
         // 更新 customer
         $result = Customer::find($client_code)
             ->update([
@@ -222,7 +202,7 @@ class CustomerController extends Controller
             'tier_4_rate' => $request->tier_4_rate  ? $request->tier_4_rate/100 : '',
             'tier_top_amount' => $request->tier_top_amount,
             'tier_top_rate' => $request->tier_top_rate  ? $request->tier_top_rate/100 : '',
-            'promotion_threshold' => $request->percentage_of_promotion ? (100 - $request->percentage_of_promotion)/100 : '',
+            'promotion_threshold' => $request->percentage_off_promotion ? (100 - $request->percentage_off_promotion)/100 : '',
             'tier_promotion' => $request->tier_promotion ? $request->tier_promotion/100 : '',
         ])->filter()->toArray();
 
