@@ -10,6 +10,7 @@ use App\Models\CommissionSkuSetting;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Customer\IndexRequest;
 use Symfony\Component\HttpFoundation\Response;
+use App\Http\Requests\Customer\AjaxStoreRequest;
 use App\Http\Requests\Customer\AjaxUpdateRequest;
 
 class CustomerController extends Controller
@@ -37,6 +38,95 @@ class CustomerController extends Controller
             ->paginate();
 
         return view('customer.index', compact('customers', 'query'));
+    }
+
+    public function ajaxCreate()
+    {
+        $callback = function($user) {
+            return [
+                'id' => $user->id,
+                'user_name' => $user->user_name,
+                'role_id' => optional($user->roles->first())->id,
+                'role_desc' => optional($user->roles->first())->role_desc,
+            ];
+        };
+
+        $unSelectedUsers = User::with('roles')->get()
+            ->map($callback);
+
+        return view('customer.create', compact('unSelectedUsers'));
+    }
+
+    public function ajaxStore(AjaxStoreRequest $request)
+    {
+        if ($request->calculation_type == Commission::CALCULATION_TYPE_SKU) {
+            if (!CommissionSkuSetting::where('client_code', $request->client_code)->exists()) {
+                abort(Response::HTTP_INTERNAL_SERVER_ERROR, ' Once the SKU commission(s) is created, you are able to select the "SKU".
+                Go to: Setting > SKU Commission > Upload SKU');
+            }
+        }
+
+        // 建立 customer
+        $customer = Customer::create([
+            'client_code' => $request->client_code,
+            'company_name' => $request->company_name,
+            'contact_person' => $request->company_contact,
+            'address1' => $request->street1,
+            'address2' => $request->street2,
+            'city' => $request->city,
+            'district' => $request->district,
+            'zip' => $request->zip,
+            'country' => $request->country,
+            'sales_region' => $request->sales_region,
+            'contract_date' => $request->contract_date,
+            'active' => $request->active,
+        ]);
+
+        if (!$customer) {
+            abort(Response::HTTP_INTERNAL_SERVER_ERROR, 'Created Failed');
+        }
+
+        // 更新 customer_relations
+        $customerRelationsData = [];
+        if ($request->staff_members) {
+            foreach (explode('|', $request->staff_members) as $user_id) {
+                $customerRelationsData[$user_id] = [
+                    'role_id' => $customerRelationsData[$user_id] = User::find($user_id)->roles->first()->id,
+                    'active' => 1,
+                    'created_by' => Auth::id(),
+                    'updated_by' => Auth::id(),
+                ];
+            }
+        }
+
+        $customer->users()->attach($customerRelationsData);
+
+        // 更新 commission_settings
+        $commissionData = collect([
+            'active' => 1,
+            'calculation_type' => $request->calculation_type ?? Commission::CALCULATION_TYPE_BASIC_RATE,
+            'basic_rate' => $request->basic_rate ? $request->basic_rate/100 : '',
+            'promotion_threshold' => $request->promotion_threshold,
+            'tier_promotion' => $request->tier_promotion,
+            'tier_1_threshold' => $request->tier_1_threshold,
+            'tier_1_amount' => $request->tier_1_amount,
+            'tier_1_rate' => $request->tier_1_rate  ? $request->tier_1_rate/100 : '',
+            'tier_2_threshold' => $request->tier_2_threshold,
+            'tier_2_amount' => $request->tier_2_amount,
+            'tier_2_rate' => $request->tier_2_rate  ? $request->tier_2_rate/100 : '',
+            'tier_3_threshold' => $request->tier_3_threshold,
+            'tier_3_amount' => $request->tier_3_amount,
+            'tier_3_rate' => $request->tier_3_rate  ? $request->tier_3_rate/100 : '',
+            'tier_4_threshold' => $request->tier_4_threshold,
+            'tier_4_amount' => $request->tier_4_amount,
+            'tier_4_rate' => $request->tier_4_rate  ? $request->tier_4_rate/100 : '',
+            'tier_top_amount' => $request->tier_top_amount,
+            'tier_top_rate' => $request->tier_top_rate  ? $request->tier_top_rate/100 : '',
+            'promotion_threshold' => $request->percentage_of_promotion ? (100 - $request->percentage_of_promotion)/100 : '',
+            'tier_promotion' => $request->tier_promotion ? $request->tier_promotion/100 : '',
+        ])->filter()->toArray();
+
+        $customer->commission()->create($commissionData);
     }
 
     public function ajaxEdit(string $client_code)

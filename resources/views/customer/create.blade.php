@@ -8,9 +8,8 @@
 
 <!-- colorbox html part start -->
 <div class="container">
-    <form id='customerUpdateForm' method="POST">
+    <form id='customerCreateForm' method="POST">
         @csrf
-        @method('PATCH')
 
         <div class="row">
             {{-- Basic Information --}}
@@ -24,21 +23,21 @@
                             Client Code <span class="text-red">*<span>
                         </label>
                         <input class="form-control _fz-1" name="client_code" id="client_code" 
-                            type="text" value="{{ $customer->client_code }}">
+                            type="text" value="">
                     </div>
                     <div class="col-6 form-group mb-2">
                         <label class="form-control-label _fz-1" for="company_name">
                             Company Name
                         </label>
                         <input class="form-control _fz-1" name="company_name" id="company_name" 
-                            type="text" value="{{ $customer->company_name }}">
+                            type="text" value="">
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-6 form-group mb-2">
                         <label class="form-control-label _fz-1" for="company_contact">Company Contact</label>
                         <input class="form-control _fz-1" name="company_contact" id="company_contact" 
-                            type="text" value="{{ $customer->contact_person }}">
+                            type="text" value="">
                     </div>
                     <div class="col-6">
                     </div>
@@ -47,36 +46,36 @@
                     <div class="col-6 form-group mb-2">
                         <label class="form-control-label _fz-1" for="street1">Street1</label>
                         <input class="form-control _fz-1" name="street1" id="street1" 
-                            type="text" value="{{ $customer->address1 }}">
+                            type="text" value="">
                     </div>
                     <div class="col-6 form-group mb-2">
                         <label class="form-control-label _fz-1" for="street2">Street2</label>
                         <input class="form-control _fz-1" name="street2" id="street2" 
-                            type="text" value="{{ $customer->address2 }}">
+                            type="text" value="">
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-6 form-group mb-2">
                         <label class="form-control-label _fz-1" for="city">City</label>
                         <input class="form-control _fz-1" name="city" id="city" 
-                            type="text" value="{{ $customer->city }}">
+                            type="text" value="">
                     </div>
                     <div class="col-3 form-group mb-2">
                         <label class="form-control-label _fz-1" for="district">District</label>
                         <input class="form-control _fz-1" name="district" id="district" 
-                            type="text" value="{{ $customer->district }}">
+                            type="text" value="">
                     </div>
                     <div class="col-3 form-group mb-2">
                         <label class="form-control-label _fz-1" for="zip">Zip</label>
                         <input class="form-control _fz-1" name="zip" id="zip" 
-                            type="text" value="{{ $customer->zip }}">
+                            type="text" value="">
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-6 form-group mb-2">
                         <label class="form-control-label _fz-1" for="country">Country</label>
                         <input class="form-control _fz-1" name="country" id="country" 
-                            type="text" value="{{ $customer->country }}">
+                            type="text" value="">
                     </div>
                     <div class="col-6">
                     </div>
@@ -93,10 +92,10 @@
                         Sales Region <span class="text-red">*<span>
                     </label>
                     <select class="form-control _fz-1" data-toggle="select" name="sales_region" id="sales_region">
-                        <option value="HK" @if($customer->sales_region === 'HK') {{ 'selected' }} @endif>
+                        <option value="HK">
                             HK
                         </option>
-                        <option value="TW" @if($customer->sales_region === 'TW') {{ 'selected' }} @endif>
+                        <option value="TW">
                             TW
                         </option>
                     </select>
@@ -106,20 +105,17 @@
                         Contract Date <span class="text-red">*<span>
                     </label>
                     <input class="form-control _fz-1" name="contract_date" id="contract_date" 
-                        type="text" value="{{ optional($customer->contract_date)->format('Y-m-d') }}">
+                        type="text" value="">
                 </div>
                 <div class="form-group mb-2">
-                    {{-- TODO: 畫面可能需要再調整 --}}
                     <label class="form-control-label _fz-1">Status</label>
                     <div>
                         <div class="custom-control custom-radio custom-control-inline">
-                            <input type="radio" id="active" name="active" class="custom-control-input" value="1"
-                                {{ $customer->isActive() ? 'checked' : '' }}>
+                            <input type="radio" id="active" name="active" class="custom-control-input" value="1" checked>
                             <label class="custom-control-label" for="active">Active</label>
                         </div>
                         <div class="custom-control custom-radio custom-control-inline">
-                            <input type="radio" id="inActive" name="active" class="custom-control-input" value="0" 
-                                {{ $customer->isInActive() ? 'checked' : '' }}>
+                            <input type="radio" id="inActive" name="active" class="custom-control-input" value="0">
                             <label class="custom-control-label" for="inActive">InActive</label>
                         </div>
                     </div>
@@ -130,8 +126,8 @@
                         Setting
                     </button>
                     
-                    <input type="hidden" name="staff_members" value="{{ $selectedUsers->pluck('id')->implode('|') }}">
-                    <p class="_fz-1 mt-1 _p-sales-reps">{{ $selectedUsers->pluck('user_name')->implode('、') }}</p>
+                    <input type="hidden" name="staff_members" value="">
+                    <p class="_fz-1 mt-1 _p-sales-reps"></p>
                 </div>
             </div>
             {{-- ./ Advanced Setting --}}
@@ -144,23 +140,18 @@
             <h3>(Standard) Calculation Type <span class="text-red">*<span></h3>
             <hr class="my-2 w-100">
             @inject('commission', 'App\Constants\Commission')
-            @php
-                $skuChecked = (optional($customer->commission)->calculation_type === $commission::CALCULATION_TYPE_SKU) ? 'checked' : '';
-                $tierChecked = (optional($customer->commission)->calculation_type === $commission::CALCULATION_TYPE_TIER) ? 'checked' : '';
-                $basicChecked = (optional($customer->commission)->calculation_type === $commission::CALCULATION_TYPE_BASIC_RATE) ? 'checked' : '';
-            @endphp
             <div class="custom-control custom-radio mb-2">
-                <input type="radio" id="is_sku" name="calculation_type" class="custom-control-input" value="{{ $commission::CALCULATION_TYPE_SKU }}" {{ $skuChecked }}>
+                <input type="radio" id="is_sku" name="calculation_type" class="custom-control-input" value="{{ $commission::CALCULATION_TYPE_SKU }}">
                 <label class="custom-control-label" style="font-size: 0.65rem;" for="is_sku">SKU</label>
             </div>
             <div class="custom-control custom-radio mb-2">
-                <input type="radio" id="basic_rate" name="calculation_type" class="custom-control-input" value="{{ $commission::CALCULATION_TYPE_BASIC_RATE }}" {{ $basicChecked }}>
+                <input type="radio" id="basic_rate" name="calculation_type" class="custom-control-input" value="{{ $commission::CALCULATION_TYPE_BASIC_RATE }}" checked>
                 <label class="custom-control-label" style="font-size: 0.65rem;" for="basic_rate">Basic Rate</label>
                 <input class="form-control w-25 d-inline ml-2" name="basic_rate" 
-                    type="text" value="{{ optional($customer->commission)->basic_rate_percentage }}"> %
+                    type="text" value=""> %
             </div>
             <div class="custom-control custom-radio mb-2">
-                <input type="radio" id="tier" name="calculation_type" class="custom-control-input" value="{{ $commission::CALCULATION_TYPE_TIER }}" {{ $tierChecked }}>
+                <input type="radio" id="tier" name="calculation_type" class="custom-control-input" value="{{ $commission::CALCULATION_TYPE_TIER }}">
                 <label class="custom-control-label" style="font-size: 0.65rem;" for="tier">Tier</label>
             </div>
             <hr class="my-2 w-100">
@@ -177,64 +168,52 @@
                     <tr>
                         <th>1<span class="text-red">*<span></th>
                         <td>
-                            <input class="form-control _fz-1" type="text" name='tier_1_threshold' 
-                                value='{{ optional($customer->commission)->tier_1_threshold }}'>
+                            <input class="form-control _fz-1" type="text" name='tier_1_threshold'>
                         </td>
                         <td>
-                            <input class="form-control _fz-1" type="text" name='tier_1_amount' 
-                                value='{{ optional($customer->commission)->tier_1_amount }}'>
+                            <input class="form-control _fz-1" type="text" name='tier_1_amount'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_1_rate' 
-                                value='{{ optional($customer->commission)->tier_1_rate_percentage }}'>
+                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_1_rate'>
                             <span>%</span>
                         </td>
                     </tr>
                     <tr>
                         <th>2</th>
                         <td>
-                            <input class="form-control _fz-1" type="text" name='tier_2_threshold' 
-                                value='{{ optional($customer->commission)->tier_2_threshold }}'>
+                            <input class="form-control _fz-1" type="text" name='tier_2_threshold'>
                         </td>
                         <td>
-                            <input class="form-control _fz-1" type="text" name='tier_2_amount' 
-                                value='{{ optional($customer->commission)->tier_2_amount }}'>
+                            <input class="form-control _fz-1" type="text" name='tier_2_amount'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_2_rate' 
-                                value='{{ optional($customer->commission)->tier_2_rate_percentage }}'>
+                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_2_rate'>
                             <span>%</span>
                         </td>
                     </tr>
                     <tr>
                         <th>3</th>
                         <td>
-                            <input class="form-control _fz-1" type="text" name='tier_3_threshold' 
-                                value='{{ optional($customer->commission)->tier_3_threshold }}'>
+                            <input class="form-control _fz-1" type="text" name='tier_3_threshold'>
                         </td>
                         <td>
-                            <input class="form-control _fz-1" type="text" name='tier_3_amount' 
-                                value='{{ optional($customer->commission)->tier_3_amount }}'>
+                            <input class="form-control _fz-1" type="text" name='tier_3_amount'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_3_rate' 
-                                value='{{ optional($customer->commission)->tier_3_rate_percentage }}'>
+                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_3_rate'>
                             <span>%</span>
                         </td>
                     </tr>
                     <tr>
                         <th>4</th>
                         <td>
-                            <input class="form-control _fz-1" type="text" name='tier_4_threshold' 
-                                value='{{ optional($customer->commission)->tier_4_threshold }}'>
+                            <input class="form-control _fz-1" type="text" name='tier_4_threshold'>
                         </td>
                         <td>
-                            <input class="form-control _fz-1" type="text" name='tier_4_amount' 
-                                value='{{ optional($customer->commission)->tier_4_amount }}'>
+                            <input class="form-control _fz-1" type="text" name='tier_4_amount'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_4_rate' 
-                                value='{{ optional($customer->commission)->tier_4_rate_percentage }}'>
+                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_4_rate'>
                             <span>%</span>
                         </td>
                     </tr>
@@ -242,12 +221,10 @@
                         <th></th>
                         <th class="text-center">Maximum Amount<span class="text-red">*<span></th>
                         <td>
-                            <input class="form-control _fz-1" type="text" name='tier_top_amount' 
-                                value='{{ optional($customer->commission)->tier_top_amount }}'>
+                            <input class="form-control _fz-1" type="text" name='tier_top_amount'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_top_rate' 
-                                value='{{ optional($customer->commission)->tier_top_rate_percentage }}'>
+                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_top_rate'>
                             <span>%</span>
                         </td>
                     </tr>
@@ -259,13 +236,13 @@
             <div class="form-group mb-2">
                 <label class="form-control-label _fz-1" for="percentage_of_promotion">Percentage Off Promotion</label>
                 <input class="form-control _fz-1 d-inline w-25" name="percentage_of_promotion" id="percentage_of_promotion" 
-                    type="text" value="{{ optional($customer->commission)->percentage_off_promotion }}">
+                    type="text">
                 <span>%</span>
             </div>
             <div class="form-group mb-2">
                 <label class="form-control-label _fz-1" for="tier_promotion">Promo Commission Rate</label>
                 <input class="form-control _fz-1 d-inline w-25" name="tier_promotion" id="tier_promotion" 
-                    type="text" value="{{ optional($customer->commission)->tier_promotion_percentage }}">
+                    type="text">
                 <span>%</span>
             </div>
         </div>
@@ -291,9 +268,6 @@
                     <div class="row">
                         <div class="form-group col-lg-12">
                             <select class="_select-sales_rep" multiple="multiple" name="sales_rep">
-                                @foreach ($selectedUsers as $user)
-                                    <option value="{{ $user['id'] }}" selected>{{ $user['user_name'] }} ({{ $user['role_desc'] }})</option>
-                                @endforeach
                                 @foreach ($unSelectedUsers as $user)
                                     <option value="{{ $user['id'] }}">{{ $user['user_name'] }} ({{ $user['role_desc'] }})</option>
                                 @endforeach
