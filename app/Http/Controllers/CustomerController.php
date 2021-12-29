@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Customer;
 use App\Constants\Commission;
 use App\Models\CommissionSetting;
+use App\Models\CommissionSkuSetting;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Customer\IndexRequest;
 use Symfony\Component\HttpFoundation\Response;
@@ -65,6 +66,14 @@ class CustomerController extends Controller
     public function ajaxUpdate(AjaxUpdateRequest $request, string $client_code)
     {
         // dd($request->all());
+
+        if ($request->calculation_type == Commission::CALCULATION_TYPE_SKU) {
+            if (!CommissionSkuSetting::where('client_code', $request->client_code)->exists()) {
+                abort(Response::HTTP_INTERNAL_SERVER_ERROR, ' Once the SKU commission(s) is created, you are able to select the "SKU".
+                Go to: Setting > SKU Commission > Upload SKU');
+            }
+        }
+
         // 更新 customer
         $result = Customer::find($client_code)
             ->update([
