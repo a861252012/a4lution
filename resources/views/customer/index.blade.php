@@ -191,7 +191,7 @@
                                     text: msg,
                                 });
 
-                                // location.reload();
+                                location.reload();
                             },
                             error: function (e) {
 
@@ -262,7 +262,7 @@
                                     text: msg,
                                 });
 
-                                // location.reload();
+                                location.reload();
                             },
                             error: function (e) {
 
