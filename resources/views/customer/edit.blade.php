@@ -177,7 +177,7 @@
                     <tr>
                         <th>1<span class="text-red">*<span></th>
                         <td>
-                            <input class="form-control _fz-1" type="text" name='tier_1_threshold' 
+                            <input class="form-control _fz-1 _limit_integer" type="text" name='tier_1_threshold' 
                                 value='{{ optional($customer->commission)->tier_1_threshold }}'>
                         </td>
                         <td>
@@ -185,7 +185,7 @@
                                 value='{{ optional($customer->commission)->tier_1_amount }}'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_1_rate' 
+                            <input class="form-control d-inline w-75 _fz-1 _limit_integer" type="text" name='tier_1_rate' 
                                 value='{{ optional($customer->commission)->tier_1_rate_percentage }}'>
                             <span>%</span>
                         </td>
@@ -193,7 +193,7 @@
                     <tr>
                         <th>2</th>
                         <td>
-                            <input class="form-control _fz-1" type="text" name='tier_2_threshold' 
+                            <input class="form-control _fz-1 _limit_integer" type="text" name='tier_2_threshold' 
                                 value='{{ optional($customer->commission)->tier_2_threshold }}'>
                         </td>
                         <td>
@@ -201,7 +201,7 @@
                                 value='{{ optional($customer->commission)->tier_2_amount }}'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_2_rate' 
+                            <input class="form-control d-inline w-75 _fz-1 _limit_integer" type="text" name='tier_2_rate' 
                                 value='{{ optional($customer->commission)->tier_2_rate_percentage }}'>
                             <span>%</span>
                         </td>
@@ -209,7 +209,7 @@
                     <tr>
                         <th>3</th>
                         <td>
-                            <input class="form-control _fz-1" type="text" name='tier_3_threshold' 
+                            <input class="form-control _fz-1 _limit_integer" type="text" name='tier_3_threshold' 
                                 value='{{ optional($customer->commission)->tier_3_threshold }}'>
                         </td>
                         <td>
@@ -217,7 +217,7 @@
                                 value='{{ optional($customer->commission)->tier_3_amount }}'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_3_rate' 
+                            <input class="form-control d-inline w-75 _fz-1 _limit_integer" type="text" name='tier_3_rate' 
                                 value='{{ optional($customer->commission)->tier_3_rate_percentage }}'>
                             <span>%</span>
                         </td>
@@ -225,7 +225,7 @@
                     <tr>
                         <th>4</th>
                         <td>
-                            <input class="form-control _fz-1" type="text" name='tier_4_threshold' 
+                            <input class="form-control _fz-1 _limit_integer" type="text" name='tier_4_threshold' 
                                 value='{{ optional($customer->commission)->tier_4_threshold }}'>
                         </td>
                         <td>
@@ -233,7 +233,7 @@
                                 value='{{ optional($customer->commission)->tier_4_amount }}'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_4_rate' 
+                            <input class="form-control d-inline w-75 _fz-1 _limit_integer" type="text" name='tier_4_rate' 
                                 value='{{ optional($customer->commission)->tier_4_rate_percentage }}'>
                             <span>%</span>
                         </td>
@@ -246,7 +246,7 @@
                                 value='{{ optional($customer->commission)->tier_top_amount }}'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1" type="text" name='tier_top_rate' 
+                            <input class="form-control d-inline w-75 _fz-1 _limit_integer" type="text" name='tier_top_rate' 
                                 value='{{ optional($customer->commission)->tier_top_rate_percentage }}'>
                             <span>%</span>
                         </td>
@@ -258,13 +258,13 @@
             <hr class="my-2 w-100">
             <div class="form-group mb-2">
                 <label class="form-control-label _fz-1" for="percentage_off_promotion">Percentage Off Promotion</label>
-                <input class="form-control _fz-1 d-inline w-25" name="percentage_off_promotion" id="percentage_off_promotion" 
+                <input class="form-control _fz-1 d-inline w-25 _limit_integer" name="percentage_off_promotion" id="percentage_off_promotion" 
                     type="text" value="{{ optional($customer->commission)->percentage_off_promotion }}">
                 <span>%</span>
             </div>
             <div class="form-group mb-2">
                 <label class="form-control-label _fz-1" for="tier_promotion">Promo Commission Rate</label>
-                <input class="form-control _fz-1 d-inline w-25" name="tier_promotion" id="tier_promotion" 
+                <input class="form-control _fz-1 d-inline w-25 _limit_integer" name="tier_promotion" id="tier_promotion" 
                     type="text" value="{{ optional($customer->commission)->tier_promotion_percentage }}">
                 <span>%</span>
             </div>
@@ -407,6 +407,13 @@
                 setTwoDecimal($(this).val())
             );
         });
+
+        $('._limit_integer').on('input', function () {
+            if (this.value != this.value.replace(/[^0-9\.]/g, '')) {
+                this.value = this.value.replace(/[^0-9\.]/g, '');
+            }
+        });
+        
         
     });
 
