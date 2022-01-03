@@ -35,21 +35,6 @@ class BillingStatementService
         $reportDate = Carbon::parse($request->report_date)->format('Y-m-d');
         $clientCode = $request->client_code;
 
-        //4-1 Commission Rate
-        $exchangeRate = (new ExchangeRateRepository)->getByQuotedDate($reportDate);
-        if ($exchangeRate->isEmpty()) {
-            Log::error('uploadFileToS3_failed: exchangeRate is empty');
-            return;
-        }
-
-
-        if (!(new CommissionSettingRepository)->findByClientCode($clientCode)) {
-            Log::error('uploadFileToS3_failed: commissionSetting is empty');
-            return;
-        }
-
-        //4-2 Expenses Breakdown start
-
         //getReportFees
         $supplierCode = (new CustomerRepository)->findByClientCode($clientCode)->supplier_code;
 
