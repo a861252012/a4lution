@@ -2,11 +2,12 @@
 
 namespace App\Services;
 
-use App\Repositories\InvoiceRepository;
-use App\Repositories\ExchangeRateRepository;
-use Symfony\Component\HttpFoundation\Response;
 use App\Repositories\BillingStatementRepository;
 use App\Repositories\CommissionSettingRepository;
+use App\Repositories\ExchangeRateRepository;
+use App\Repositories\InvoiceRepository;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
 
 class InvoiceService
 {
@@ -26,6 +27,24 @@ class InvoiceService
         $reportDateTime = date('Y-m-01', strtotime($date));
 
         $formattedReportDate = date('F-Y', strtotime($date));
+
+        //檢查匯率是否已設定
+        $exchangeRate = (new ExchangeRateRepository)->getByQuotedDate($reportDateTime);
+
+        if ($exchangeRate->isEmpty()) {
+            return [
+                'status' => Response::HTTP_FORBIDDEN,
+                'msg' => "{$formattedReportDate} exchangeRate is empty"
+            ];
+        }
+
+        //檢查傭金設定是否已設定
+        if (!(new CommissionSettingRepository)->findByClientCode($clientCode)) {
+            return [
+                'status' => Response::HTTP_FORBIDDEN,
+                'msg' => "{$clientCode} commissionSetting is empty"
+            ];
+        }
 
         //檢核若該月份已結算員工commission則提示訊息(需Revoke Approval)
         if ($this->billingStatementRepository->checkIfSettled($reportDateTime)) {
@@ -49,20 +68,6 @@ class InvoiceService
             return [
                 'status' => Response::HTTP_ACCEPTED,
                 'msg' => 'Duplicate entry with the same client code and report date',
-            ];
-        }
-
-        if ((new ExchangeRateRepository)->getByQuotedDate($reportDateTime)->isEmpty()) {
-            return [
-                'status' => Response::HTTP_NOT_FOUND,
-                'msg' => 'Currency Exchange Rate Not Found Error',
-            ];
-        }
-
-        if (!(new CommissionSettingRepository)->findByClientCode($clientCode)) {
-            return [
-                'status' => Response::HTTP_NOT_FOUND,
-                'msg' => 'commissionSetting Not Found Error',
             ];
         }
 

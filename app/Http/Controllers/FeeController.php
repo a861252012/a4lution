@@ -2,26 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\ImportTitle;
+use App\Exports\AmazonDateRangeExport;
+use App\Exports\FirstMileShipmentFeeExport;
+use App\Exports\LongTermStorageFeesExport;
+use App\Exports\MonthlyStorageFeesExport;
+use App\Exports\PlatformAdFeesExport;
 use App\Imports\QueueAmazonDateRangeImport;
 use App\Imports\QueueFirstMileShipmentFees;
 use App\Imports\QueueLongTermStorageFees;
 use App\Imports\QueueMonthlyStorageFees;
 use App\Imports\QueuePlatformAdFees;
-use App\Exports\PlatformAdFeesExport;
-use App\Exports\AmazonDateRangeExport;
-use App\Exports\LongTermStorageFeesExport;
-use App\Exports\MonthlyStorageFeesExport;
-use App\Exports\FirstMileShipmentFeeExport;
 use App\Models\AmazonDateRangeReport;
-use App\Models\FirstMileShipmentFee;
-use App\Models\LongTermStorageFee;
-use App\Models\PlatformAdFee;
 use App\Models\BatchJob;
-use App\Models\MonthlyStorageFee;
 use App\Models\BillingStatement;
 use App\Models\ExtraordinaryItem;
+use App\Models\FirstMileShipmentFee;
+use App\Models\LongTermStorageFee;
+use App\Models\MonthlyStorageFee;
+use App\Models\PlatformAdFee;
 use App\Repositories\CustomerRepository;
 use App\Repositories\ExchangeRateRepository;
+use Carbon\Carbon;
+use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,9 +32,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
-use Carbon\Carbon;
 use Maatwebsite\Excel\HeadingRowImport;
-use App\Constants\ImportTitle;
+use Symfony\Component\HttpFoundation\Response;
 
 class FeeController extends Controller
 {
@@ -48,15 +50,15 @@ class FeeController extends Controller
     private $exchangeRateRepository;
 
     public function __construct(
-        BatchJob                $batchJob,
-        AmazonDateRangeReport   $amazonDateRangeReport,
-        PlatformAdFee           $platformAdFee,
-        MonthlyStorageFee       $monthlyStorageFee,
-        LongTermStorageFee      $longTermStorageFee,
-        FirstMileShipmentFee    $firstMileShipmentFee,
-        BillingStatement        $billingStatement,
-        CustomerRepository      $customerRepository,
-        ExchangeRateRepository  $exchangeRateRepository
+        BatchJob               $batchJob,
+        AmazonDateRangeReport  $amazonDateRangeReport,
+        PlatformAdFee          $platformAdFee,
+        MonthlyStorageFee      $monthlyStorageFee,
+        LongTermStorageFee     $longTermStorageFee,
+        FirstMileShipmentFee   $firstMileShipmentFee,
+        BillingStatement       $billingStatement,
+        CustomerRepository     $customerRepository,
+        ExchangeRateRepository $exchangeRateRepository
     ) {
         $this->batchJob = $batchJob;
         $this->amazonDateRangeReport = $amazonDateRangeReport;
@@ -71,14 +73,14 @@ class FeeController extends Controller
 
     public function uploadView(Request $request)
     {
-        $createdAt = $request->input('search_date') ?? date('Y-m-d h:i:s');
+        $createdAt = $request->search_date ?? date('Y-m-d h:i:s');
         $createdFrom = date('Y-m-d 00:00:00', strtotime($createdAt));
         $createdTo = date('Y-m-d 23:59:59', strtotime($createdAt));
-        $feeType = $request->input('fee_type') ?? null;
-        $reportDate = $request->input('report_date') ?? date('Y-m');
+        $feeType = $request->fee_type ?? null;
+        $reportDate = $request->report_date ?? date('Y-m');
         $reportDateFrom = $reportDate ? date('Y-m-01', strtotime($reportDate)) : date('Y-m-01');
         $reportDateTo = $reportDate ? date('Y-m-31', strtotime($reportDate)) : date('Y-m-31');
-        $status = $request->input('status_type') ?? null;
+        $status = $request->status_type ?? null;
 
         $query = $this->batchJob->select(
             'batch_jobs.user_id',
@@ -110,29 +112,23 @@ class FeeController extends Controller
     public function uploadFile(Request $request)
     {
         $fileData = $request->file('file');
-
-        $feeType = $request->input('inline_fee_type');
-
-        $fileName = $fileData->getClientOriginalName();
-
-        $inputReportDate = date('Y-m-d', strtotime($request->input('inline_report_date')));
-
+        $feeType = $request->inline_fee_type;
+        $inputReportDate = date('Y-m-d', strtotime($request->inline_report_date));
         $reportDate = $inputReportDate ? date('Y-m-d', strtotime($inputReportDate)) : date('Y-m-d');
-
-        $currentDateTime = Carbon::now()->timezone((config('services.timezone.taipei')))->toDateTimeString();
 
         $insertBatchID = BatchJob::insertGetId([
             'user_id' => Auth::id(),
             'fee_type' => $feeType,
-            'file_name' => $fileName,
+            'file_name' => $fileData->getClientOriginalName(),
             'report_date' => $reportDate,
             'total_count' => 0,
             'status' => self::BATCH_STATUS,
-            'created_at' => $currentDateTime,
+            'created_at' => now()->timezone((config('services.timezone.taipei')))->toDateTimeString(),
         ]);
 
         //查詢該月是否已結算,如已結算則不得再更改
-        $haveMonthlyReport = $this->billingStatement->where('active', 1)
+        $haveMonthlyReport = $this->billingStatement
+            ->active()
             ->where('report_date', $inputReportDate)
             ->count();
 
@@ -178,11 +174,11 @@ class FeeController extends Controller
 
     public function platformAdsView(Request $request)
     {
-        $data['reportDate'] = $request->input('report_date') ?? date('Y-m');
+        $data['reportDate'] = $request->report_date ?? date('Y-m');
         $reportDateFrom = $data['reportDate'] ? date('Y-m-01', strtotime($data['reportDate'])) : date('Y-m-01');
         $reportDateTo = $data['reportDate'] ? date('Y-m-31', strtotime($data['reportDate'])) : date('Y-m-31');
-        $data['supplier'] = $request->input('supplier') ?? null;
-        $data['platform'] = $request->input('platform') ?? null;
+        $data['supplier'] = $request->supplier ?? null;
+        $data['platform'] = $request->platform ?? null;
 
         //調整report_date格式
         $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') as report_date");
@@ -224,12 +220,12 @@ class FeeController extends Controller
 
     public function amzDaterangeView(Request $request)
     {
-        $data['reportDate'] = $request->input('report_date') ?? date('Y-m');
+        $data['reportDate'] = $request->report_date ?? date('Y-m');
         $reportDateFrom = $data['reportDate'] ? date('Y-m-01', strtotime($data['reportDate'])) : date('Y-m-01');
         $reportDateTo = $data['reportDate'] ? date('Y-m-31', strtotime($data['reportDate'])) : date('Y-m-31');
-        $data['orderID'] = $request->input('order_id') ?? null;
-        $data['sku'] = $request->input('sku') ?? null;
-        $data['supplier'] = $request->input('supplier') ?? null;
+        $data['orderID'] = $request->order_id ?? null;
+        $data['sku'] = $request->sku ?? null;
+        $data['supplier'] = $request->supplier ?? null;
 
         //調整report_date格式
         $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') as report_date");
@@ -279,10 +275,10 @@ class FeeController extends Controller
 
     public function monthlyStorageView(Request $request)
     {
-        $data['reportDate'] = $request->input('report_date') ?? date('Y-m');
+        $data['reportDate'] = $request->report_date ?? date('Y-m');
         $reportDateFrom = $data['reportDate'] ? date('Y-m-01', strtotime($data['reportDate'])) : date('Y-m-01');
         $reportDateTo = $data['reportDate'] ? date('Y-m-31', strtotime($data['reportDate'])) : date('Y-m-31');
-        $data['supplier'] = $request->input('supplier') ?? null;
+        $data['supplier'] = $request->supplier ?? null;
 
         //調整report_date格式
         $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') as report_date");
@@ -306,7 +302,7 @@ class FeeController extends Controller
             ->whereBetween('report_date', [$reportDateFrom, $reportDateTo]);
 
         if ($data['supplier']) {
-            $query->where('supplier', '=', $data['supplier']);
+            $query->where('supplier', $data['supplier']);
         }
 
         $data['lists'] = $query->orderby('report_date', 'desc')
@@ -318,11 +314,11 @@ class FeeController extends Controller
 
     public function longTermStorageView(Request $request)
     {
-        $data['reportDate'] = $request->input('report_date') ?? date('Y-m');
+        $data['reportDate'] = $request->report_date ?? date('Y-m');
         $reportDateFrom = $data['reportDate'] ? date('Y-m-01', strtotime($data['reportDate'])) : date('Y-m-01');
         $reportDateTo = $data['reportDate'] ? date('Y-m-31', strtotime($data['reportDate'])) : date('Y-m-31');
-        $data['supplier'] = $request->input('supplier') ?? null;
-        $data['sku'] = $request->input('sku') ?? null;
+        $data['supplier'] = $request->supplier ?? null;
+        $data['sku'] = $request->sku ?? null;
 
         //調整report_date格式
         $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') as report_date");
@@ -361,13 +357,13 @@ class FeeController extends Controller
 
     public function firstMileShipmentView(Request $request)
     {
-        $data['reportDate'] = $request->input('report_date') ?? date('Y-m');
+        $data['reportDate'] = $request->report_date ?? date('Y-m');
         $reportDateFrom = $data['reportDate'] ? date('Y-m-01', strtotime($data['reportDate'])) : date('Y-m-01');
         $reportDateTo = $data['reportDate'] ? date('Y-m-31', strtotime($data['reportDate'])) : date('Y-m-31');
-        $data['clientCode'] = $request->input('client_code') ?? null;
-        $data['fbaShipment'] = $request->input('fba_shipment') ?? null;
-        $data['idsSku'] = $request->input('ids_sku') ?? null;
-        $data['account'] = $request->input('account') ?? null;
+        $data['clientCode'] = $request->client_code ?? null;
+        $data['fbaShipment'] = $request->fba_shipment ?? null;
+        $data['idsSku'] = $request->ids_sku ?? null;
+        $data['account'] = $request->account ?? null;
 
         //調整report_date格式
         $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') as report_date");
@@ -446,8 +442,8 @@ class FeeController extends Controller
 
     public function extraordinaryItem(Request $request)
     {
-        $data['clientCode'] = $request->input('client_code') ?? null;
-        $data['reportDate'] = $request->input('report_date') ?? null;
+        $data['clientCode'] = $request->client_code ?? null;
+        $data['reportDate'] = $request->report_date ?? null;
 
         $data['lists'] = ExtraordinaryItem::from('extraordinary_items as e')
             ->leftJoin('users as u', function ($join) {
@@ -520,7 +516,7 @@ class FeeController extends Controller
                     'data' => $data
                 ]
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error($e->getMessage());
 
             return response()->json(
@@ -545,7 +541,7 @@ class FeeController extends Controller
                     'data' => $data
                 ]
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error($e->getMessage());
 
             return response()->json(
@@ -581,7 +577,7 @@ class FeeController extends Controller
                     'msg' => 'success'
                 ]
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error($e->getMessage());
 
             return response()->json(
@@ -608,7 +604,7 @@ class FeeController extends Controller
                     'msg' => 'success'
                 ]
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error($e->getMessage());
 
             return response()->json(
@@ -644,7 +640,7 @@ class FeeController extends Controller
                     'msg' => 'success'
                 ]
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error($e->getMessage());
 
             return response()->json(
@@ -658,21 +654,35 @@ class FeeController extends Controller
 
     public function preValidation(Request $request): JsonResponse
     {
+        $dateObject = Carbon::parse($request->route('date'));
+
+        //exchange rate validation
+        $exchangeRate = (new ExchangeRateRepository)->getByQuotedDate($dateObject->startOfMonth()->toDateString());
+
+        if ($exchangeRate->isEmpty()) {
+            return response()->json(
+                [
+                    'status' => Response::HTTP_FORBIDDEN,
+                    'msg' => "Currency Exchange Rate Not Found Error"
+                ]
+            );
+        }
+
         //check if monthly report exist
         $hasMonthlyBilling = $this->billingStatement
             ->active()
             ->whereRaw(
                 "DATE_FORMAT(report_date,'%Y%m') = ?",
-                [Carbon::parse($request->route('date'))->format('Ym')]
+                [$dateObject->format('Ym')]
             )
             ->count();
 
         if ($hasMonthlyBilling) {
-            $formattedDate = Carbon::parse($request->route('date'))->format('Y-m');
+            $formattedDate = $dateObject->format('Y-m');
 
             return response()->json(
                 [
-                    'status' => 403,
+                    'status' => Response::HTTP_FORBIDDEN,
                     'msg' => "The {$formattedDate} sales summary was generated.
                             Please delete the sales summary and reupload it."
                 ]
@@ -686,7 +696,7 @@ class FeeController extends Controller
         if (!$headings) {
             return response()->json(
                 [
-                    'status' => 403,
+                    'status' => Response::HTTP_FORBIDDEN,
                     'msg' => "Title unmatched"
                 ]
             );
@@ -717,7 +727,7 @@ class FeeController extends Controller
         if ($diff->isNotEmpty()) {
             return response()->json(
                 [
-                    'status' => 403,
+                    'status' => Response::HTTP_FORBIDDEN,
                     'msg' => "Title : {$diff->implode(', ')} unmatched"
                 ]
             );
@@ -725,7 +735,7 @@ class FeeController extends Controller
 
         return response()->json(
             [
-                'status' => 200,
+                'status' => Response::HTTP_OK,
                 'msg' => "success"
             ]
         );
