@@ -34,7 +34,7 @@ class InvoiceService
         if ($exchangeRate->isEmpty()) {
             return [
                 'status' => Response::HTTP_FORBIDDEN,
-                'msg' => "{$formattedReportDate} exchangeRate is empty"
+                'msg' => "Currency Exchange Rate Not Found Error"
             ];
         }
 
