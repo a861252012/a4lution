@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
-use App\Repositories\BillingStatementRepository;
 use App\Repositories\InvoiceRepository;
+use App\Repositories\ExchangeRateRepository;
 use Symfony\Component\HttpFoundation\Response;
+use App\Repositories\BillingStatementRepository;
+use App\Repositories\CommissionSettingRepository;
 
 class InvoiceService
 {
@@ -47,6 +49,20 @@ class InvoiceService
             return [
                 'status' => Response::HTTP_ACCEPTED,
                 'msg' => 'Duplicate entry with the same client code and report date',
+            ];
+        }
+
+        if ((new ExchangeRateRepository)->getByQuotedDate($reportDateTime)->isEmpty()) {
+            return [
+                'status' => Response::HTTP_NOT_FOUND,
+                'msg' => 'Currency Exchange Rate Not Found Error',
+            ];
+        }
+
+        if (!(new CommissionSettingRepository)->findByClientCode($clientCode)) {
+            return [
+                'status' => Response::HTTP_NOT_FOUND,
+                'msg' => 'commissionSetting Not Found Error',
             ];
         }
 
