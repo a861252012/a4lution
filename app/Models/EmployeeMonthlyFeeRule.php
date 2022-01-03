@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EmployeeMonthlyFeeRule extends Model
 {
@@ -22,4 +23,13 @@ class EmployeeMonthlyFeeRule extends Model
         'tier_1_over_a_year' => 'float',
         'tier_2_over_a_year' => 'float',
     ];
+
+    ###################
+    ## Relationships ##
+    ###################
+
+    public function roles(): BelongsTo
+    {
+        return $this->belongsTo(Role::class, 'role_id', 'id');
+    }
 }

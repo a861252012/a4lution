@@ -254,15 +254,15 @@
     </script>
 @endpush
 
-@push('css')
-    <style>
-        td.details-control {
-            background: url("{{ asset('pictures') }}/details_open.png") no-repeat center center;
-            cursor: pointer;
-        }
+{{--@push('css')--}}
+{{--    <style>--}}
+{{--        td.details-control {--}}
+{{--            background: url("{{ asset('pictures') }}/details_open.png") no-repeat center center;--}}
+{{--            cursor: pointer;--}}
+{{--        }--}}
 
-        tr.details td.details-control {
-            background: url("{{ asset('pictures') }}/details_close.png") no-repeat center center;
-        }
-    </style>
-@endpush
+{{--        tr.details td.details-control {--}}
+{{--            background: url("{{ asset('pictures') }}/details_close.png") no-repeat center center;--}}
+{{--        }--}}
+{{--    </style>--}}
+{{--@endpush--}}
