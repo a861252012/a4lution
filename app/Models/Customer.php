@@ -32,6 +32,15 @@ class Customer extends Model
         });
     }
 
+    ############
+    ## Scopes ##
+    ############
+
+    public function getUpdatedAtTwAttribute()
+    {
+        return $this->updated_at->setTimezone('Asia/Taipei');
+    }
+
     ###################
     ## Relationships ##
     ###################

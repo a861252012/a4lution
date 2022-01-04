@@ -14,6 +14,7 @@ class CreateCustomerRelationsTable extends Migration
     public function up()
     {
         Schema::create('customer_relations', function (Blueprint $table) {
+            $table->id();
             $table->string('client_code', 50);
             $table->integer('user_id');
             $table->tinyInteger('role_id');
