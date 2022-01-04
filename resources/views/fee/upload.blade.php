@@ -40,23 +40,23 @@
                                         id="select_fee_type">
                                     <option value="">all</option>
                                     <option value="platform_ad_fees"
-                                    @if($feeType == 'platform_ad_fees') {{ 'selected' }} @endif>
+                                    @if(request('fee_type') == 'platform_ad_fees') {{ 'selected' }} @endif>
                                         Platform Advertisement Fee
                                     </option>
                                     <option value="amazon_date_range"
-                                    @if($feeType == 'amazon_date_range') {{ 'selected' }} @endif>
+                                    @if(request('fee_type') == 'amazon_date_range') {{ 'selected' }} @endif>
                                         Amazon Date Range Report
                                     </option>
                                     <option value="long_term_storage_fees"
-                                    @if($feeType == 'long_term_storage_fees') {{ 'selected' }} @endif>
+                                    @if(request('fee_type') == 'long_term_storage_fees') {{ 'selected' }} @endif>
                                         FBA Long Term Storage Fee
                                     </option>
                                     <option value="monthly_storage_fees"
-                                    @if($feeType == 'monthly_storage_fees') {{ 'selected' }} @endif>
+                                    @if(request('fee_type') == 'monthly_storage_fees') {{ 'selected' }} @endif>
                                         FBA Monthly Storage Fee
                                     </option>
                                     <option value="first_mile_shipment_fees"
-                                    @if($feeType == 'first_mile_shipment_fees') {{ 'selected' }} @endif>
+                                    @if(request('fee_type') == 'first_mile_shipment_fees') {{ 'selected' }} @endif>
                                         First Mile Shipment Fee
                                     </option>
                                 </select>
@@ -70,15 +70,12 @@
                                 <select class="form-control _fz-1" data-toggle="select" name="status_type"
                                         id="select_status">
                                     <option value="">all</option>
-                                    <option value="completed" @if($status == 'completed') {{ 'selected' }} @endif>
-                                        Completed
-                                    </option>
-                                    <option value="processing" @if($status == 'processing') {{ 'selected' }} @endif>
-                                        Processing
-                                    </option>
-                                    <option value="failed" @if($status == 'failed') {{ 'selected' }} @endif>
-                                        Error
-                                    </option>
+                                    <option value="completed" @if(request('status_type') == 'completed')
+                                        {{ 'selected' }} @endif>Completed</option>
+                                    <option value="processing" @if(request('status_type') == 'processing')
+                                        {{ 'selected' }} @endif>Processing</option>
+                                    <option value="failed" @if(request('status_type') == 'failed')
+                                        {{ 'selected' }} @endif>Error</option>
                                 </select>
                             </div>
                         </div>
@@ -88,7 +85,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="report_date">Report Date</label>
                                 <input class="form-control _fz-1" name="report_date" id="report_date"
-                                       value="{{$reportDate}}" placeholder="report date" type="text">
+                                       value="{{ request('report_date') }}" placeholder="report date" type="text">
                             </div>
                         </div>
 

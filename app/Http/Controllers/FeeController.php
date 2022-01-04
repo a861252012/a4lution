@@ -73,16 +73,7 @@ class FeeController extends Controller
 
     public function uploadView(Request $request)
     {
-        $createdAt = data_get($request->search_date, date('Y-m-d h:i:s'));
-        $createdFrom = date('Y-m-d 00:00:00', strtotime($createdAt));
-        $createdTo = date('Y-m-d 23:59:59', strtotime($createdAt));
-        $feeType = $request->fee_type ?? null;
-        $reportDate = $request->report_date ?? date('Y-m');
-        $reportDateFrom = $reportDate ? date('Y-m-01', strtotime($reportDate)) : date('Y-m-01');
-        $reportDateTo = $reportDate ? date('Y-m-31', strtotime($reportDate)) : date('Y-m-31');
-        $status = $request->status_type ?? null;
-
-        $lists = $this->batchJob->query()
+        $data['lists'] = $this->batchJob->query()
         ->select(
             'batch_jobs.user_id',
             'batch_jobs.report_date',
@@ -94,13 +85,31 @@ class FeeController extends Controller
             'users.user_name'
         )
             ->join('users', 'users.id', '=', 'batch_jobs.user_id')
-            ->whereBetween('batch_jobs.created_at', [$createdFrom, $createdTo])
-            ->whereBetween('batch_jobs.report_date', [$reportDateFrom, $reportDateTo])
             ->when($request->status, fn ($q) => $q->where('batch_jobs.status', $request->status))
             ->when($request->fee_type, fn ($q) => $q->where('batch_jobs.fee_type', $request->fee_type))
+            ->when(
+                $request->search_date,
+                fn ($q) => $q->whereBetween(
+                    'batch_jobs.created_at',
+                    [
+                        Carbon::parse($request->search_date)->startOfDay()->toDateTimeString(),
+                        Carbon::parse($request->search_date)->endOfDay()->toDateTimeString(),
+                    ]
+                )
+            )
+            ->when(
+                $request->report_date,
+                fn ($q) => $q->whereBetween(
+                    'batch_jobs.report_date',
+                    [
+                        Carbon::parse($request->report_date)->startOfMonth()->toDateTimeString(),
+                        Carbon::parse($request->report_date)->endOfMonth()->toDateTimeString(),
+                    ]
+                )
+            )
             ->orderby('batch_jobs.id', 'desc')->paginate(50)->appends(request()->query());
 
-        return view('fee.upload', compact('lists', 'reportDate', 'feeType', 'status', 'createdAt'));
+        return view('fee.upload', );
     }
 
     public function uploadFile(Request $request)
