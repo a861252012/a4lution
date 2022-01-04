@@ -20,7 +20,7 @@
         <div class="card">
             <!-- Card header -->
             <div class="card-header py-2">
-                <form method="GET" action="/fee/upload" role="form" class="form">
+                <form method="GET" action="{{ route('fee.upload.view') }}" role="form" class="form">
                     <div class="row">
 
                         {{-- Created At --}}
@@ -28,7 +28,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="input_date">Created At</label>
                                 <input class="form-control _fz-1" name="search_date" id="input_date"
-                                       placeholder="date" type="text" value="{{ $createdAt }}">
+                                       placeholder="date" type="text" value="{{  request('search_date') }}">
                             </div>
                         </div>
 
@@ -244,7 +244,6 @@
 @push('js')
     <script type="text/javascript">
         $(function () {
-            let inputDate = $('#input_date').val();
             let reportDate = $('#report_date').val();
 
             $('#input_date').datepicker({
@@ -269,7 +268,6 @@
                 autoclose: true
             });
 
-            $('#input_date').datepicker('update', inputDate);
             $('#report_date').datepicker('update', reportDate);
             $('#inline_report_date').datepicker('update', new Date());
 
