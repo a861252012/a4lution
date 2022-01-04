@@ -74,16 +74,16 @@ class FeeController extends Controller
     public function uploadView(Request $request)
     {
         $data['lists'] = $this->batchJob->query()
-        ->select(
-            'batch_jobs.user_id',
-            'batch_jobs.report_date',
-            'batch_jobs.fee_type',
-            'batch_jobs.file_name',
-            'batch_jobs.status',
-            'batch_jobs.created_at',
-            'batch_jobs.user_error_msg',
-            'users.user_name'
-        )
+            ->select(
+                'batch_jobs.user_id',
+                'batch_jobs.report_date',
+                'batch_jobs.fee_type',
+                'batch_jobs.file_name',
+                'batch_jobs.status',
+                'batch_jobs.created_at',
+                'batch_jobs.user_error_msg',
+                'users.user_name'
+            )
             ->join('users', 'users.id', '=', 'batch_jobs.user_id')
             ->when($request->status, fn ($q) => $q->where('batch_jobs.status', $request->status))
             ->when($request->fee_type, fn ($q) => $q->where('batch_jobs.fee_type', $request->fee_type))

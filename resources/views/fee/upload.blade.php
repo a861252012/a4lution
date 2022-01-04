@@ -71,11 +71,14 @@
                                         id="select_status">
                                     <option value="">all</option>
                                     <option value="completed" @if(request('status_type') == 'completed')
-                                        {{ 'selected' }} @endif>Completed</option>
+                                        {{ 'selected' }} @endif>Completed
+                                    </option>
                                     <option value="processing" @if(request('status_type') == 'processing')
-                                        {{ 'selected' }} @endif>Processing</option>
+                                        {{ 'selected' }} @endif>Processing
+                                    </option>
                                     <option value="failed" @if(request('status_type') == 'failed')
-                                        {{ 'selected' }} @endif>Error</option>
+                                        {{ 'selected' }} @endif>Error
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -329,14 +332,14 @@
                     data: data,
                     success: function (res) {
                         if (res.status !== 200) {
+                            //如驗證失敗則可再次上傳
+                            $('#inline_submit').prop('disabled', false);
+
                             swal({
                                 icon: "error",
                                 text: res.msg
                             })
                             return false;
-
-                            //如驗證失敗則可再次上傳
-                            $('#inline_submit').prop('disabled', false);
                         }
 
                         uploadAjax(file, date, type);
