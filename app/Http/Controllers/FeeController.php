@@ -109,7 +109,7 @@ class FeeController extends Controller
             )
             ->orderby('batch_jobs.id', 'desc')->paginate(50)->appends(request()->query());
 
-        return view('fee.upload', );
+        return view('fee.upload', $data);
     }
 
     public function uploadFile(Request $request)
