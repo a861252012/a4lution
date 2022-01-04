@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Customer;
 use App\Constants\Commission;
+use App\Models\CustomerRelation;
 use App\Models\CommissionSetting;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Models\CommissionSkuSetting;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Customer\IndexRequest;
@@ -43,7 +45,9 @@ class CustomerController extends Controller
 
     public function ajaxCreate()
     {
-        $unSelectedUsers = User::with('roles')->get()
+        $unSelectedUsers = User::with('roles')
+            ->whereHas('roles')
+            ->get()
             ->map(fn($user) => [
                 'id' => $user->id,
                 'user_name' => $user->user_name,
@@ -62,6 +66,7 @@ class CustomerController extends Controller
             // 建立 customer
             $customer = Customer::create([
                 'client_code' => $request->client_code,
+                'supplier_code' => 'AVO-' . $request->client_code,
                 'company_name' => $request->company_name,
                 'contact_person' => $request->company_contact,
                 'address1' => $request->street1,
@@ -79,6 +84,7 @@ class CustomerController extends Controller
                 abort(Response::HTTP_INTERNAL_SERVER_ERROR, 'Created Failed');
             }
 
+
             // 更新 customer_relations
             $customerRelationsData = [];
             if ($request->staff_members) {
@@ -93,6 +99,7 @@ class CustomerController extends Controller
             }
 
             $customer->users()->attach($customerRelationsData);
+
 
             // 更新 commission_settings
             $commissionData = collect([
@@ -123,6 +130,7 @@ class CustomerController extends Controller
 
         } catch (\Throwable $e) {
             DB::rollBack();
+            Log::error($e);
             abort(Response::HTTP_INTERNAL_SERVER_ERROR, 'Created Failed');
         }
 
@@ -145,8 +153,10 @@ class CustomerController extends Controller
             ];
         };
 
-        $selectedUsers = $customer->users->map($callback);
-        $unSelectedUsers = User::with('roles')->get()
+        $selectedUsers = $customer->users->load('roles')->map($callback);
+        $unSelectedUsers = User::with('roles')
+            ->whereHas('roles')
+            ->get()
             ->diff($customer->users)
             ->map($callback);
 
@@ -178,11 +188,31 @@ class CustomerController extends Controller
             if (!$result) {
                 abort(Response::HTTP_INTERNAL_SERVER_ERROR, 'Updated Failed');
             }
+            $customer = Customer::findOrFail($client_code);
 
             // 更新 customer_relations
+            $originalUserIds = CustomerRelation::query()
+                ->where('client_code', $client_code)
+                ->where('active', 1)
+                ->pluck('user_id')
+                ->toArray();
+
+            $newUserIds =  explode('|', $request->staff_members);
+            $removeUserIds = array_diff($originalUserIds, $newUserIds);
+            $createUserIds = array_diff($newUserIds, $originalUserIds);
+
+            CustomerRelation::query()
+                ->where('client_code', $client_code)
+                ->where('active', 1)
+                ->whereIn('user_id', $removeUserIds)
+                ->update([
+                    'active' => 0,
+                    'updated_by' => Auth::id(),
+                ]);
+
             $customerRelationsData = [];
             if ($request->staff_members) {
-                foreach (explode('|', $request->staff_members) as $user_id) {
+                foreach ($createUserIds as $user_id) {
                     $customerRelationsData[$user_id] = [
                         'role_id' => $customerRelationsData[$user_id] = User::find($user_id)->roles->first()->id,
                         'active' => 1,
@@ -191,10 +221,7 @@ class CustomerController extends Controller
                     ];
                 }
             }
-
-            $customer = Customer::find($client_code);
-            $customer->customerRelation()->update(['active' => 0]);
-            $customer->users()->syncWithoutDetaching($customerRelationsData);
+            $customer->users()->attach($customerRelationsData);
 
             // 更新 commission_settings
             $commissionData = collect([
@@ -227,6 +254,7 @@ class CustomerController extends Controller
 
         } catch (\Throwable $e) {
             DB::rollBack();
+            Log::error($e);
             abort(Response::HTTP_INTERNAL_SERVER_ERROR, 'Updated Failed');
         }
 

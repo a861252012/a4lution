@@ -32,6 +32,15 @@ class Customer extends Model
         });
     }
 
+    ############
+    ## Scopes ##
+    ############
+
+    public function getUpdatedAtTwAttribute()
+    {
+        return $this->updated_at->setTimezone('Asia/Taipei');
+    }
+
     ###################
     ## Relationships ##
     ###################
@@ -54,6 +63,7 @@ class Customer extends Model
     public function salesReps()
     {
         return $this->belongsToMany(User::class, 'customer_relations', 'client_code', 'user_id', 'client_code')
+            ->where('customer_relations.active', 1)
             ->where('customer_relations.role_id', 1)
             ->where('users.active', 1);
     }
@@ -62,6 +72,7 @@ class Customer extends Model
     public function accountServices()
     {
         return $this->belongsToMany(User::class, 'customer_relations', 'client_code', 'user_id', 'client_code')
+            ->where('customer_relations.active', 1)
             ->where('customer_relations.role_id', 4)
             ->where('users.active', 1);
     }

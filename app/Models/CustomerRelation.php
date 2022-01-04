@@ -8,9 +8,22 @@ class CustomerRelation extends Model
 {
     protected $table = "customer_relations";
 
-    protected $primaryKey = null;
+    protected $primaryKey = 'id';
 
     public $incrementing = false;
+
+    protected static function booted()
+    {
+        static::creating(function ($customerRelation) {
+            $customerRelation->updated_by = Auth::id();
+            $customerRelation->created_by = Auth::id();
+            $customerRelation->active = 1;
+        });
+
+        static::updating(function ($customerRelation) {
+            $customerRelation->updated_by = Auth::id();
+        });
+    }
 
     ###################
     ## Relationships ##

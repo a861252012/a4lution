@@ -11,7 +11,8 @@ class CreateCommissionSettingsTable extends Migration
     public function up()
     {
         Schema::create($this->tableName, function (Blueprint $table) {
-            $table->string('client_code', 50)->unique('client_code');
+            $table->id();
+            $table->string('client_code', 50);
             $table->unsignedTinyInteger('calculation_type')->default(3)->comment('計算方式 (1: sku 參照commission_sku_configs、2: tier 級距收費、3: basic_rate)');
             $table->decimal('basic_rate', 5, 2)->nullable()->comment('基礎參數-commision');
             $table->string('currency', 3)->nullable();

@@ -115,7 +115,7 @@
                                 <td>{{ $customer->sales_region }}</td>
                                 <td>{{ $customer->salesReps->pluck('user_name')->implode(',') }}</td>
                                 <td>{{ $customer->accountServices->pluck('user_name')->implode(',') }}</td>
-                                <td>{{ $customer->updated_at }}</td>
+                                <td>{{ $customer->updated_at_tw }}</td>
                                 <td>{{ $customer->updater->user_name }}</td>
                                 <td class="py-1">
                                     <div class="dropdown">
@@ -166,10 +166,8 @@
                     },
                     onComplete: function () {
 
-                        // TODO: 使用此方式關閉，在開啟一個 colorbox 就無法按 X 和 點選黑暗處關掉 colorbox
                         $('#cancelBtn').click(function () {
-                            $('#cboxOverlay').remove();
-                            $('#colorbox').remove();
+                            $.colorbox.close();
                         });
 
                         // prepare Options Object
@@ -178,10 +176,6 @@
                             responseType: 'blob', // important
                             type: 'PATCH',
                             success: function (res) {
-                                // 關閉 colorbox
-                                // TODO: 使用此方式關閉，在開啟一個 colorbox 就無法按 X 和 點選黑暗處關掉 colorbox
-                                $('#cboxOverlay').remove();
-                                $('#colorbox').remove();
                                 $.colorbox.close();
                                 
                                 let msg = "Changed Success";
@@ -237,10 +231,8 @@
                     },
                     onComplete: function () {
 
-                        // TODO: 使用此方式關閉，在開啟一個 colorbox 就無法按 X 和 點選黑暗處關掉 colorbox
                         $('#cancelBtn').click(function () {
-                            $('#cboxOverlay').remove();
-                            $('#colorbox').remove();
+                            $.colorbox.close();
                         });
 
                         // prepare Options Object
@@ -249,10 +241,6 @@
                             responseType: 'blob',
                             type: 'POST',
                             success: function (res) {
-                                // 關閉 colorbox
-                                // TODO: 使用此方式關閉，在開啟一個 colorbox 就無法按 X 和 點選黑暗處關掉 colorbox
-                                $('#cboxOverlay').remove();
-                                $('#colorbox').remove();
                                 $.colorbox.close();
                                 
                                 let msg = "Created Success";

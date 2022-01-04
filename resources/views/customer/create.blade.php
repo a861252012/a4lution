@@ -168,52 +168,52 @@
                     <tr>
                         <th>1<span class="text-red">*<span></th>
                         <td>
-                            <input class="form-control _fz-1 _limit_integer" type="text" name='tier_1_threshold'>
+                            <input class="form-control _fz-1 _input_limit_integer" type="text" name='tier_1_threshold'>
                         </td>
                         <td>
                             <input class="form-control _fz-1" type="text" name='tier_1_amount'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1 _limit_integer" type="text" name='tier_1_rate'>
+                            <input class="form-control d-inline w-75 _fz-1 _input_limit_integer" type="text" name='tier_1_rate'>
                             <span>%</span>
                         </td>
                     </tr>
                     <tr>
                         <th>2</th>
                         <td>
-                            <input class="form-control _fz-1 _limit_integer" type="text" name='tier_2_threshold'>
+                            <input class="form-control _fz-1 _input_limit_integer" type="text" name='tier_2_threshold'>
                         </td>
                         <td>
                             <input class="form-control _fz-1" type="text" name='tier_2_amount'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1 _limit_integer" type="text" name='tier_2_rate'>
+                            <input class="form-control d-inline w-75 _fz-1 _input_limit_integer" type="text" name='tier_2_rate'>
                             <span>%</span>
                         </td>
                     </tr>
                     <tr>
                         <th>3</th>
                         <td>
-                            <input class="form-control _fz-1 _limit_integer" type="text" name='tier_3_threshold'>
+                            <input class="form-control _fz-1 _input_limit_integer" type="text" name='tier_3_threshold'>
                         </td>
                         <td>
                             <input class="form-control _fz-1" type="text" name='tier_3_amount'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1 _limit_integer" type="text" name='tier_3_rate'>
+                            <input class="form-control d-inline w-75 _fz-1 _input_limit_integer" type="text" name='tier_3_rate'>
                             <span>%</span>
                         </td>
                     </tr>
                     <tr>
                         <th>4</th>
                         <td>
-                            <input class="form-control _fz-1 _limit_integer" type="text" name='tier_4_threshold'>
+                            <input class="form-control _fz-1 _input_limit_integer" type="text" name='tier_4_threshold'>
                         </td>
                         <td>
                             <input class="form-control _fz-1" type="text" name='tier_4_amount'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1 _limit_integer" type="text" name='tier_4_rate'>
+                            <input class="form-control d-inline w-75 _fz-1 _input_limit_integer" type="text" name='tier_4_rate'>
                             <span>%</span>
                         </td>
                     </tr>
@@ -224,7 +224,7 @@
                             <input class="form-control _fz-1" type="text" name='tier_top_amount'>
                         </td>
                         <td>
-                            <input class="form-control d-inline w-75 _fz-1 _limit_integer" type="text" name='tier_top_rate'>
+                            <input class="form-control d-inline w-75 _fz-1 _input_limit_integer" type="text" name='tier_top_rate'>
                             <span>%</span>
                         </td>
                     </tr>
@@ -235,13 +235,13 @@
             <hr class="my-2 w-100">
             <div class="form-group mb-2">
                 <label class="form-control-label _fz-1" for="percentage_off_promotion">Percentage Off Promotion</label>
-                <input class="form-control _fz-1 d-inline w-25 _limit_integer" name="percentage_off_promotion" id="percentage_off_promotion" 
+                <input class="form-control _fz-1 d-inline w-25 _input_limit_integer" name="percentage_off_promotion" id="percentage_off_promotion" 
                     type="text">
                 <span>%</span>
             </div>
             <div class="form-group mb-2">
                 <label class="form-control-label _fz-1" for="tier_promotion">Promo Commission Rate</label>
-                <input class="form-control _fz-1 d-inline w-25 _limit_integer" name="tier_promotion" id="tier_promotion" 
+                <input class="form-control _fz-1 d-inline w-25 _input_limit_integer" name="tier_promotion" id="tier_promotion" 
                     type="text">
                 <span>%</span>
             </div>
@@ -286,12 +286,16 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
+
         $('#contract_date').datepicker({
             format: 'yyyy-mm-dd',//日期時間格式
             ignoreReadonly: false,  //禁止使用者輸入 啟用唯讀
             autoclose: true
         });
 
+        // ******************
+        // Staff Members 處理
+        // ******************
         $('._btn-sales-rep').click(function() {
             $('#staffMemberModal').modal('show')
         }) ;
@@ -329,7 +333,9 @@
         });
 
 
-        // 設定小數點後兩位
+        // ****************************
+        // 限制 input 只能輸入小數點後兩位
+        // ****************************
         function setTwoDecimal(num) {
             if(num.indexOf(".") !== 0){
                 num = num.replace(/[^\d.]/g, "");  // 清除'數字'和 '.' 以外的字元  
@@ -382,9 +388,13 @@
             );
         });
 
-        $('._limit_integer').on('input', function () {
-            if (this.value != this.value.replace(/[^0-9\.]/g, '')) {
-                this.value = this.value.replace(/[^0-9\.]/g, '');
+        // ****************************
+        // 限制 input 只能輸入整數
+        // ****************************
+        $('._input_limit_integer').on('input', function () {
+            this.value = Number(this.value.replace(/[^0-9]/g, ''));
+            if (this.value == 0) {
+                this.value = '';
             }
         });
     });
