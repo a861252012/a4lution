@@ -24,7 +24,7 @@
                             Client Code <span class="text-red">*</span>
                         </label>
                         <input class="form-control _fz-1" name="client_code" id="client_code" 
-                            type="text" value="{{ $customer->client_code }}">
+                            type="text" value="{{ $customer->client_code }}" disabled>
                     </div>
                     <div class="col-6 form-group mb-2">
                         <label class="form-control-label _fz-1" for="company_name">

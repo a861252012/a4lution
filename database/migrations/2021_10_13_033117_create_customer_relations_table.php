@@ -23,8 +23,6 @@ class CreateCustomerRelationsTable extends Migration
             $table->unsignedInteger('created_by');
             $table->timestamp('updated_at')->default('0000-00-00 00:00:00');
             $table->unsignedInteger('updated_by');
-            
-            $table->unique(['client_code', 'user_id', 'role_id'], 'client_code_sales_user_name');
         });
     }
 
