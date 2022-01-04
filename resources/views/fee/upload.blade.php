@@ -136,7 +136,8 @@
                     <tbody>
                     @foreach ($lists as $item)
                         <tr>
-                            <td>{{ $item->created_at }}</td>
+                            <td>{{ \Carbon\Carbon::parse($item->created_at)
+                                                    ->setTimezone(config('services.timezone.taipei'))}}</td>
                             <td>{{ $item->user_name }}</td>
                             <td>{{ $item->report_date }}</td>
                             <td>{{ $item->fee_type }}</td>
@@ -312,6 +313,9 @@
                     return false;
                 }
 
+                //暫時禁止用戶再次上傳檔案
+                $('#inline_submit').prop('disabled', true);
+
                 swal({
                     icon: "success",
                     text: "processing"
@@ -335,6 +339,9 @@
                                 text: res.msg
                             })
                             return false;
+
+                            //如驗證失敗則可再次上傳
+                            $('#inline_submit').prop('disabled', false);
                         }
 
                         uploadAjax(file, date, type);
@@ -381,7 +388,22 @@
                 contentType: false,
                 data: data,
                 success: function () {
-                    console.log('success');
+                    //如上傳成功則可再次上傳
+                    $('#inline_submit').prop('disabled', false);
+                }, error: function (e) {
+                    // 顯示 Validate Error
+                    let errors = [];
+                    $.each(JSON.parse(e.responseText).errors, function (col, msg) {
+                        errors.push(msg.toString());
+                    });
+
+                    swal({
+                        icon: 'error',
+                        text: errors.join("\n")
+                    });
+
+                    //如上傳失敗則可再次上傳
+                    $('#inline_submit').prop('disabled', false);
                 }
             });
         }

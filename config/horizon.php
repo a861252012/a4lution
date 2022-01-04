@@ -185,7 +185,7 @@ return [
                 'processes' => 1,
                 'memory' => 256,
                 'tries' => 3,
-                'timeout' => 180,
+                'timeout' => 3600,
             ],
             'supervisor-3' => [
                 'connection' => 'redis',
@@ -219,7 +219,7 @@ return [
                 'processes' => 1,
                 'memory' => 256,
                 'tries' => 3,
-                'timeout' => 180,
+                'timeout' => 3600,
             ],
             'supervisor-3' => [
                 'connection' => 'redis',
