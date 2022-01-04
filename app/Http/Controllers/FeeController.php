@@ -73,7 +73,7 @@ class FeeController extends Controller
 
     public function uploadView(Request $request)
     {
-        $createdAt = $request->search_date ?? date('Y-m-d h:i:s');
+        $createdAt = data_get($request->search_date, date('Y-m-d h:i:s'));
         $createdFrom = date('Y-m-d 00:00:00', strtotime($createdAt));
         $createdTo = date('Y-m-d 23:59:59', strtotime($createdAt));
         $feeType = $request->fee_type ?? null;
@@ -82,7 +82,8 @@ class FeeController extends Controller
         $reportDateTo = $reportDate ? date('Y-m-31', strtotime($reportDate)) : date('Y-m-31');
         $status = $request->status_type ?? null;
 
-        $query = $this->batchJob->select(
+        $lists = $this->batchJob->query()
+        ->select(
             'batch_jobs.user_id',
             'batch_jobs.report_date',
             'batch_jobs.fee_type',
@@ -94,17 +95,10 @@ class FeeController extends Controller
         )
             ->join('users', 'users.id', '=', 'batch_jobs.user_id')
             ->whereBetween('batch_jobs.created_at', [$createdFrom, $createdTo])
-            ->whereBetween('batch_jobs.report_date', [$reportDateFrom, $reportDateTo]);
-
-        if ($request->input('status')) {
-            $query->where('batch_jobs.status', '=', $status);
-        }
-
-        if ($request->input('fee_type')) {
-            $query->where('batch_jobs.fee_type', '=', $feeType);
-        }
-
-        $lists = $query->orderby('batch_jobs.id', 'desc')->paginate(50)->appends(request()->query());
+            ->whereBetween('batch_jobs.report_date', [$reportDateFrom, $reportDateTo])
+            ->when($request->status, fn ($q) => $q->where('batch_jobs.status', $request->status))
+            ->when($request->fee_type, fn ($q) => $q->where('batch_jobs.fee_type', $request->fee_type))
+            ->orderby('batch_jobs.id', 'desc')->paginate(50)->appends(request()->query());
 
         return view('fee.upload', compact('lists', 'reportDate', 'feeType', 'status', 'createdAt'));
     }
