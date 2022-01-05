@@ -4,25 +4,37 @@ namespace App\Imports;
 
 use App\Models\BatchJob;
 use App\Models\MonthlyStorageFee;
+use App\Services\ImportService;
+use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Events\AfterImport;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\RemembersRowNumber;
 use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithBatchInserts;
+use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
-use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
-use App\Services\ImportService;
 
-class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading, WithBatchInserts, WithCalculatedFormulas, WithEvents, WithValidation
+class QueueMonthlyStorageFees implements
+    ToModel,
+    WithHeadingRow,
+    ShouldQueue,
+    WithChunkReading,
+    WithBatchInserts,
+    WithCalculatedFormulas,
+    WithEvents,
+    WithValidation
 {
-    use Importable, RegistersEventListeners, RemembersRowNumber;
+    use Importable,
+        RegistersEventListeners,
+        RemembersRowNumber;
 
     public $rows = 0;
     private $userID;
@@ -92,13 +104,6 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
         return 1000;
     }
 
-    public function getRowCount(): int
-    {
-        return MonthlyStorageFee::where('upload_id', $this->batchID)
-            ->where('active', 1)
-            ->count();
-    }
-
     public function chunkSize(): int
     {
         return 1000;
@@ -126,9 +131,9 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
                     );
 
                     DB::commit();
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     DB::rollback();
-                    \Log::channel('daily_queue_import')
+                    Log::channel('daily_queue_import')
                         ->info("[QueueMonthlyStorageFees.errors]" . $e);
                 }
             },
@@ -153,19 +158,26 @@ class QueueMonthlyStorageFees implements ToModel, WithHeadingRow, ShouldQueue, W
                         });
 
                     DB::commit();
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     DB::rollback();
 
-                    \Log::channel('daily_queue_import')
+                    Log::channel('daily_queue_import')
                         ->info("[QueueMonthlyStorageFees.errors]" . $e);
                 }
 
                 foreach ($event->getException() as $failure) {
-                    \Log::channel('daily_queue_import')
+                    Log::channel('daily_queue_import')
                         ->info("[QueueMonthlyStorageFees.errors]" . $failure);
                 }
             },
         ];
+    }
+
+    public function getRowCount(): int
+    {
+        return MonthlyStorageFee::where('upload_id', $this->batchID)
+            ->where('active', 1)
+            ->count();
     }
 
     public function rules(): array

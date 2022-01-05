@@ -6,19 +6,13 @@ namespace App\Repositories;
 use App\Models\AmazonReportList;
 use Illuminate\Support\Facades\DB;
 
-class AmazonReportListRepository
+class AmazonReportListRepository extends BaseRepository
 {
     protected $amazonReportList;
 
     public function __construct()
     {
-    }
-
-    public function insertData(array $data)
-    {
-        return DB::transaction(function () use ($data) {
-            return AmazonReportList::insert($data);
-        });
+        parent::__construct(new AmazonReportList);
     }
 
     public function getAccountMarketingAndPromotion(string $reportDate, string $clientCode, string $supplierName, bool $isCrafter)

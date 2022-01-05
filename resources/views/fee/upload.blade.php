@@ -20,7 +20,7 @@
         <div class="card">
             <!-- Card header -->
             <div class="card-header py-2">
-                <form method="GET" action="/fee/upload" role="form" class="form">
+                <form method="GET" action="{{ route('fee.upload.view') }}" role="form" class="form">
                     <div class="row">
 
                         {{-- Created At --}}
@@ -28,7 +28,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="input_date">Created At</label>
                                 <input class="form-control _fz-1" name="search_date" id="input_date"
-                                       placeholder="date" type="text" value="{{ $createdAt }}">
+                                       placeholder="date" type="text" value="{{  request('search_date') }}">
                             </div>
                         </div>
 
@@ -40,23 +40,23 @@
                                         id="select_fee_type">
                                     <option value="">all</option>
                                     <option value="platform_ad_fees"
-                                    @if($feeType == 'platform_ad_fees') {{ 'selected' }} @endif>
+                                    @if(request('fee_type') == 'platform_ad_fees') {{ 'selected' }} @endif>
                                         Platform Advertisement Fee
                                     </option>
                                     <option value="amazon_date_range"
-                                    @if($feeType == 'amazon_date_range') {{ 'selected' }} @endif>
+                                    @if(request('fee_type') == 'amazon_date_range') {{ 'selected' }} @endif>
                                         Amazon Date Range Report
                                     </option>
                                     <option value="long_term_storage_fees"
-                                    @if($feeType == 'long_term_storage_fees') {{ 'selected' }} @endif>
+                                    @if(request('fee_type') == 'long_term_storage_fees') {{ 'selected' }} @endif>
                                         FBA Long Term Storage Fee
                                     </option>
                                     <option value="monthly_storage_fees"
-                                    @if($feeType == 'monthly_storage_fees') {{ 'selected' }} @endif>
+                                    @if(request('fee_type') == 'monthly_storage_fees') {{ 'selected' }} @endif>
                                         FBA Monthly Storage Fee
                                     </option>
                                     <option value="first_mile_shipment_fees"
-                                    @if($feeType == 'first_mile_shipment_fees') {{ 'selected' }} @endif>
+                                    @if(request('fee_type') == 'first_mile_shipment_fees') {{ 'selected' }} @endif>
                                         First Mile Shipment Fee
                                     </option>
                                 </select>
@@ -70,14 +70,14 @@
                                 <select class="form-control _fz-1" data-toggle="select" name="status_type"
                                         id="select_status">
                                     <option value="">all</option>
-                                    <option value="completed" @if($status == 'completed') {{ 'selected' }} @endif>
-                                        Completed
+                                    <option value="completed" @if(request('status_type') == 'completed')
+                                        {{ 'selected' }} @endif>Completed
                                     </option>
-                                    <option value="processing" @if($status == 'processing') {{ 'selected' }} @endif>
-                                        Processing
+                                    <option value="processing" @if(request('status_type') == 'processing')
+                                        {{ 'selected' }} @endif>Processing
                                     </option>
-                                    <option value="failed" @if($status == 'failed') {{ 'selected' }} @endif>
-                                        Error
+                                    <option value="failed" @if(request('status_type') == 'failed')
+                                        {{ 'selected' }} @endif>Error
                                     </option>
                                 </select>
                             </div>
@@ -88,7 +88,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="report_date">Report Date</label>
                                 <input class="form-control _fz-1" name="report_date" id="report_date"
-                                       value="{{$reportDate}}" placeholder="report date" type="text">
+                                       value="{{ request('report_date') }}" placeholder="report date" type="text">
                             </div>
                         </div>
 
@@ -136,7 +136,8 @@
                     <tbody>
                     @foreach ($lists as $item)
                         <tr>
-                            <td>{{ $item->created_at }}</td>
+                            <td>{{ \Carbon\Carbon::parse($item->created_at)
+                                                    ->setTimezone(config('services.timezone.taipei'))}}</td>
                             <td>{{ $item->user_name }}</td>
                             <td>{{ $item->report_date }}</td>
                             <td>{{ $item->fee_type }}</td>
@@ -243,7 +244,6 @@
 @push('js')
     <script type="text/javascript">
         $(function () {
-            let inputDate = $('#input_date').val();
             let reportDate = $('#report_date').val();
 
             $('#input_date').datepicker({
@@ -268,7 +268,6 @@
                 autoclose: true
             });
 
-            $('#input_date').datepicker('update', inputDate);
             $('#report_date').datepicker('update', reportDate);
             $('#inline_report_date').datepicker('update', new Date());
 
@@ -312,6 +311,9 @@
                     return false;
                 }
 
+                //暫時禁止用戶再次上傳檔案
+                $('#inline_submit').prop('disabled', true);
+
                 swal({
                     icon: "success",
                     text: "processing"
@@ -330,6 +332,9 @@
                     data: data,
                     success: function (res) {
                         if (res.status !== 200) {
+                            //如驗證失敗則可再次上傳
+                            $('#inline_submit').prop('disabled', false);
+
                             swal({
                                 icon: "error",
                                 text: res.msg
@@ -381,7 +386,22 @@
                 contentType: false,
                 data: data,
                 success: function () {
-                    console.log('success');
+                    //如上傳成功則可再次上傳
+                    $('#inline_submit').prop('disabled', false);
+                }, error: function (e) {
+                    // 顯示 Validate Error
+                    let errors = [];
+                    $.each(JSON.parse(e.responseText).errors, function (col, msg) {
+                        errors.push(msg.toString());
+                    });
+
+                    swal({
+                        icon: 'error',
+                        text: errors.join("\n")
+                    });
+
+                    //如上傳失敗則可再次上傳
+                    $('#inline_submit').prop('disabled', false);
                 }
             });
         }
