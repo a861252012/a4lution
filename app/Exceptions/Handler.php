@@ -2,7 +2,13 @@
 
 namespace App\Exceptions;
 
+use Log;
 use Throwable;
+use Illuminate\Support\Arr;
+use App\Support\LaravelLoggerUtil;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
 class Handler extends ExceptionHandler
@@ -46,6 +52,67 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+        if($request->ajax()) {
+            return $this->ajaxRender($request, $exception);
+        }
+
         return parent::render($request, $exception);
+    }
+
+    private function ajaxRender($request, Throwable $exception)
+    {
+        // Validation
+        if ($exception instanceof ValidationException) {
+            $validationErrors = [];
+            foreach ($exception->errors() as $key => $item) {
+                $validationErrors[$key] = $item[0];
+            }
+
+            return $this->exceptionResponse(
+                $exception, 
+                Response::HTTP_UNPROCESSABLE_ENTITY, 
+                'Validation Error', 
+                $validationErrors
+            );
+        }
+
+        // Http
+        if ($exception instanceof HttpException) {
+            return $this->exceptionResponse(
+                $exception, 
+                $exception->getStatusCode(), 
+                $exception->getMessage(),
+            );
+        }
+
+        // Other issues
+        return $this->exceptionResponse(
+            $exception, 
+            Response::HTTP_INTERNAL_SERVER_ERROR, 
+            'Server Error',
+        );
+    }
+
+    // 統一回覆格式
+    private function exceptionResponse(Throwable $e, int $code, string $message, array $errors = [])
+    {
+        if($code === Response::HTTP_INTERNAL_SERVER_ERROR) {
+            LaravelLoggerUtil::loggerException($e);
+        }
+
+        $data = [
+            'code'    => $code,
+            'message' => $message,
+            'errors' => $errors ?: Arr::wrap($message)
+        ];
+
+        if (!app()->isProduction()) {
+            $data['debug'] = [
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTrace(),
+            ];
+        }
+
+        return response()->json($data, $code);
     }
 }

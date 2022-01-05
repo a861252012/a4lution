@@ -93,8 +93,6 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/invoice/export', 'InvoiceController@ajaxExport')->name('ajax.invoice.export');
     });
 
-    Route::get('{page}', 'PageController@index')->name('page.index');
-
     Route::prefix('employee')->group(function () {
         Route::get('/commissionpay', 'EmployeeController@commissionPayView')->name('employeeCommission.view');
         Route::get('/commissionpay/detail/{userID?}/{date?}', 'EmployeeController@commissionDetail');
@@ -112,4 +110,14 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/exchangeRate/{date}', 'ExchangeRateController@ajaxShow');
         Route::get('/exchangeRate/{currency}/{startDate}/{endDate}', 'ExchangeRateController@ajaxGetExchangeRate');
     });
+
+    Route::get('/customers', 'CustomerController@index')->name('customer.index');
+    Route::post('/ajax/customers/create', 'CustomerController@ajaxCreate')->name('ajax.customer.create');
+    Route::post('/ajax/customers/store', 'CustomerController@ajaxStore')->name('ajax.customer.store');
+    Route::post('/ajax/customers/{client_code}/edit', 'CustomerController@ajaxEdit')->name('ajax.customer.edit');
+    Route::patch('/ajax/customers/{client_code}', 'CustomerController@ajaxUpdate')->name('ajax.customer.update');
+
+
+
+    Route::get('{page}', 'PageController@index')->name('page.index');
 });

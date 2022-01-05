@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Carbon\Carbon;
 use App\Models\OrderProduct;
+use App\Constants\Commission;
 use App\Support\ERPRequester;
 use App\Models\CommissionSetting;
 use App\Models\ExtraordinaryItem;
@@ -370,7 +371,7 @@ class BillingStatementService
 
         $settings = $commissionSetting->where('client_code', $clientCode)->first();
 
-        if ($settings->is_sku_level_commission === 'T') {
+        if ($settings->calculation_type === Commission::CALCULATION_TYPE_SKU) {
             //check unmatched record
             $haveUnmatchedRecord = $orderProductRepository->checkUnmatchedRecord($clientCode, $reportDate);
             if (!empty($haveUnmatchedRecord)) {
@@ -406,10 +407,10 @@ class BillingStatementService
         }
 
         //check if commission rate type is tiered
-        if ($settings->tier === 'T') {
+        if ($settings->calculation_type === Commission::CALCULATION_TYPE_TIER) {
             return $this->getTieredInfo($clientCode, $totalSalesAmount);
         }
-        return ['type' => 'tiered', 'value' => $settings->basic_rate, 'status' => 'success'];
+        return ['type' => 'base rate', 'value' => $settings->basic_rate, 'status' => 'success'];
     }
 
     public function getAvolutionCommission(
@@ -425,7 +426,9 @@ class BillingStatementService
                 return round($orderProductRepository->getSkuAvolutionCommission($clientCode, $shipDate), 2);
             case 'promotion':
                 return $commissionRate['value'];
-            case 'tiered':
+
+            // tier rate、 base rate、tier amount
+            default:
                 return round($tieredParam * $commissionRate['value'], 2);
         }
     }
@@ -455,7 +458,7 @@ class BillingStatementService
             //如有amount則先取amount
             $amountKey = "tier_{$newLevel}_amount";
             if (!empty((float)$setting->$amountKey)) {
-                return ['type' => 'tiered', 'value' => $setting->$amountKey, 'status' => 'success'];
+                return ['type' => 'tiered amount', 'value' => $setting->$amountKey, 'status' => 'success'];
             }
 
             $rateKey = "tier_{$newLevel}_rate";

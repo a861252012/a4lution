@@ -9,8 +9,8 @@ class AjaxStoreRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            "report_date" => "required",
-            "client_code" => "required",
+            'report_date' => 'required',
+            'client_code' => 'required',
         ];
     }
 }

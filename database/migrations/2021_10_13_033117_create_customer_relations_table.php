@@ -14,6 +14,7 @@ class CreateCustomerRelationsTable extends Migration
     public function up()
     {
         Schema::create('customer_relations', function (Blueprint $table) {
+            $table->id();
             $table->string('client_code', 50);
             $table->integer('user_id');
             $table->tinyInteger('role_id');
@@ -22,8 +23,6 @@ class CreateCustomerRelationsTable extends Migration
             $table->unsignedInteger('created_by');
             $table->timestamp('updated_at')->default('0000-00-00 00:00:00');
             $table->unsignedInteger('updated_by');
-            
-            $table->unique(['client_code', 'user_id', 'role_id'], 'client_code_sales_user_name');
         });
     }
 

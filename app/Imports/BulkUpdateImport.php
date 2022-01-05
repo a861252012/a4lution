@@ -63,7 +63,7 @@ class BulkUpdateImport implements
 
                 $diff = array_diff($updateData, $originalOrderProduct);
 
-                collect($diff)->each(fn ($item, $key) => SystemChangeLog::insert(
+                collect($diff)->each(fn($item, $key) => SystemChangeLog::insert(
                     [
                         'menu_path' => '/orders/bulkUpdate/index',
                         'event_type' => 'U',
