@@ -11,7 +11,6 @@ class AjaxUpdateRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'client_code' => 'required',
             'company_name' => 'nullable',
             'company_contact' => 'nullable',
             'street1' => 'nullable',
