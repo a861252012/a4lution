@@ -171,7 +171,6 @@ class CustomerController extends Controller
             // 更新 customer
             $result = Customer::find($client_code)
                 ->update([
-                    'client_code' => $request->client_code,
                     'company_name' => $request->company_name,
                     'contact_person' => $request->company_contact,
                     'address1' => $request->street1,
