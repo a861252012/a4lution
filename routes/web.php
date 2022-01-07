@@ -116,6 +116,8 @@ Route::group(['middleware' => 'auth'], function () {
     });
 
     Route::get('/customers', 'CustomerController@index')->name('customer.index');
+    Route::post('/ajax/customers/create', 'CustomerController@ajaxCreate')->name('ajax.customer.create');
+    Route::post('/ajax/customers/store', 'CustomerController@ajaxStore')->name('ajax.customer.store');
     Route::post('/ajax/customers/{client_code}/edit', 'CustomerController@ajaxEdit')->name('ajax.customer.edit');
     Route::patch('/ajax/customers/{client_code}', 'CustomerController@ajaxUpdate')->name('ajax.customer.update');
 

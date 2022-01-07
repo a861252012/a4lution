@@ -6,11 +6,12 @@ use App\Constants\Commission;
 use App\Rules\CheckCalculationType;
 use App\Http\Requests\BaseFormRequest;
 
-class AjaxUpdateRequest extends BaseFormRequest
+class AjaxStoreRequest extends BaseFormRequest
 {
     public function rules(): array
     {
         return [
+            'client_code' => 'required|unique:App\Models\Customer,client_code',
             'company_name' => 'nullable',
             'company_contact' => 'nullable',
             'street1' => 'nullable',
