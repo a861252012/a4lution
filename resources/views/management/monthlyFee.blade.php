@@ -20,7 +20,7 @@
         <div class="card">
             <!-- Card header -->
             <div class="card-header py-2">
-                <form method="GET" action="{{route(('monthlyFee.view'))}}" role="form">
+                <form id="monthly_setting" action="{{route(('monthlyFee.view'))}}" role="form">
                     <div class="row">
 
                         {{-- Client Code --}}
@@ -28,8 +28,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="client_code">Client Code</label>
                                 <input class="form-control _fz-1" name="client_code" id="client_code"
-                                       type="text" placeholder="Client Code"
-                                       value="{{ request('client_code') }}">
+                                       type="text" placeholder="Client Code" value="{{ request('client_code') }}">
                             </div>
                         </div>
 
@@ -80,7 +79,7 @@
                     @forelse ($lists as $item)
                         <tr>
                             <td></td>
-                            <td data-attr="client_code">{{ $item->client_code }}</td>
+                            <td data-attr="client_code" class="href_style">{{ $item->client_code }}</td>
                             <td>{{ $item->company_name }}</td>
                             <td>{!! ($item->active) ? "<strong>Active</strong>" : 'Inactive' !!}</td>
                             <td>{{ $item->contract_date }}</td>
@@ -140,7 +139,6 @@
                 let idx = $.inArray(tr.attr('id'), detailRows);
                 let clientCode = $(this).parent().find('[data-attr="client_code"]').text();
 
-                console.log(clientCode);
                 if (row.child.isShown()) {
                     tr.removeClass('details');
                     row.child.hide();
@@ -153,13 +151,13 @@
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         }
                     });
-                    //call api to check if monthly report exist
+
+                    //call api to get monthly fee detail
                     $.ajax({
                         url: origin + '/management/monthlyFee/ajax/employeeRule/' + clientCode,
                         type: 'get',
                         async: false,
                         success: function (res) {
-                            console.log(res);
                             tr.addClass('details');
                             row.child(format(res)).show();
                         }
@@ -178,6 +176,20 @@
                     $('#' + id + ' td:details-control').trigger('click');
                 });
             });
+
+            //綁定第一層列表的 client code 欄位 (開啟colorbox編輯視窗)
+            $('#monthly_fee_table').find('td[data-attr="client_code"]').on('click', function () {
+                $.colorbox({
+                    iframe: false,
+                    href: origin + '/management/monthlyFee/ajax/editView/' + $(this).text(),
+                    width: "80%",
+                    height: "90%",
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+            });
+
         });
 
         function format(d) {
@@ -201,14 +213,15 @@
                     '<td>' + item.client_code + '</td>' +
                     '<td>' + item.roles.role_name + '</td>' +
                     '<td>' + item.is_tiered_rate + '</td>' +
-                    '<td>First Year: ' + item.rate_base + '% <br/>' +
-                    ' Renewal: ' + item.rate + '%</td>' +
+                    '<td>First Year: ' + item.rate_base * 100 + '% <br/>' +
+                    ' Renewal: ' + item.rate * 100 + '%</td>' +
                     '<td>' + item.threshold + '</td>' +
-                    '<td>First Year: ' + item.tier_1_first_year + '% <br/>' +
-                    ' Renewal: ' + item.tier_1_over_a_year + '%</td>' +
-                    '<td>' + item.tier_2_first_year + '</td>' +
-                    '<td>' + moment.tz(item.updated_at, "Asia/Taipei").format('YYYY-MM-DD HH:mm:ss'); + '</td>' +
-                    '</tr>'
+                    '<td>First Year: ' + item.tier_1_first_year * 100 + '% <br/>' +
+                    ' Renewal: ' + item.tier_1_over_a_year * 100 + '%</td>' +
+                    '<td>' + item.tier_2_first_year * 100 + '</td>' +
+                    '<td>' + moment.tz(item.updated_at, "Asia/Taipei").format('YYYY-MM-DD HH:mm:ss');
+                +'</td>' +
+                '</tr>'
             })
 
             html += '</tbody>' +
