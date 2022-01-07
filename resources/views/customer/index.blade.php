@@ -1,7 +1,4 @@
-@extends('layouts.app', [
-    'parentSection' => 'INVOICE',
-    'elementName' => 'ISSUE'
-])
+@extends('layouts.app')
 @section('content')
     @component('layouts.headers.auth')
         @component('layouts.headers.breadcrumbs')
@@ -19,8 +16,6 @@
         <div class="card">
             <!-- Card header -->
             <div class="card-header py-2">
-                <input type="hidden" id="csrf_token" name="_token" value="{{ csrf_token() }}">
-
                 <form method="GET" action="{{ route('customer.index') }}" role="form" class="form">
                     <div class="row">
                         {{-- CLIENT CODE --}}
