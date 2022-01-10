@@ -185,7 +185,7 @@ class BillingStatementService
             true
         );
 
-        $fees['a4AccountMarketingAndPromotion'] = $clientAccountMarketingAndPromotion ?
+        $fees['clientAccountMarketingAndPromotion'] = $clientAccountMarketingAndPromotion ?
             $clientAccountMarketingAndPromotion[0]->Miscellaneous : 0;
 
         $a4AccountMarketingAndPromotion = $amazonReportListRepository->getAccountMarketingAndPromotion(
@@ -195,7 +195,7 @@ class BillingStatementService
             false
         );
 
-        $fees['clientAccountMarketingAndPromotion'] = $a4AccountMarketingAndPromotion ?
+        $fees['a4AccountMarketingAndPromotion'] = $a4AccountMarketingAndPromotion ?
             $a4AccountMarketingAndPromotion[0]->Miscellaneous : 0;
 
         //getAccountFbaStorageFee
