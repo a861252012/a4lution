@@ -103,7 +103,23 @@
 <script src="{{ asset('js') }}/momentJS.js"></script>
 <!-- Moment Timezone JS(如有使用到時區就要額外include) -->
 <script src="{{ asset('js') }}/moment-timezone-with-data.js"></script>
+<script>
 
+    // 顯示 validation errors
+    @if ($errors->count())
+        let errors = [];
+
+        @foreach ($errors->all() as $error)
+            errors.push('{{ $error }}');
+        @endforeach
+        
+        swal({
+            icon: 'error',
+            text: errors.join("\n")
+        });
+    @endif
+
+</script>
 @stack('js')
 </body>
 </html>
