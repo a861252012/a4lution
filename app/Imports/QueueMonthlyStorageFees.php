@@ -116,11 +116,11 @@ class QueueMonthlyStorageFees implements
                 DB::beginTransaction();
                 try {
                     MonthlyStorageFee::where('report_date', $this->inputReportDate)
-                        ->where('active', '=', 1)
+                        ->where('active', 1)
                         ->where('upload_id', '<', $this->batchID)
                         ->cursor()
-                        ->chunk(1000, function ($items) {
-                            $items->update(['active' => 0]);
+                        ->each(function ($item) {
+                            $item->update(['active' => 0]);
                         });
 
                     BatchJob::where('id', $this->batchID)->update(
@@ -150,10 +150,10 @@ class QueueMonthlyStorageFees implements
                     );
 
                     MonthlyStorageFee::where('report_date', $this->inputReportDate)
-                        ->where('active', '=', 1)
-                        ->where('upload_id', '=', $this->batchID)
+                        ->where('active', 1)
+                        ->where('upload_id', $this->batchID)
                         ->cursor()
-                        ->chunk(1000, function ($item) {
+                        ->each(function ($item) {
                             $item->delete();
                         });
 
