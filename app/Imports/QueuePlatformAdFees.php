@@ -100,9 +100,9 @@ class QueuePlatformAdFees implements
                 try {
                     PlatformAdFee::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '<', $this->batchID)
-                        ->where('active', '=', 1)
+                        ->where('active', 1)
                         ->cursor()
-                        ->chunk(1000, function ($item) {
+                        ->each(function ($item) {
                             $item->update(['active' => 0]);
                         });
 
@@ -134,10 +134,10 @@ class QueuePlatformAdFees implements
                     );
 
                     PlatformAdFee::where('report_date', $this->inputReportDate)
-                        ->where('active', '=', 1)
-                        ->where('upload_id', '=', $this->batchID)
+                        ->where('active', 1)
+                        ->where('upload_id', $this->batchID)
                         ->cursor()
-                        ->chunk(1000, function ($item) {
+                        ->each(function ($item) {
                             $item->delete();
                         });
 
