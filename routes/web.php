@@ -109,6 +109,10 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/exchangeRate/create', 'ExchangeRateController@ajaxCreate');
         Route::get('/exchangeRate/{date}', 'ExchangeRateController@ajaxShow');
         Route::get('/exchangeRate/{currency}/{startDate}/{endDate}', 'ExchangeRateController@ajaxGetExchangeRate');
+        Route::get('/monthlyFee', 'ManagementController@monthlyFeeView')->name('monthlyFee.view');
+        Route::get('/monthlyFee/ajax/employeeRule/{clientCode?}', 'ManagementController@ajaxEmployeeRule');
+        Route::post('/monthlyFee/ajax/editView/{clientCode}', 'ManagementController@ajaxEditView');
+        Route::post('/monthlyFee/ajax/createSetting/{clientCode}', 'ManagementController@ajaxCreateSetting');
     });
 
     Route::get('/customers', 'CustomerController@index')->name('customer.index');
@@ -116,8 +120,6 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/ajax/customers/store', 'CustomerController@ajaxStore')->name('ajax.customer.store');
     Route::post('/ajax/customers/{client_code}/edit', 'CustomerController@ajaxEdit')->name('ajax.customer.edit');
     Route::patch('/ajax/customers/{client_code}', 'CustomerController@ajaxUpdate')->name('ajax.customer.update');
-
-
 
     Route::get('{page}', 'PageController@index')->name('page.index');
 });
