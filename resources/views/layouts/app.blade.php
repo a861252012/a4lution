@@ -102,6 +102,23 @@
 
 <!-- moment JS -->
 <script src="{{ asset('js') }}/momentJS.js"></script>
+<script>
+
+        // 顯示 validation errors
+        @if ($errors->count())
+            let errors = [];
+
+            @foreach ($errors->all() as $error)
+                errors.push('{{ $error }}');
+            @endforeach
+            
+            swal({
+                icon: 'error',
+                text: errors.join("\n")
+            });
+        @endif
+
+    </script>
 @stack('js')
 </body>
 </html>

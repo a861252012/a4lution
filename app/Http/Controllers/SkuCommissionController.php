@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\SkuCommissionExport;
 use App\Imports\SkuCommissionImport;
 use App\Models\CommissionSkuSetting;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\SkuCommission\IndexRequest;
+use App\Http\Requests\SkuCommission\ExportRequest;
 use App\Http\Requests\SkuCommission\ajaxUploadStoreRequest;
 
 class SkuCommissionController extends Controller
@@ -63,5 +65,10 @@ class SkuCommissionController extends Controller
             $skuCommissionImport,
             $request->file('file')
         );
+    }
+
+    public function export(ExportRequest $request)
+    {
+        return new SkuCommissionExport($request->client_code, $request->sku);
     }
 }

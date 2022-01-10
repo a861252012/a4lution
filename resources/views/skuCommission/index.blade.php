@@ -16,7 +16,7 @@
         <div class="card">
             <!-- Card header -->
             <div class="card-header py-2">
-                <form method="GET" action="{{ route('sku_commission.index') }}" role="form" class="form">
+                <form id="searchForm" method="GET" action="{{ route('sku_commission.index') }}" role="form" class="form">
                     <div class="row">
                         {{-- CLIENT CODE --}}
                         <div class="col-lg-2 col-md-6 col-sm-6">
@@ -40,8 +40,8 @@
                         <div class="col-lg-2 col-md-6 col-sm-6">
                             <label class="form-control-label"></label>
                             <div class="form-group mb-0">
-                                <button class="form-control _fz-1 btn _btn btn-primary" type="submit"
-                                        style="margin-top: 6px;">Search
+                                <button id="searchBtn" class="form-control _fz-1 btn _btn btn-primary"
+                                    style="margin-top: 6px;">Search
                                 </button>
                             </div>
                         </div>
@@ -63,7 +63,7 @@
                             <label class="form-control-label"></label>
                             <div class="form-group mb-0">
                                 <button class="form-control _fz-1 btn _btn btn-primary" 
-                                    id="exportBtn" type="submit" style="margin-top: 6px;">Export</button>
+                                    id="exportBtn" style="margin-top: 6px;">Export</button>
                             </div>
                         </div>
                     </div>
@@ -171,6 +171,17 @@
                     .bind(this)
                 });
             });
+
+            $('#searchBtn').click(function () {
+                $('#searchForm').attr('action', '{{ route('sku_commission.index') }}');
+                $('#searchForm').submit();
+            });
+
+            $('#exportBtn').click(function () {
+                $('#searchForm').attr('action', '{{ route('sku_commission.export') }}');
+                $('#searchForm').submit();
+            });
+
         });
 
     </script>

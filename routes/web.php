@@ -121,6 +121,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/sku-commissions', 'SkuCommissionController@index')->name('sku_commission.index');
     Route::get('/ajax/sku-commissions/upload', 'SkuCommissionController@ajaxUpload')->name('ajax.sku_commission.upload');
     Route::post('/ajax/sku-commissions/upload/store', 'SkuCommissionController@ajaxUploadStore')->name('ajax.sku_commission.upload.store');
+    Route::get('/sku-commissions/export', 'SkuCommissionController@export')->name('sku_commission.export');
 
 
     Route::get('{page}', 'PageController@index')->name('page.index');
