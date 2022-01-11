@@ -6,6 +6,7 @@ use App\Exports\SkuCommissionExport;
 use App\Imports\SkuCommissionImport;
 use App\Models\CommissionSkuSetting;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\HeadingRowImport;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\SkuCommission\IndexRequest;
 use App\Http\Requests\SkuCommission\ExportRequest;
@@ -46,8 +47,8 @@ class SkuCommissionController extends Controller
         $skuCommissionImport = new SkuCommissionImport($clientCode);
 
         // 檢查 excel title 排序是否正確
-        $titles = ['Site','Currency','SKU','Threshold','Basic Rate (<Threshold)','Higher Rate (>=Threshold)'];
-        $fileTitles = $skuCommissionImport->toArray($request->file('file'))[0][0];
+        $titles = ['site','currency','sku','threshold','basic_rate_threshold','higher_rate_threshold'];
+        $fileTitles = (new HeadingRowImport)->toArray($request->file('file'))[0][0];
 
         foreach ($titles as $index => $title) {
             if ($fileTitles[$index] <> $title) {
