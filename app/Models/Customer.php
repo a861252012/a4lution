@@ -32,9 +32,9 @@ class Customer extends Model
         });
     }
 
-    ############
-    ## Scopes ##
-    ############
+    ###############
+    ## Accessors ##
+    ###############
 
     public function getUpdatedAtTwAttribute()
     {

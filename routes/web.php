@@ -111,12 +111,17 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/exchangeRate/{currency}/{startDate}/{endDate}', 'ExchangeRateController@ajaxGetExchangeRate');
     });
 
+
     Route::get('/customers', 'CustomerController@index')->name('customer.index');
     Route::post('/ajax/customers/create', 'CustomerController@ajaxCreate')->name('ajax.customer.create');
     Route::post('/ajax/customers/store', 'CustomerController@ajaxStore')->name('ajax.customer.store');
     Route::post('/ajax/customers/{client_code}/edit', 'CustomerController@ajaxEdit')->name('ajax.customer.edit');
     Route::patch('/ajax/customers/{client_code}', 'CustomerController@ajaxUpdate')->name('ajax.customer.update');
 
+    Route::get('/sku-commissions', 'SkuCommissionController@index')->name('sku_commission.index');
+    Route::get('/ajax/sku-commissions/upload', 'SkuCommissionController@ajaxUpload')->name('ajax.sku_commission.upload');
+    Route::post('/ajax/sku-commissions/upload/store', 'SkuCommissionController@ajaxUploadStore')->name('ajax.sku_commission.upload.store');
+    Route::get('/sku-commissions/export', 'SkuCommissionController@export')->name('sku_commission.export');
 
 
     Route::get('{page}', 'PageController@index')->name('page.index');
