@@ -5,8 +5,10 @@ namespace App\Imports;
 use App\Models\CommissionSkuSetting;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\Importable;
+use Maatwebsite\Excel\Concerns\WithStartRow;
+use Maatwebsite\Excel\Concerns\WithValidation;
 
-class SkuCommissionImport implements ToModel
+class SkuCommissionImport implements ToModel, WithStartRow, WithValidation
 {
     use Importable;
 
@@ -34,4 +36,21 @@ class SkuCommissionImport implements ToModel
         return 2;
     }
 
+    public function rules(): array
+    {
+        return [
+            '3' => ['required','numeric'],
+            '4' => ['required','numeric'],
+            '5' => ['required','numeric'],
+        ];
+    }
+
+    public function customValidationAttributes()
+    {
+        return [
+            '3' => '[ Threshold ]',
+            '4' => '[ Basic Rate ]',
+            '5' => '[ Higher Rate ]',
+        ];
+    }
 }
