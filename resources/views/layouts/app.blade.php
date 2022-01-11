@@ -34,7 +34,7 @@
     <link href="{{ asset('argon') }}/vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
 
     <!-- dataTables css -->
-    <link rel="stylesheet" href="{{ asset('argon') }}/vendor/datatables.net-bs4/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.1/css/jquery.dataTables.css">
 
 <!-- Argon CSS -->
     <link type="text/css" href="{{ asset('css') }}/argon.css?v=2.0.0" rel="stylesheet">
