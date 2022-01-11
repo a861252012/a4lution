@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Models\AmazonDateRangeReport;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
+use Log;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -12,7 +13,12 @@ use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Throwable;
 
-class MisCellaneousExport implements WithTitle, FromQuery, WithHeadings, withMapping, WithStrictNullComparison
+class MisCellaneousExport implements
+    WithTitle,
+    FromQuery,
+    WithHeadings,
+    withMapping,
+    WithStrictNullComparison
 {
     private $reportDate;
     private $clientCode;
@@ -39,7 +45,7 @@ class MisCellaneousExport implements WithTitle, FromQuery, WithHeadings, withMap
         $invoice->doc_status = "deleted";
         $invoice->save();
 
-        \Log::channel('daily_queue_export')
+        Log::channel('daily_queue_export')
             ->info('MisCellaneousExport')
             ->info($exception);
     }
@@ -91,7 +97,7 @@ class MisCellaneousExport implements WithTitle, FromQuery, WithHeadings, withMap
             ->where('amazon_date_range_report.active', 1)
             ->where('amazon_date_range_report.supplier', $this->clientCode)
             ->where('amazon_date_range_report.report_date', $this->reportDate)
-            ->whereIn('amazon_date_range_report.type', ['FBA Customer Return Fee', 'Adjustment', 'other']);
+            ->whereNotIn('amazon_date_range_report.type', ['Order','Refund']);
     }
 
     public function headings(): array
