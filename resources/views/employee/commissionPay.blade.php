@@ -260,6 +260,7 @@
             background: url("{{ asset('pictures') }}/details_open.png") no-repeat center center;
             cursor: pointer;
         }
+
         tr.details td.details-control {
             background: url("{{ asset('pictures') }}/details_close.png") no-repeat center center;
         }
