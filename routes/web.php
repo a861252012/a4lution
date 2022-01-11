@@ -109,10 +109,6 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/exchangeRate/create', 'ExchangeRateController@ajaxCreate');
         Route::get('/exchangeRate/{date}', 'ExchangeRateController@ajaxShow');
         Route::get('/exchangeRate/{currency}/{startDate}/{endDate}', 'ExchangeRateController@ajaxGetExchangeRate');
-        Route::get('/monthlyFee', 'ManagementController@monthlyFeeView')->name('monthlyFee.view');
-        Route::get('/monthlyFee/ajax/employeeRule/{clientCode?}', 'ManagementController@ajaxEmployeeRule');
-        Route::post('/monthlyFee/ajax/editView/{clientCode}', 'ManagementController@ajaxEditView');
-        Route::post('/monthlyFee/ajax/createSetting/{clientCode}', 'ManagementController@ajaxCreateSetting');
     });
 
 

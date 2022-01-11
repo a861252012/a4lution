@@ -104,9 +104,9 @@ class QueueLongTermStorageFees implements
                 try {
                     longTermStorageFee::where('report_date', $this->inputReportDate)
                         ->where('upload_id', '<', $this->batchID)
-                        ->where('active', 1)
+                        ->where('active', '=', 1)
                         ->cursor()
-                        ->each(function ($item) {
+                        ->chunk(1000, function ($item) {
                             $item->update(['active' => 0]);
                         });
 
@@ -142,7 +142,7 @@ class QueueLongTermStorageFees implements
                         ->where('upload_id', '=', $this->batchID)
                         ->where('active', '=', 1)
                         ->cursor()
-                        ->each(function ($item) {
+                        ->chunk(1000, function ($item) {
                             $item->delete();
                         });
 
