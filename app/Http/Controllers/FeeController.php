@@ -39,15 +39,15 @@ class FeeController extends Controller
 {
     const BATCH_STATUS = 'processing';
 
-    private $batchJob;
-    private $amazonDateRangeReport;
-    private $platformAdFee;
-    private $monthlyStorageFee;
-    private $longTermStorageFee;
-    private $firstMileShipmentFee;
-    private $billingStatement;
-    private $customerRepository;
-    private $exchangeRateRepository;
+    private BatchJob $batchJob;
+    private AmazonDateRangeReport $amazonDateRangeReport;
+    private PlatformAdFee $platformAdFee;
+    private MonthlyStorageFee $monthlyStorageFee;
+    private LongTermStorageFee $longTermStorageFee;
+    private FirstMileShipmentFee $firstMileShipmentFee;
+    private BillingStatement $billingStatement;
+    private CustomerRepository $customerRepository;
+    private ExchangeRateRepository $exchangeRateRepository;
 
     public function __construct(
         BatchJob               $batchJob,
@@ -74,17 +74,17 @@ class FeeController extends Controller
     public function uploadView(Request $request)
     {
         $data['lists'] = $this->batchJob->query()
+            ->with('users:id,user_name')
             ->select(
                 'batch_jobs.user_id',
                 'batch_jobs.report_date',
                 'batch_jobs.fee_type',
                 'batch_jobs.file_name',
+                'batch_jobs.total_count',
                 'batch_jobs.status',
                 'batch_jobs.created_at',
-                'batch_jobs.user_error_msg',
-                'users.user_name'
+                'batch_jobs.user_error_msg'
             )
-            ->join('users', 'users.id', '=', 'batch_jobs.user_id')
             ->when($request->status, fn ($q) => $q->where('batch_jobs.status', $request->status))
             ->when($request->fee_type, fn ($q) => $q->where('batch_jobs.fee_type', $request->fee_type))
             ->when(
@@ -126,7 +126,7 @@ class FeeController extends Controller
             'report_date' => $reportDate,
             'total_count' => 0,
             'status' => self::BATCH_STATUS,
-            'created_at' => now()->timezone((config('services.timezone.taipei')))->toDateTimeString(),
+            'created_at' => now()->toDateTimeString(),
         ]);
 
         //查詢該月是否已結算,如已結算則不得再更改
@@ -177,17 +177,11 @@ class FeeController extends Controller
 
     public function platformAdsView(Request $request)
     {
-        $data['reportDate'] = $request->report_date ?? date('Y-m');
-        $reportDateFrom = $data['reportDate'] ? date('Y-m-01', strtotime($data['reportDate'])) : date('Y-m-01');
-        $reportDateTo = $data['reportDate'] ? date('Y-m-31', strtotime($data['reportDate'])) : date('Y-m-31');
-        $data['supplier'] = $request->supplier ?? null;
-        $data['platform'] = $request->platform ?? null;
+        $data['reportDate'] = $request->report_date ? Carbon::parse($request->report_date)->startOfMonth()
+            : now()->startOfMonth();
 
-        //調整report_date格式
-        $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') as report_date");
-
-        $query = $this->platformAdFee->select(
-            $formattedReportDate,
+        $data['lists'] = $this->platformAdFee->select(
+            DB::raw("date_format(report_date,'%M-%Y') as report_date"),
             'client_code as supplier',
             'platform',
             'account',
@@ -203,18 +197,11 @@ class FeeController extends Controller
             'sales_amount',
             'sales_amount_hkd'
         )
-            ->where('active', 1)
-            ->whereBetween('report_date', [$reportDateFrom, $reportDateTo]);
-
-        if ($data['supplier']) {
-            $query->where('client_code', '=', $data['supplier']);
-        }
-
-        if ($data['platform']) {
-            $query->where('platform', '=', $data['platform']);
-        }
-
-        $data['lists'] = $query->orderby('report_date', 'desc')
+            ->active()
+            ->where('report_date', $data['reportDate'])
+            ->when($request->supplier, fn ($q) => $q->where('client_code', $request->supplier))
+            ->when($request->platform, fn ($q) => $q->where('platform', $request->platform))
+            ->orderByDesc('report_date')
             ->paginate(100)
             ->appends($request->query());
 

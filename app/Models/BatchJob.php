@@ -4,6 +4,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BatchJob extends Model
 {
@@ -15,8 +16,8 @@ class BatchJob extends Model
 
     public $timestamps = false;
 
-    public function users()
+    public function users(): BelongsTo
     {
-        return $this->belongsTo('App\Models\User', 'id', 'user_id');
+        return $this->belongsTo('App\Models\User', 'user_id', 'id');
     }
 }

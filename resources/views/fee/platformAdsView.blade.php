@@ -26,7 +26,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="report_date">Report Date</label>
                                 <input class="form-control _fz-1" name="report_date" id="report_date" type="text"
-                                       placeholder="report date" value="{{$data['reportDate'] ?? ''}}" readonly>
+                                       placeholder="report date" value="{{ request('report_date') }}" readonly>
                             </div>
                         </div>
 
@@ -35,7 +35,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="supplier">Supplier</label>
                                 <input class="form-control _fz-1" name="supplier" id="supplier"
-                                       placeholder="supplier" type="text" value="{{$data['supplier'] ?? ''}}">
+                                       placeholder="supplier" type="text" value="{{ request('supplier') }}">
                             </div>
                         </div>
 
@@ -44,7 +44,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="platform">Platform</label>
                                 <input class="form-control _fz-1" name="platform" id="platform" type="text"
-                                       value="{{$data['platform'] ?? ''}}" placeholder="platform">
+                                       value="{{ request('platform') }}" placeholder="platform">
                             </div>
                         </div>
 
