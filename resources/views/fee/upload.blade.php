@@ -129,7 +129,7 @@
                         <th>Report Date</th>
                         <th>Fee Type</th>
                         <th>File Name</th>
-                        <th>Total Count</th>
+                        <th>Inserted Rows</th>
                         <th>Status</th>
                         <th>Error Msg</th>
                     </tr>
