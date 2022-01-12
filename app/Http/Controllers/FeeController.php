@@ -126,7 +126,7 @@ class FeeController extends Controller
             'report_date' => $reportDate,
             'total_count' => 0,
             'status' => self::BATCH_STATUS,
-            'created_at' => now()->timezone((config('services.timezone.taipei')))->toDateTimeString(),
+            'created_at' => now()->toDateTimeString(),
         ]);
 
         //查詢該月是否已結算,如已結算則不得再更改
