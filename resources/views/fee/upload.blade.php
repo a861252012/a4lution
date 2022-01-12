@@ -129,6 +129,7 @@
                         <th>Report Date</th>
                         <th>Fee Type</th>
                         <th>File Name</th>
+                        <th>Total Count</th>
                         <th>Status</th>
                         <th>Error Msg</th>
                     </tr>
@@ -138,11 +139,12 @@
                         <tr>
                             <td>{{ \Carbon\Carbon::parse($item->created_at)
                                                     ->setTimezone(config('services.timezone.taipei')) }}</td>
-                            <td>{{ $item->user_name }}</td>
+                            <td>{{ $item->users->user_name }}</td>
                             <td>{{ \Carbon\Carbon::parse($item->report_date)
                                                     ->setTimezone(config('services.timezone.taipei'))->format('F-Y') }}</td>
                             <td>{{ $item->fee_type }}</td>
                             <td>{{ $item->file_name }}</td>
+                            <td>{{ $item->total_count }}</td>
                             <td>{{ $item->status }}</td>
                             <td>{{ $item->user_error_msg }}</td>
                         </tr>
