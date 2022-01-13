@@ -5,7 +5,7 @@
 
 namespace App\Constants;
 
-class ImportTitle
+class ImportTitleConstant
 {
     //platform_ad_fees
     const PLATFORM_AD = [

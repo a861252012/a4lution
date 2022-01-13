@@ -2,7 +2,7 @@
 
 namespace App\Constants;
 
-class Currency
+class CurrencyConstant
 {
     //現有匯率支援的幣別
     const EXCHANGE_RATE = [

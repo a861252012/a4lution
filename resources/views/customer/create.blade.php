@@ -20,7 +20,7 @@
                 <div class="row">
                     <div class="col-6 form-group mb-2">
                         <label class="form-control-label _fz-1" for="client_code">
-                            Client Code <span class="text-red">*<span>
+                            Client Code <span class="text-red">*</span>
                         </label>
                         <input class="form-control _fz-1" name="client_code" id="client_code" 
                             type="text" value="">
@@ -89,7 +89,7 @@
                 <hr class="my-2">
                 <div class="form-group mb-2">
                     <label class="form-control-label _fz-1" for="sales_region">
-                        Sales Region <span class="text-red">*<span>
+                        Sales Region <span class="text-red">*</span>
                     </label>
                     <select class="form-control _fz-1" data-toggle="select" name="sales_region" id="sales_region">
                         <option value="HK">
@@ -102,7 +102,7 @@
                 </div>
                 <div class="form-group mb-2">
                     <label class="form-control-label _fz-1" for="contract_date">
-                        Contract Date <span class="text-red">*<span>
+                        Contract Date <span class="text-red">*</span>
                     </label>
                     <input class="form-control _fz-1" name="contract_date" id="contract_date" 
                         type="text" value="">
@@ -137,9 +137,9 @@
         <div class="d-flex flex-column mt-4">
             <h3>Sales Commission Calculator</h3>
             <hr class="my-2 w-100">
-            <h3>(Standard) Calculation Type <span class="text-red">*<span></h3>
+            <h3>(Standard) Calculation Type <span class="text-red">*</span></h3>
             <hr class="my-2 w-100">
-            @inject('commission', 'App\Constants\Commission')
+            @inject('commission', 'App\Constants\CommissionConstant')
             <div class="custom-control custom-radio mb-2">
                 <input type="radio" id="is_sku" name="calculation_type" class="custom-control-input" value="{{ $commission::CALCULATION_TYPE_SKU }}">
                 <label class="custom-control-label" style="font-size: 0.65rem;" for="is_sku">SKU</label>
@@ -166,7 +166,7 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <th>1<span class="text-red">*<span></th>
+                        <th>1<span class="text-red">*</span></th>
                         <td>
                             <input class="form-control _fz-1 _input_limit_integer" type="text" name='tier_1_threshold'>
                         </td>
@@ -219,7 +219,7 @@
                     </tr>
                     <tr>
                         <th></th>
-                        <th class="text-center">Maximum Amount<span class="text-red">*<span></th>
+                        <th class="text-center">Maximum Amount<span class="text-red">*</span></th>
                         <td>
                             <input class="form-control _fz-1" type="text" name='tier_top_amount'>
                         </td>
@@ -231,7 +231,7 @@
                 </tbody>
             </table>
             <hr class="my-2 w-100">
-            <h3>(Optional) Promo Commission <span class="text-red">*<span></h3>
+            <h3>(Optional) Promo Commission <span class="text-red">*</span></h3>
             <hr class="my-2 w-100">
             <div class="form-group mb-2">
                 <label class="form-control-label _fz-1" for="percentage_off_promotion">Percentage Off Promotion</label>

@@ -4,7 +4,7 @@ namespace App\Services;
 
 use Carbon\Carbon;
 use App\Models\OrderProduct;
-use App\Constants\Commission;
+use App\Constants\CommissionConstant;
 use App\Support\ERPRequester;
 use App\Models\CommissionSetting;
 use App\Models\ExtraordinaryItem;
@@ -370,7 +370,7 @@ class BillingStatementService
 
         $settings = $commissionSetting->where('client_code', $clientCode)->first();
 
-        if ($settings->calculation_type === Commission::CALCULATION_TYPE_SKU) {
+        if ($settings->calculation_type === CommissionConstant::CALCULATION_TYPE_SKU) {
             //check unmatched record
             $haveUnmatchedRecord = $orderProductRepository->checkUnmatchedRecord($clientCode, $reportDate);
             if (!empty($haveUnmatchedRecord)) {
@@ -406,7 +406,7 @@ class BillingStatementService
         }
 
         //check if commission rate type is tiered
-        if ($settings->calculation_type === Commission::CALCULATION_TYPE_TIER) {
+        if ($settings->calculation_type === CommissionConstant::CALCULATION_TYPE_TIER) {
             return $this->getTieredInfo($clientCode, $totalSalesAmount);
         }
         return ['type' => 'base rate', 'value' => $settings->basic_rate, 'status' => 'success'];
