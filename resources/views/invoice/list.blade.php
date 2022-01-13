@@ -188,10 +188,16 @@
                                         icon: res.icon,
                                         text: res.msg
                                     });
-                                }, error: function (error) {
+                                }, error: function (e) {
+                                    // 顯示 Validate Error
+                                    let errors = [];
+                                    $.each(JSON.parse(e.responseText).errors, function (col, msg) {
+                                        errors.push(msg.toString());
+                                    });
+
                                     swal({
                                         icon: 'error',
-                                        text: error
+                                        text: errors.join("\n")
                                     });
                                 }
                             });

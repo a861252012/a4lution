@@ -591,11 +591,15 @@
                             }
                         });
                     }, error: function (e) {
-                        console.log('error');
-                        console.log(e);
+                        // 顯示 Validate Error
+                        let errors = [];
+                        $.each(JSON.parse(e.responseText).errors, function (col, msg) {
+                            errors.push(msg.toString());
+                        });
+
                         swal({
                             icon: 'error',
-                            text: e
+                            text: errors.join("\n")
                         });
                     }
                 };
@@ -680,12 +684,11 @@
                             url: '/ajax/invoice/export',
                             responseType: 'blob', // important
                             type: 'POST',
-                            beforeSend: function (e) {
+                            beforeSend: function () {
                                 $('#cboxOverlay').remove();
                                 $('#colorbox').remove();
                                 $.colorbox.close();
-                            },
-                            success: function (res) {
+                            }, success: function () {
                                 let msg = "Your file(s) are being processed.";
                                 msg += "Please check back later.";
                                 msg += "Go to your invoice list to get status information for all of your reports";
@@ -693,13 +696,22 @@
                                 swal({
                                     text: msg,
                                     icon: 'success',
+                                }).then(function (isConfirm) {
+                                    if (isConfirm) {
+                                        $.colorbox.close();
+                                    }
                                 });
 
-                            },
-                            error: function (e) {
+                            }, error: function (e) {
+                                // 顯示 Validate Error
+                                let errors = [];
+                                $.each(JSON.parse(e.responseText).errors, function (col, msg) {
+                                    errors.push(msg.toString());
+                                });
+
                                 swal({
-                                    icon: "error",
-                                    text: e
+                                    icon: 'error',
+                                    text: errors.join("\n")
                                 });
                             }
                         };
@@ -728,11 +740,21 @@
                         swal({
                             icon: res.icon,
                             text: res.msg
+                        }).then(function (isConfirm) {
+                            if (isConfirm) {
+                                $.colorbox.close();
+                            }
                         });
                     }, error: function (e) {
+                        // 顯示 Validate Error
+                        let errors = [];
+                        $.each(JSON.parse(e.responseText).errors, function (col, msg) {
+                            errors.push(msg.toString());
+                        });
+
                         swal({
                             icon: 'error',
-                            text: e
+                            text: errors.join("\n")
                         });
                     }
                 });
@@ -859,10 +881,15 @@
                 success: function (res) {
                     console.log(res);
                 }, error: function (e) {
-                    console.log(e);
+                    // 顯示 Validate Error
+                    let errors = [];
+                    $.each(JSON.parse(e.responseText).errors, function (col, msg) {
+                        errors.push(msg.toString());
+                    });
+
                     swal({
                         icon: 'error',
-                        text: e
+                        text: errors.join("\n")
                     });
                 }
             });
