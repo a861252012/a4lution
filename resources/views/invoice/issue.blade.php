@@ -19,9 +19,9 @@
         <div class="card">
             <!-- Card header -->
             <div class="card-header py-2">
-                <input type="hidden" id="csrf_token" name="_token" value="{{ csrf_token() }}">
+                @csrf
 
-                <form method="GET" action="/invoice/issue" role="form" class="form">
+                <form method="GET" action="{{ route('invoice.issue.view') }}" role="form" class="form">
                     <div class="row">
                         {{-- CLIENT CODE --}}
                         <div class="col-lg-2 col-md-6 col-sm-6">
@@ -29,8 +29,12 @@
                                 <label class="form-control-label _fz-1" for="sel_client_code">Client Code</label>
                                 <select class="form-control _fz-1" data-toggle="select" name="sel_client_code"
                                         id="sel_client_code">
+                                    <option value={{''}} @if(request('client_code') === 'all'){{ 'selected' }} @endif>
+                                        {{'all'}}
+                                    </option>
                                     @forelse ($client_code_lists as $item)
-                                        <option value="{{$item}}" @if($sel_client_code == $item) {{ 'selected' }} @endif>{{$item}}</option>
+                                        <option value="{{$item}}" @if(request('sel_client_code') == $item)
+                                            {{ 'selected' }} @endif>{{$item}}</option>
                                     @empty
                                         <option value="">{{'NONE'}}</option>
                                     @endforelse
@@ -43,7 +47,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="search_report_date">Report Date</label>
                                 <input class="form-control _fz-1" name="report_date" id="search_report_date"
-                                       type="text" placeholder="REPORT DATE" value="{{$report_date ?? ''}}">
+                                       type="text" placeholder="REPORT DATE" value="{{ request('report_date') }}">
                             </div>
                         </div>
 
@@ -126,7 +130,6 @@
                     </tbody>
                 </table>
 
-
             </div>
             {{-- Pagination --}}
             @if($lists && $lists->lastPage() > 1)
@@ -162,10 +165,10 @@
                     </div>
 
                     <div class="col-2">
-                        <select class="form-control" data-toggle="select" name="sel_client_code"
-                                id="cbx_client_code">
+                        <select class="form-control" data-toggle="select" name="sel_client_code" id="cbx_client_code">
                             @forelse ($client_code_lists as $item)
-                                <option value="{{$item}}" @if($sel_client_code == $item) {{ 'selected' }} @endif>
+                                <option value="{{$item}}" @if(request('sel_client_code') == $item) {{ 'selected' }}
+                                        @endif>
                                     {{$item}}
                                 </option>
                             @empty
@@ -181,7 +184,7 @@
 
                     <div class="col-2">
                         <input class="form-control" name="report_date" id="inline_report_date"
-                               type="text" placeholder="REPORT DATE" value="{{$report_date ?? ''}}" required>
+                               type="text" placeholder="REPORT DATE" value="{{ request('report_date') }}" required>
                     </div>
                 </div>
 
@@ -647,10 +650,8 @@
                 data['_token'] = $('meta[name="csrf-token"]').attr('content');
                 data['billing_statement_id'] = $(this).attr('billing-statement-id');
 
-
                 $.colorbox({
                     iframe: false,
-                    // preloading: false,
                     href: origin + '/invoice/edit',
                     width: "70%",
                     height: "70%",
@@ -776,19 +777,19 @@
                             buttons: true,
                             buttons: ["No,Cancel Plx!", "Yes,Delete it!"]
                         })
-                        .then(function (isConfirm) {
-                            if (isConfirm) {
+                            .then(function (isConfirm) {
+                                if (isConfirm) {
 
-                                swal({
-                                    text: "processing!",
-                                    icon: "success",
-                                    button: "OK",
-                                });
+                                    swal({
+                                        text: "processing!",
+                                        icon: "success",
+                                        button: "OK",
+                                    });
 
-                                deleteIssue(reportDate);
-                                ajaxRunBillingStatement();
-                            }
-                        });
+                                    deleteIssue(reportDate);
+                                    ajaxRunBillingStatement();
+                                }
+                            });
                     } else {
                         swal({
                             icon: 'warning',
@@ -818,7 +819,7 @@
                     report_date: reportDate,
                     client_code: clientCode
                 },
-                success: function (res) {
+                success: function () {
                     swal({
                         text: "Generate Summary Complete!",
                         icon: "success",
@@ -831,7 +832,7 @@
 
                     // 顯示 Validate Error
                     let errors = [];
-                    $.each(JSON.parse(e.responseText).errors, function(col, msg) {                    
+                    $.each(JSON.parse(e.responseText).errors, function (col, msg) {
                         errors.push(msg.toString());
                     });
 

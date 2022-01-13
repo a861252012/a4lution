@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Constants\Role;
+use App\Constants\RoleID;
 use App\Models\Customer;
 use App\Models\EmployeeMonthlyFeeRule;
 use Illuminate\Http\JsonResponse;
@@ -70,9 +70,9 @@ class ManagementController extends Controller
     private function getRole(): array
     {
         return [
-            'sales' => Role::SALES,
-            'operation' => Role::OPERATION,
-            'account_service' => Role::ACCOUNT_SERVICE
+            'sales' => RoleID::SALES,
+            'operation' => RoleID::OPERATION,
+            'account_service' => RoleID::ACCOUNT_SERVICE
         ];
     }
 

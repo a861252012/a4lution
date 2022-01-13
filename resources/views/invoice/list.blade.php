@@ -25,17 +25,18 @@
             <!-- Card header -->
             <div class="card-header py-2">
                 <div>
-                    <form method="GET" action="/invoice/list" role="form" class="form">
+                    <form method="GET" action="{{ route('invoice.list.view') }}" role="form" class="form">
                         <div class="row">
                             {{-- CLIENT CODE --}}
                             <div class="col-lg-2 col-md-6 col-sm-6">
                                 <div class="form-group mb-0">
                                     <label class="form-control-label _fz-1" for="client_code">Client Code</label>
-                                    <select class="form-control _fz-1" data-toggle="select" name="client_code"
-                                            id="client_code">
+                                    <select class="form-control _fz-1" name="client_code" id="client_code">
+                                        <option value={{''}} @if(request('client_code') === 'all')
+                                            {{ 'selected' }} @endif>{{'all'}}</option>
                                         @forelse ($client_code_lists as $item)
-                                            <option value="{{$item}}" @if($clientCode == $item) {{ 'selected' }} @endif>
-                                                {{$item}}</option>
+                                            <option value="{{$item}}" @if(request('client_code') == $item)
+                                                {{ 'selected' }} @endif>{{$item}}</option>
                                         @empty
                                             <option value="">{{'NONE'}}</option>
                                         @endforelse
@@ -48,8 +49,7 @@
                                 <div class="form-group mb-0">
                                     <label class="form-control-label _fz-1" for="erp_order_id">Report Date</label>
                                     <input class="form-control _fz-1" name="report_date" id="report_date"
-                                            type="text" placeholder="Report Date"
-                                            value="{{$reportDate ?? ''}}">
+                                           type="text" placeholder="Report Date" value="{{ request('report_date') }}">
                                 </div>
                             </div>
 
@@ -57,17 +57,16 @@
                             <div class="col-lg-2 col-md-6 col-sm-6">
                                 <div class="form-group mb-0">
                                     <label class="form-control-label _fz-1" for="status">Status</label>
-                                    <select class="form-control _fz-1" data-toggle="select" name="status"
-                                            id="status">
+                                    <select class="form-control _fz-1" data-toggle="select" name="status" id="status">
                                         <option value="">all</option>
-                                        <option value="processing" @if($status == 'processing') {{ 'selected' }} @endif>
-                                            processing
+                                        <option value="processing" @if(request('status') === 'processing')
+                                            {{ 'selected' }} @endif>processing
                                         </option>
-                                        <option value="deleted" @if($status == 'deleted') {{ 'selected' }} @endif>
-                                            deleted
+                                        <option value="deleted" @if(request('status') === 'deleted') {{ 'selected' }}
+                                                @endif>deleted
                                         </option>
-                                        <option value="active" @if($status == 'active') {{ 'selected' }} @endif>
-                                            active
+                                        <option value="active" @if(request('status') === 'active')
+                                            {{ 'selected' }} @endif>active
                                         </option>
                                     </select>
                                 </div>
@@ -147,8 +146,6 @@
 
     <script type="text/javascript">
         $(function () {
-            let reportDate = $('#report_date').val();
-
             $('#report_date').datepicker({
                 format: 'yyyy-mm',//日期時間格式
                 viewMode: "months",

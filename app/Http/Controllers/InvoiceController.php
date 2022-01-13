@@ -2,35 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
-use App\Models\Role;
-use App\Models\Invoice;
-use App\Models\Customer;
-use Illuminate\Bus\Batch;
-use App\Models\OrderProduct;
-use Illuminate\Http\Request;
 use App\Constants\Commission;
-use App\Support\ERPRequester;
-use App\Models\RoleAssignment;
+use App\Constants\RoleID;
+use App\Jobs\Invoice\CreateZipToS3;
+use App\Jobs\Invoice\ExportInvoiceExcel;
+use App\Jobs\Invoice\ExportInvoicePDFs;
 use App\Jobs\Invoice\SetSaveDir;
 use App\Models\BillingStatement;
-use App\Models\CustomerRelation;
-use App\Services\InvoiceService;
 use App\Models\CommissionSetting;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
-use App\Jobs\Invoice\CreateZipToS3;
+use App\Models\Customer;
+use App\Models\CustomerRelation;
 use App\Models\FirstMileShipmentFee;
-use Illuminate\Support\Facades\Auth;
-use App\Jobs\Invoice\ExportInvoicePDFs;
-use App\Repositories\InvoiceRepository;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\Storage;
-use App\Jobs\Invoice\ExportInvoiceExcel;
-use App\Repositories\OrderProductRepository;
+use App\Models\Invoice;
+use App\Models\OrderProduct;
+use App\Models\Role;
+use App\Models\RoleAssignment;
 use App\Repositories\AmazonReportListRepository;
 use App\Repositories\BillingStatementRepository;
 use App\Repositories\FirstMileShipmentFeeRepository;
+use App\Repositories\InvoiceRepository;
+use App\Repositories\OrderProductRepository;
+use App\Services\InvoiceService;
+use App\Support\ERPRequester;
+use Carbon\Carbon;
+use Illuminate\Bus\Batch;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class InvoiceController extends Controller
 {
@@ -185,64 +186,42 @@ class InvoiceController extends Controller
 
     public function listView(Request $request)
     {
-        $data['clientCode'] = $request->input('client_code') ?? null;
-        $data['reportDate'] = $request->input('report_date') ?? null;
-        $data['status'] = $request->input('status') ?? null;
-        $data['lists'] = [];
-
-        //取得登入用戶的對應 client_code列表
-        $roleID = $this->roleAssignment->select('role_id')
-            ->where('user_id', Auth::id())
-            ->where('active', 1)
-            ->pluck('role_id');
-
-        $managerRoleID = $this->role->select('id')
-            ->where('role_name', self::MANAGER_ROLE_NAME)
-            ->where('active', 1)
-            ->pluck('id');
-
-        if ($roleID == $managerRoleID) {
-            $data['client_code_lists'] = $this->customerRelation
-                ->select('customer_relations.client_code')
-                ->distinct('customer_relations.client_code')
-                ->pluck('client_code');
-        } else {
-            $data['client_code_lists'] = $this->customerRelation
-                ->select('customer_relations.client_code')
-                ->distinct('customer_relations.client_code')
-                ->join('users', 'users.id', '=', 'customer_relations.user_id')
-                ->where('customer_relations.active', 1)
-                ->where('users.id', Auth::id())
-                ->pluck('client_code');
-        }
-
-        if (count($request->all())) {
-            $formattedReportDate = DB::raw("date_format(report_date,'%M-%Y') AS report_date");
-
-            $query = $this->invoice->select(
+        $data['lists'] = (count($request->all())) ? $this->invoice
+            ->query()
+            ->select(
+                DB::raw("date_format(report_date,'%M-%Y') AS report_date"),
                 'id',
                 'client_code',
-                $formattedReportDate,
                 'opex_invoice_no',
                 'doc_file_name',
                 'doc_status',
                 'doc_storage_token',
                 'created_at'
-            );
+            )
+            ->active()
+            ->when($request->client_code, fn ($q) => $q->where('client_code', $request->client_code))
+            ->when($request->status, fn ($q) => $q->where('doc_status', $request->status))
+            ->when(
+                $request->report_date,
+                fn ($q) => $q->where(
+                    'report_date',
+                    Carbon::parse($request->report_date)->startOfMonth()->toDateTimeString()
+                )
+            )
+            ->orderBy('id', 'desc')->paginate(100) : [];
 
-            if ($data['clientCode']) {
-                $query->where('client_code', $data['clientCode']);
-            }
-
-            if ($data['reportDate']) {
-                $query->where('report_date', date('Y-m-01', strtotime($data['reportDate'])));
-            }
-
-            if ($data['status']) {
-                $query->where('doc_status', $data['status']);
-            }
-            $data['lists'] = $query->orderBy('id', 'desc')->paginate(100);
-        }
+        //取得登入用戶的對應 client_code列表
+        $data['client_code_lists'] = $this->customerRelation
+            ->select('customer_relations.client_code')
+            ->distinct('customer_relations.client_code')
+            ->when((Auth::user()->roleAssignment->role_id === RoleID::MANAGER), function ($q) {
+                return $q->pluck('client_code');
+            }, function ($q) {
+                $q->join('users', 'users.id', '=', 'customer_relations.user_id');
+                $q->where('customer_relations.active', 1);
+                $q->where('users.id', Auth::id());
+                return $q->pluck('client_code');
+            });
 
         return view('invoice/list', $data);
     }
@@ -274,40 +253,9 @@ class InvoiceController extends Controller
 
     public function issueView(Request $request)
     {
-        $data['sel_client_code'] = $request->input('sel_client_code') ?? null;
-        $data['report_date'] = $request->input('report_date') ?? null;
-        $data['status'] = $request->input('status') ?? null;
-        $data['lists'] = [];
-
-        //取得登入用戶的對應 client_code列表
-        $roleID = $this->roleAssignment->select('role_id')
-            ->where('user_id', Auth::id())
-            ->where('active', 1)
-            ->pluck('role_id');
-
-        $managerRoleID = $this->role->select('id')
-            ->where('role_name', self::MANAGER_ROLE_NAME)
-            ->where('active', 1)
-            ->pluck('id');
-
-        if ($roleID == $managerRoleID) {
-            $data['client_code_lists'] = $this->customerRelation
-                ->select('customer_relations.client_code')
-                ->distinct('customer_relations.client_code')
-                ->pluck('client_code');
-        } else {
-            $data['client_code_lists'] = $this->customerRelation
-                ->select('customer_relations.client_code')
-                ->distinct('customer_relations.client_code')
-                ->join('users', 'users.id', '=', 'customer_relations.user_id')
-                ->where('customer_relations.active', 1)
-                ->where('users.id', Auth::id())
-                ->pluck('client_code');
-        }
-
-        if (count($request->all())) {
-            $formattedShipDate = DB::raw("date_format(report_date,'%b-%Y') as 'report_date'");
-            $query = $this->billingStatement->select(
+        $data['lists'] = (count($request->all())) ? $this->billingStatement
+            ->query()
+            ->select(
                 'id',
                 'client_code',
                 'avolution_commission',
@@ -315,18 +263,30 @@ class InvoiceController extends Controller
                 'total_sales_orders',
                 'total_sales_amount',
                 'total_expenses',
-                $formattedShipDate
-            )->where('active', 1);
+                DB::raw("date_format(report_date,'%b-%Y') as 'report_date'")
+            )->active()
+            ->when($request->sel_client_code, fn ($q) => $q->where('client_code', $request->sel_client_code))
+            ->when(
+                $request->report_date,
+                fn ($q) => $q->where(
+                    'report_date',
+                    Carbon::parse($request->report_date)->startOfMonth()->toDateTimeString()
+                )
+            )
+            ->paginate(100) : [];
 
-            if ($data['sel_client_code']) {
-                $query->where('client_code', $data['sel_client_code']);
-            }
-
-            if ($data['report_date']) {
-                $query->where('report_date', date('Y-m-01', strtotime($data['report_date'])));
-            }
-            $data['lists'] = $query->paginate(100);
-        }
+        //取得登入用戶的對應 client_code列表
+        $data['client_code_lists'] = $this->customerRelation->query()
+            ->select('customer_relations.client_code')
+            ->distinct('customer_relations.client_code')
+            ->when((Auth::user()->roleAssignment->role_id === RoleID::MANAGER), function ($q) {
+                return $q->pluck('client_code');
+            }, function ($q) {
+                $q->join('users', 'users.id', '=', 'customer_relations.user_id');
+                $q->where('customer_relations.active', 1);
+                $q->where('users.id', Auth::id());
+                return $q->pluck('client_code');
+            });
 
         return view('invoice/issue', $data);
     }
