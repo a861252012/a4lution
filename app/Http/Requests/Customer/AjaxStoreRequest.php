@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Customer;
 
-use App\Constants\Commission;
+use App\Constants\CommissionConstant;
 use App\Rules\CheckCalculationType;
 use App\Http\Requests\BaseFormRequest;
 
@@ -25,22 +25,22 @@ class AjaxStoreRequest extends BaseFormRequest
             'active' => 'nullable',
             'staff_members' => 'nullable',
             'calculation_type' => ['nullable', new CheckCalculationType],
-            'basic_rate' => 'nullable|required_if:calculation_type,'.Commission::CALCULATION_TYPE_BASIC_RATE,
-            'tier_1_threshold' => 'nullable|integer|min:0|required_if:calculation_type,'.Commission::CALCULATION_TYPE_TIER,
+            'basic_rate' => 'nullable|required_if:calculation_type,'.CommissionConstant::CALCULATION_TYPE_BASIC_RATE,
+            'tier_1_threshold' => 'nullable|integer|min:0|required_if:calculation_type,'.CommissionConstant::CALCULATION_TYPE_TIER,
             'tier_2_threshold' => 'nullable|integer|min:0|gt:tier_1_threshold',
             'tier_3_threshold' => 'nullable|integer|min:0|gt:tier_2_threshold',
             'tier_4_threshold' => 'nullable|integer|min:0|gt:tier_3_threshold',
-            'tier_1_amount' => 'nullable|numeric|min:0|required_if:calculation_type,'.Commission::CALCULATION_TYPE_TIER,
+            'tier_1_amount' => 'nullable|numeric|min:0|required_if:calculation_type,'.CommissionConstant::CALCULATION_TYPE_TIER,
             'tier_2_amount' => 'nullable|numeric|min:0|gt:tier_1_amount',
             'tier_3_amount' => 'nullable|numeric|min:0|gt:tier_2_amount',
             'tier_4_amount' => 'nullable|numeric|min:0|gt:tier_3_amount',
-            'tier_top_amount' => 'nullable|numeric|min:0|required_if:calculation_type,'.Commission::CALCULATION_TYPE_TIER,
+            'tier_top_amount' => 'nullable|numeric|min:0|required_if:calculation_type,'.CommissionConstant::CALCULATION_TYPE_TIER,
 
-            'tier_1_rate' => 'nullable|integer|between:0,100|required_if:calculation_type,'.Commission::CALCULATION_TYPE_TIER,
+            'tier_1_rate' => 'nullable|integer|between:0,100|required_if:calculation_type,'.CommissionConstant::CALCULATION_TYPE_TIER,
             'tier_2_rate' => 'nullable|integer|between:0,100|gt:tier_1_rate',
             'tier_3_rate' => 'nullable|integer|between:0,100|gt:tier_2_rate',
             'tier_4_rate' => 'nullable|integer|between:0,100|gt:tier_3_rate',
-            'tier_top_rate' => 'nullable|integer|between:0,100|required_if:calculation_type,'.Commission::CALCULATION_TYPE_TIER,
+            'tier_top_rate' => 'nullable|integer|between:0,100|required_if:calculation_type,'.CommissionConstant::CALCULATION_TYPE_TIER,
 
             'percentage_off_promotion' => 'nullable|integer|between:0,100|required_with:tier_promotion',
             'tier_promotion' => 'nullable|integer|between:0,100|required_with:percentage_off_promotion',
