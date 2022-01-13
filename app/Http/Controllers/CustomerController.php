@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Customer;
-use App\Constants\Commission;
+use App\Constants\CommissionConstant;
 use App\Models\CustomerRelation;
 use App\Models\CommissionSetting;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +20,6 @@ class CustomerController extends Controller
 {
     public function index(IndexRequest $request)
     {
-        
         $query = [
             'client_code' => $request->client_code ?? null,
             'active' => $request->active ?? null,
@@ -104,7 +103,7 @@ class CustomerController extends Controller
             // 更新 commission_settings
             $commissionData = collect([
                 'active' => 1,
-                'calculation_type' => $request->calculation_type ?? Commission::CALCULATION_TYPE_BASIC_RATE,
+                'calculation_type' => $request->calculation_type ?? CommissionConstant::CALCULATION_TYPE_BASIC_RATE,
                 'basic_rate' => $request->basic_rate ? $request->basic_rate/100 : '',
                 'promotion_threshold' => $request->promotion_threshold,
                 'tier_promotion' => $request->tier_promotion,
@@ -224,7 +223,7 @@ class CustomerController extends Controller
 
             // 更新 commission_settings
             $commissionData = collect([
-                'calculation_type' => $request->calculation_type ?? Commission::CALCULATION_TYPE_BASIC_RATE,
+                'calculation_type' => $request->calculation_type ?? CommissionConstant::CALCULATION_TYPE_BASIC_RATE,
                 'basic_rate' => $request->basic_rate ? $request->basic_rate/100 : '',
                 'promotion_threshold' => $request->promotion_threshold,
                 'tier_promotion' => $request->tier_promotion,

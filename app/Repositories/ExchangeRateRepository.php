@@ -2,7 +2,7 @@
 
 namespace App\Repositories;
 
-use App\Constants\Currency;
+use App\Constants\CurrencyConstant;
 use App\Models\ExchangeRate;
 use App\Support\LaravelLoggerUtil;
 use Carbon\Carbon;
@@ -46,7 +46,7 @@ class ExchangeRateRepository extends BaseRepository
         try {
             $exchangeRates = $this->model
                 ->when($quotedDate, fn ($q) => $q->where('quoted_date', Carbon::parse($quotedDate)->format('Y-m-d')))
-                ->whereIn('base_currency', Currency::EXCHANGE_RATE)
+                ->whereIn('base_currency', CurrencyConstant::EXCHANGE_RATE)
                 ->active()
                 ->orderBy($orderBy, 'desc')
                 ->take(18)
