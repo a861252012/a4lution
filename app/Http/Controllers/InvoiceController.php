@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Constants\Commission;
-use App\Constants\RoleID;
+use App\Constants\CommissionConstant;
 use App\Jobs\Invoice\CreateZipToS3;
 use App\Jobs\Invoice\ExportInvoiceExcel;
 use App\Jobs\Invoice\ExportInvoicePDFs;
@@ -11,7 +10,6 @@ use App\Jobs\Invoice\SetSaveDir;
 use App\Models\BillingStatement;
 use App\Models\CommissionSetting;
 use App\Models\Customer;
-use App\Models\CustomerRelation;
 use App\Models\FirstMileShipmentFee;
 use App\Models\Invoice;
 use App\Models\OrderProduct;
@@ -19,11 +17,13 @@ use App\Models\Role;
 use App\Models\RoleAssignment;
 use App\Repositories\AmazonReportListRepository;
 use App\Repositories\BillingStatementRepository;
+use App\Repositories\CustomerRelationRepository;
 use App\Repositories\FirstMileShipmentFeeRepository;
 use App\Repositories\InvoiceRepository;
 use App\Repositories\OrderProductRepository;
 use App\Services\InvoiceService;
 use App\Support\ERPRequester;
+use Illuminate\Support\Facades\Bus;
 use Carbon\Carbon;
 use Illuminate\Bus\Batch;
 use Illuminate\Database\QueryException;
@@ -32,11 +32,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Response;
+use Throwable;
 
 class InvoiceController extends Controller
 {
+    private const GET_SUPPLIER_INFO = 'getSupplierInfo';
     private Invoice $invoice;
-    private CustomerRelation $customerRelation;
+    private CustomerRelationRepository $customerRelationRepo;
     private RoleAssignment $roleAssignment;
     private Role $role;
     private BillingStatement $billingStatement;
@@ -47,12 +50,10 @@ class InvoiceController extends Controller
     private BillingStatementRepository $billingStatementRepository;
     private FirstMileShipmentFee $firstMileShipmentFee;
     private InvoiceService $invoiceService;
-    private const MANAGER_ROLE_NAME = 'manager';
-    private const GET_SUPPLIER_INFO = 'getSupplierInfo';
 
     public function __construct(
         Invoice                        $invoice,
-        CustomerRelation               $customerRelation,
+        CustomerRelationRepository     $customerRelationRepo,
         Customer                       $customer,
         RoleAssignment                 $roleAssignment,
         Role                           $role,
@@ -66,7 +67,7 @@ class InvoiceController extends Controller
     ) {
         // TODO: 很多 new object，但下面 Methods 沒使用
         $this->invoice = $invoice;
-        $this->customerRelation = $customerRelation;
+        $this->customerRelationRepo = $customerRelationRepo;
         $this->roleAssignment = $roleAssignment;
         $this->role = $role;
         $this->billingStatement = $billingStatement;
@@ -97,34 +98,6 @@ class InvoiceController extends Controller
         }
     }
 
-
-    public function getTieredInfo(string $clientCode, float $totalSalesAmount): array
-    {
-        $setting = CommissionSetting::where('client_code', $clientCode)->first();
-
-        if (!empty($setting) & $totalSalesAmount >= $setting->tier_1_threshold) {
-            $newLevel = 1;
-            for ($i = 1; $i <= 4; $i++) {
-                $key = "tier_{$i}_threshold";
-                $val = $setting->$key;
-                if ($totalSalesAmount >= $val) {
-                    $newLevel = $i;
-                }
-            }
-            //如有amount則先取amount
-            $amountKey = "tier_{$newLevel}_amount";
-            if (!empty((float)$setting->$amountKey)) {
-                return ['type' => 'tiered', 'value' => $setting->$amountKey, 'status' => 'success'];
-            }
-
-            $rateKey = "tier_{$newLevel}_rate";
-
-            return ['type' => 'tiered', 'value' => $setting->$rateKey, 'status' => 'success'];
-        }
-
-        return ['type' => 'tiered', 'value' => $setting->basic_rate, 'status' => 'success'];
-    }
-
     public function getCommissionRate(string $clientCode, string $reportDate, float $totalSalesAmount)
     {
         $commissionSetting = new CommissionSetting();
@@ -132,7 +105,7 @@ class InvoiceController extends Controller
 
         $settings = $commissionSetting->where('client_code', $clientCode)->first();
 
-        if ($settings->calculation_type === Commission::CALCULATION_TYPE_SKU) {
+        if ($settings->calculation_type === CommissionConstant::CALCULATION_TYPE_SKU) {
             //check unmatched record
             $haveUnmatchedRecord = $orderProductRepository->checkUnmatchedRecord($clientCode, $reportDate);
             if (!empty($haveUnmatchedRecord)) {
@@ -168,10 +141,46 @@ class InvoiceController extends Controller
         }
 
         //check if commission rate type is tiered
-        if ($settings->calculation_type === Commission::CALCULATION_TYPE_TIER) {
+        if ($settings->calculation_type === CommissionConstant::CALCULATION_TYPE_TIER) {
             return $this->getTieredInfo($clientCode, $totalSalesAmount);
         }
         return ['type' => 'tiered', 'value' => $settings->basic_rate, 'status' => 'success'];
+    }
+
+    public function getSkuCommissionRate(object $item, float $sellingPrice, float $threshold)
+    {
+        if ($sellingPrice > $threshold) {
+            return $item->upper_bound_rate;
+        }
+
+        return $item->basic_rate;
+    }
+
+    public function getTieredInfo(string $clientCode, float $totalSalesAmount): array
+    {
+        $setting = CommissionSetting::where('client_code', $clientCode)->first();
+
+        if (!empty($setting) & $totalSalesAmount >= $setting->tier_1_threshold) {
+            $newLevel = 1;
+            for ($i = 1; $i <= 4; $i++) {
+                $key = "tier_{$i}_threshold";
+                $val = $setting->$key;
+                if ($totalSalesAmount >= $val) {
+                    $newLevel = $i;
+                }
+            }
+            //如有amount則先取amount
+            $amountKey = "tier_{$newLevel}_amount";
+            if (!empty((float)$setting->$amountKey)) {
+                return ['type' => 'tiered', 'value' => $setting->$amountKey, 'status' => 'success'];
+            }
+
+            $rateKey = "tier_{$newLevel}_rate";
+
+            return ['type' => 'tiered', 'value' => $setting->$rateKey, 'status' => 'success'];
+        }
+
+        return ['type' => 'tiered', 'value' => $setting->basic_rate, 'status' => 'success'];
     }
 
     public function getSumValue(array $fees): float
@@ -186,42 +195,34 @@ class InvoiceController extends Controller
 
     public function listView(Request $request)
     {
-        $data['lists'] = (count($request->all())) ? $this->invoice
-            ->query()
-            ->select(
-                DB::raw("date_format(report_date,'%M-%Y') AS report_date"),
-                'id',
-                'client_code',
-                'opex_invoice_no',
-                'doc_file_name',
-                'doc_status',
-                'doc_storage_token',
-                'created_at'
-            )
-            ->active()
-            ->when($request->client_code, fn ($q) => $q->where('client_code', $request->client_code))
-            ->when($request->status, fn ($q) => $q->where('doc_status', $request->status))
-            ->when(
-                $request->report_date,
-                fn ($q) => $q->where(
-                    'report_date',
-                    Carbon::parse($request->report_date)->startOfMonth()->toDateTimeString()
+        $data['lists'] = empty(count($request->all()))
+            ? []
+            : $this->invoice->query()
+                ->select(
+                    DB::raw("date_format(report_date,'%M-%Y') AS report_date"),
+                    'id',
+                    'client_code',
+                    'opex_invoice_no',
+                    'doc_file_name',
+                    'doc_status',
+                    'doc_storage_token',
+                    'created_at'
                 )
-            )
-            ->orderBy('id', 'desc')->paginate(100) : [];
+                ->active()
+                ->when($request->client_code, fn ($q) => $q->where('client_code', $request->client_code))
+                ->when($request->status, fn ($q) => $q->where('doc_status', $request->status))
+                ->when(
+                    $request->report_date,
+                    fn ($q) => $q->where(
+                        'report_date',
+                        Carbon::parse($request->report_date)->startOfMonth()->toDateString()
+                    )
+                )
+                ->orderBy('id', 'desc')
+                ->paginate(100);
 
         //取得登入用戶的對應 client_code列表
-        $data['client_code_lists'] = $this->customerRelation
-            ->select('customer_relations.client_code')
-            ->distinct('customer_relations.client_code')
-            ->when((Auth::user()->roleAssignment->role_id === RoleID::MANAGER), function ($q) {
-                return $q->pluck('client_code');
-            }, function ($q) {
-                $q->join('users', 'users.id', '=', 'customer_relations.user_id');
-                $q->where('customer_relations.active', 1);
-                $q->where('users.id', Auth::id());
-                return $q->pluck('client_code');
-            });
+        $data['client_code_lists'] = $this->customerRelationRepo->getClientCodeList();
 
         return view('invoice/list', $data);
     }
@@ -244,7 +245,7 @@ class InvoiceController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
         ];
 
-        return \Response::make(
+        return Response::make(
             Storage::disk('s3')->get("invoices/{$token}.zip"),
             200,
             $headers
@@ -253,40 +254,31 @@ class InvoiceController extends Controller
 
     public function issueView(Request $request)
     {
-        $data['lists'] = (count($request->all())) ? $this->billingStatement
-            ->query()
-            ->select(
-                'id',
-                'client_code',
-                'avolution_commission',
-                'commission_type',
-                'total_sales_orders',
-                'total_sales_amount',
-                'total_expenses',
-                DB::raw("date_format(report_date,'%b-%Y') as 'report_date'")
-            )->active()
-            ->when($request->sel_client_code, fn ($q) => $q->where('client_code', $request->sel_client_code))
-            ->when(
-                $request->report_date,
-                fn ($q) => $q->where(
-                    'report_date',
-                    Carbon::parse($request->report_date)->startOfMonth()->toDateTimeString()
+        $data['lists'] = empty(count($request->all()))
+            ? []
+            : $this->billingStatement->query()
+                ->select(
+                    'id',
+                    'client_code',
+                    'avolution_commission',
+                    'commission_type',
+                    'total_sales_orders',
+                    'total_sales_amount',
+                    'total_expenses',
+                    DB::raw("date_format(report_date,'%b-%Y') as 'report_date'")
+                )->active()
+                ->when($request->sel_client_code, fn ($q) => $q->where('client_code', $request->sel_client_code))
+                ->when(
+                    $request->report_date,
+                    fn ($q) => $q->where(
+                        'report_date',
+                        Carbon::parse($request->report_date)->startOfMonth()->toDateString()
+                    )
                 )
-            )
-            ->paginate(100) : [];
+                ->paginate(100);
 
         //取得登入用戶的對應 client_code列表
-        $data['client_code_lists'] = $this->customerRelation->query()
-            ->select('customer_relations.client_code')
-            ->distinct('customer_relations.client_code')
-            ->when((Auth::user()->roleAssignment->role_id === RoleID::MANAGER), function ($q) {
-                return $q->pluck('client_code');
-            }, function ($q) {
-                $q->join('users', 'users.id', '=', 'customer_relations.user_id');
-                $q->where('customer_relations.active', 1);
-                $q->where('users.id', Auth::id());
-                return $q->pluck('client_code');
-            });
+        $data['client_code_lists'] = $this->customerRelationRepo->getClientCodeList();
 
         return view('invoice/issue', $data);
     }
@@ -330,6 +322,8 @@ class InvoiceController extends Controller
             ]
         );
     }
+
+    // TODO: add Request
 
     public function editView(Request $request)
     {
@@ -379,7 +373,6 @@ class InvoiceController extends Controller
         return view('invoice/edit', $data);
     }
 
-    // TODO: add Request
     public function ajaxExport(Request $request)
     {
         $data = $request->all();
@@ -424,7 +417,7 @@ class InvoiceController extends Controller
         $invoice = Invoice::create($data);
         $invoiceID = $invoice->id;
 
-        $batch = \Bus::batch([
+        $batch = Bus::batch([
             [
                 new SetSaveDir($invoiceID),
                 new ExportInvoiceExcel($invoice),
@@ -433,7 +426,7 @@ class InvoiceController extends Controller
             ],
         ])->then(function (Batch $batch) use ($invoiceID) {
             (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'active']);
-        })->catch(function (Batch $batch, \Throwable $e) use ($invoiceID) {
+        })->catch(function (Batch $batch, Throwable $e) use ($invoiceID) {
             (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'failed']);
         })->finally(function (Batch $batch) {
             // TODO: 建立排程刪除舊資料(Local)
@@ -447,15 +440,6 @@ class InvoiceController extends Controller
             str_shuffle(uniqid()),
             (int)(microtime(true) * 1000)
         );
-    }
-
-    public function getSkuCommissionRate(object $item, float $sellingPrice, float $threshold)
-    {
-        if ($sellingPrice > $threshold) {
-            return $item->upper_bound_rate;
-        }
-
-        return $item->basic_rate;
     }
 
     public function deleteIssue(Request $request)

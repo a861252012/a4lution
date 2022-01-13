@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Constants\RoleID;
+use App\Constants\RoleConstant;
 use App\Models\Customer;
 use App\Models\EmployeeMonthlyFeeRule;
 use Illuminate\Http\JsonResponse;
@@ -14,10 +14,6 @@ use Throwable;
 
 class ManagementController extends Controller
 {
-    public function __construct()
-    {
-    }
-
     public function monthlyFeeView(Request $request)
     {
         $data['lists'] = [];
@@ -70,9 +66,9 @@ class ManagementController extends Controller
     private function getRole(): array
     {
         return [
-            'sales' => RoleID::SALES,
-            'operation' => RoleID::OPERATION,
-            'account_service' => RoleID::ACCOUNT_SERVICE
+            'sales' => RoleConstant::SALES,
+            'operation' => RoleConstant::OPERATION,
+            'account_service' => RoleConstant::ACCOUNT_SERVICE
         ];
     }
 
@@ -88,7 +84,7 @@ class ManagementController extends Controller
                 ->active()
                 ->update(['active' => 0]);
 
-            $formattedSetting = $roleCollection->map(fn($roleID, $roleName) => [
+            $formattedSetting = $roleCollection->map(fn ($roleID, $roleName) => [
                 'client_code' => $request->clientCode,
                 'role_id' => $roleID,
                 'is_tiered_rate' => $req['is_tiered_rate'][$roleID],

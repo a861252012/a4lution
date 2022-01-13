@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Constants\ImportTitle;
+use App\Constants\ImportTitleConstant;
 use App\Exports\AmazonDateRangeExport;
 use App\Exports\FirstMileShipmentFeeExport;
 use App\Exports\LongTermStorageFeesExport;
@@ -694,19 +694,19 @@ class FeeController extends Controller
 
         switch ($request->route('type')) {
             case 'platform_ad_fees':
-                $diff = $headings->diff(ImportTitle::PLATFORM_AD) ?? null;
+                $diff = $headings->diff(ImportTitleConstant::PLATFORM_AD) ?? null;
                 break;
             case 'amazon_date_range':
-                $diff = $headings->diff(ImportTitle::AMZ_DATE_RANGE) ?? null;
+                $diff = $headings->diff(ImportTitleConstant::AMZ_DATE_RANGE) ?? null;
                 break;
             case 'long_term_storage_fees':
-                $diff = $headings->diff(ImportTitle::LONG_TERM) ?? null;
+                $diff = $headings->diff(ImportTitleConstant::LONG_TERM) ?? null;
                 break;
             case 'monthly_storage_fees':
-                $diff = $headings->diff(ImportTitle::MONTHLY_STORAGE) ?? null;
+                $diff = $headings->diff(ImportTitleConstant::MONTHLY_STORAGE) ?? null;
                 break;
             case 'first_mile_shipment_fees':
-                $diff = $headings->diff(ImportTitle::FIRST_MILE_SHIPMENT) ?? null;
+                $diff = $headings->diff(ImportTitleConstant::FIRST_MILE_SHIPMENT) ?? null;
                 break;
 
             default:

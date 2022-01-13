@@ -2,7 +2,7 @@
 
 namespace App\Constants;
 
-class Commission
+class CommissionConstant
 {
     const CALCULATION_TYPE_SKU = 1;
     const CALCULATION_TYPE_TIER = 2;

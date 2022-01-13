@@ -2,7 +2,7 @@
 
 namespace App\Constants;
 
-class RoleID
+class RoleConstant
 {
     //現有權限對應的ID
     const SALES = 1;
