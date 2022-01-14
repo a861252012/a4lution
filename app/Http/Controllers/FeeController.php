@@ -75,18 +75,19 @@ class FeeController extends Controller
     public function uploadView(Request $request)
     {
         $feeTypes = BatchJobConstant::mapFeeType();
+        $statuses = BatchJobConstant::mapStatus();
 
         $batchJobs = BatchJob::query()
             ->with('users:id,user_name')
             ->select(
-                'batch_jobs.user_id',
-                'batch_jobs.report_date',
-                'batch_jobs.fee_type',
-                'batch_jobs.file_name',
-                'batch_jobs.total_count',
-                'batch_jobs.status',
-                'batch_jobs.created_at',
-                'batch_jobs.user_error_msg'
+                'user_id',
+                'report_date',
+                'fee_type',
+                'file_name',
+                'total_count',
+                'status',
+                'created_at',
+                'user_error_msg'
             )
             ->when($request->status, fn ($q) => $q->where('batch_jobs.status', $request->status))
             ->when($request->fee_type, fn ($q) => $q->where('batch_jobs.fee_type', $request->fee_type))
@@ -114,7 +115,7 @@ class FeeController extends Controller
             ->paginate(50)
             ->appends(request()->query());
 
-        return view('fee.upload', compact('batchJobs', 'feeTypes'));
+        return view('fee.upload', compact('batchJobs', 'feeTypes', 'statuses'));
     }
 
     public function uploadFile(Request $request)

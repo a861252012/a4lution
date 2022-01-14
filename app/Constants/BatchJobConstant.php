@@ -15,4 +15,13 @@ class BatchJobConstant
             'first_mile_shipment_fees' => 'First Mile Shipment Fee',
         ];
     }
+
+    public static function mapStatus(): array
+    {
+        return [
+            'completed' => 'Completed',
+            'processing' => 'Processing',
+            'failed' => 'Error',
+        ];
+    }
 }

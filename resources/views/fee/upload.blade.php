@@ -28,7 +28,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="input_date">Created At</label>
                                 <input class="form-control _fz-1" name="search_date" id="input_date"
-                                       placeholder="date" type="text" value="{{  request('search_date') }}">
+                                    placeholder="date" type="text" value="{{  request('search_date') }}">
                             </div>
                         </div>
 
@@ -51,18 +51,13 @@
                         <div class="col-lg-2 col-md-6 col-sm-6">
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="select_status">Status</label>
-                                <select class="form-control _fz-1" data-toggle="select" name="status_type"
-                                        id="select_status">
-                                    <option value="">all</option>
-                                    <option value="completed" @if(request('status_type') == 'completed')
-                                        {{ 'selected' }} @endif>Completed
-                                    </option>
-                                    <option value="processing" @if(request('status_type') == 'processing')
-                                        {{ 'selected' }} @endif>Processing
-                                    </option>
-                                    <option value="failed" @if(request('status_type') == 'failed')
-                                        {{ 'selected' }} @endif>Error
-                                    </option>
+                                <select class="form-control _fz-1" data-toggle="select" 
+                                    name="status" id="select_status">
+                                    @foreach (['' => 'all'] + $statuses as $key => $value)
+                                        <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>
+                                            {{ $value }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -72,7 +67,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="report_date">Report Date</label>
                                 <input class="form-control _fz-1" name="report_date" id="report_date"
-                                       value="{{ request('report_date') }}" placeholder="report date" type="text">
+                                    value="{{ request('report_date') }}" placeholder="report date" type="text">
                             </div>
                         </div>
 
@@ -91,7 +86,7 @@
                             <label class="form-control-label _fz-1" for="upload_btn"></label>
                             <div class="form-group mb-0">
                                 <a id="upload_btn" class="form-control btn btn-primary"
-                                   href="#inline_content" style="margin-top: 6px;">
+                                    href="#inline_content" style="margin-top: 6px;">
                                     <div>
                                         <i class="ni ni-cloud-upload-96"></i>
                                         <span class="_fz-1">Upload</span>
