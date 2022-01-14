@@ -2,38 +2,39 @@
 
 namespace App\Http\Controllers;
 
-use App\Constants\ImportTitleConstant;
-use App\Exports\AmazonDateRangeExport;
-use App\Exports\FirstMileShipmentFeeExport;
-use App\Exports\LongTermStorageFeesExport;
-use App\Exports\MonthlyStorageFeesExport;
-use App\Exports\PlatformAdFeesExport;
-use App\Imports\QueueAmazonDateRangeImport;
-use App\Imports\QueueFirstMileShipmentFees;
-use App\Imports\QueueLongTermStorageFees;
-use App\Imports\QueueMonthlyStorageFees;
-use App\Imports\QueuePlatformAdFees;
-use App\Models\AmazonDateRangeReport;
+use Exception;
+use Carbon\Carbon;
 use App\Models\BatchJob;
+use Illuminate\Http\Request;
+use App\Models\PlatformAdFee;
 use App\Models\BillingStatement;
 use App\Models\ExtraordinaryItem;
-use App\Models\FirstMileShipmentFee;
-use App\Models\LongTermStorageFee;
 use App\Models\MonthlyStorageFee;
-use App\Models\PlatformAdFee;
-use App\Repositories\CustomerRepository;
-use App\Repositories\ExchangeRateRepository;
-use Carbon\Carbon;
-use Exception;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\LongTermStorageFee;
 use Illuminate\Support\Facades\DB;
+use App\Constants\BatchJobConstant;
 use Illuminate\Support\Facades\Log;
+use App\Imports\QueuePlatformAdFees;
+use App\Models\FirstMileShipmentFee;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PlatformAdFeesExport;
+use App\Models\AmazonDateRangeReport;
+use App\Constants\ImportTitleConstant;
+use App\Exports\AmazonDateRangeExport;
 use Maatwebsite\Excel\HeadingRowImport;
+use App\Imports\QueueMonthlyStorageFees;
+use App\Repositories\CustomerRepository;
+use App\Exports\MonthlyStorageFeesExport;
+use App\Imports\QueueLongTermStorageFees;
+use App\Exports\LongTermStorageFeesExport;
+use App\Exports\FirstMileShipmentFeeExport;
+use App\Imports\QueueAmazonDateRangeImport;
+use App\Imports\QueueFirstMileShipmentFees;
+use App\Repositories\ExchangeRateRepository;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class FeeController extends Controller
 {
@@ -73,7 +74,9 @@ class FeeController extends Controller
 
     public function uploadView(Request $request)
     {
-        $data['lists'] = $this->batchJob->query()
+        $feeTypes = BatchJobConstant::mapFeeType();
+
+        $batchJobs = BatchJob::query()
             ->with('users:id,user_name')
             ->select(
                 'batch_jobs.user_id',
@@ -107,14 +110,16 @@ class FeeController extends Controller
                     ]
                 )
             )
-            ->orderby('batch_jobs.id', 'desc')->paginate(50)->appends(request()->query());
+            ->orderby('batch_jobs.id', 'desc')
+            ->paginate(50)
+            ->appends(request()->query());
 
-        return view('fee.upload', $data);
+        return view('fee.upload', compact('batchJobs', 'feeTypes'));
     }
 
     public function uploadFile(Request $request)
     {
-        $fileData = $request->file('file');
+        $file = $request->file('file');
         $feeType = $request->inline_fee_type;
         $inputReportDate = date('Y-m-d', strtotime($request->inline_report_date));
         $reportDate = $inputReportDate ? date('Y-m-d', strtotime($inputReportDate)) : date('Y-m-d');
@@ -122,7 +127,7 @@ class FeeController extends Controller
         $insertBatchID = BatchJob::insertGetId([
             'user_id' => Auth::id(),
             'fee_type' => $feeType,
-            'file_name' => $fileData->getClientOriginalName(),
+            'file_name' => $file->getClientOriginalName(),
             'report_date' => $reportDate,
             'total_count' => 0,
             'status' => self::BATCH_STATUS,
@@ -171,7 +176,7 @@ class FeeController extends Controller
         }
 
         if ($import) {
-            Excel::queueImport($import, $fileData)->allOnQueue('queue_excel');
+            Excel::queueImport($import, $file)->allOnQueue('queue_excel');
         }
     }
 
@@ -644,10 +649,10 @@ class FeeController extends Controller
 
     public function preValidation(Request $request): JsonResponse
     {
-        $dateObject = Carbon::parse($request->route('date'));
+        $reportDate = Carbon::parse($request->route('date'));
 
-        //exchange rate validation
-        $exchangeRate = (new ExchangeRateRepository)->getByQuotedDate($dateObject->startOfMonth()->toDateString());
+        // 1. exchange rate validation
+        $exchangeRate = (new ExchangeRateRepository)->getByQuotedDate($reportDate->startOfMonth()->toDateString());
 
         if ($exchangeRate->isEmpty()) {
             return response()->json(
@@ -658,17 +663,17 @@ class FeeController extends Controller
             );
         }
 
-        //check if monthly report exist
+        // 2. check if monthly report exist
         $hasMonthlyBilling = $this->billingStatement
             ->active()
             ->whereRaw(
                 "DATE_FORMAT(report_date,'%Y%m') = ?",
-                [$dateObject->format('Ym')]
+                [$reportDate->format('Ym')]
             )
             ->count();
 
         if ($hasMonthlyBilling) {
-            $formattedDate = $dateObject->format('Y-m');
+            $formattedDate = $reportDate->format('Y-m');
 
             return response()->json(
                 [
@@ -679,7 +684,7 @@ class FeeController extends Controller
             );
         }
 
-        //validate excel title
+        // 3. validate excel title
         $headings = (new HeadingRowImport)->toCollection($request->file('file')) ?
             (new HeadingRowImport)->toCollection($request->file('file'))->collapse()->collapse()->filter() : null;
 
