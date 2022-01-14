@@ -4,29 +4,30 @@ namespace App\Services;
 
 use Carbon\Carbon;
 use App\Models\OrderProduct;
-use App\Constants\Commission;
+use App\Constants\CommissionConstant;
 use App\Support\ERPRequester;
 use App\Models\CommissionSetting;
 use App\Models\ExtraordinaryItem;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Repositories\OrderRepository;
 use App\Repositories\CustomerRepository;
-use App\Repositories\ExchangeRateRepository;
 use App\Repositories\OrderProductRepository;
-use App\Repositories\AmazonReportListRepository;
+use App\Repositories\AmazonDateRangeReportRepository;
 use App\Repositories\BillingStatementRepository;
-use App\Repositories\CommissionSettingRepository;
 use App\Repositories\FirstMileShipmentFeeRepository;
 use App\Http\Requests\BillingStatement\AjaxStoreRequest;
 
 class BillingStatementService
 {
-    private $billingStatementRepo;
+    private BillingStatementRepository $billingStatementRepo;
+    private AmazonDateRangeReportRepository $amzDateRangeRepo;
 
-    public function __construct(BillingStatementRepository $billingStatementRepo)
-    {
+    public function __construct(
+        BillingStatementRepository $billingStatementRepo,
+        AmazonDateRangeReportRepository $amzDateRangeRepo
+    ) {
         $this->billingStatementRepo = $billingStatementRepo;
+        $this->amzDateRangeRepo = $amzDateRangeRepo;
     }
 
     // TODO: do all repository
@@ -136,9 +137,7 @@ class BillingStatementService
         $fees['client_account_refund_and_resend'] = abs((float)$clientAccountAmazonTotal + (float)$clientAccountResend + (float)$clientRefundFees);
 
         //getAccountMiscellaneous
-        $amazonReportListRepository = new AmazonReportListRepository();
-
-        $clientAccountMiscellaneous = $amazonReportListRepository->getAccountMiscellaneous(
+        $clientAccountMiscellaneous = $this->amzDateRangeRepo->getAccountMiscellaneous(
             $reportDate,
             $clientCode,
             $supplierName,
@@ -148,7 +147,7 @@ class BillingStatementService
         $fees['clientAccountMiscellaneous'] = $clientAccountMiscellaneous
             ? -1 * abs($clientAccountMiscellaneous[0]->Miscellaneous) : 0;
 
-        $a4AccountMiscellaneous = $amazonReportListRepository->getAccountMiscellaneous(
+        $a4AccountMiscellaneous = $this->amzDateRangeRepo->getAccountMiscellaneous(
             $reportDate,
             $clientCode,
             $supplierName,
@@ -178,7 +177,7 @@ class BillingStatementService
         $fees['a4AccountAds'] = $a4AccountAds ? $a4AccountAds[0]->ad : 0;
 
         //getAccountMarketingAndPromotion
-        $clientAccountMarketingAndPromotion = $amazonReportListRepository->getAccountMarketingAndPromotion(
+        $clientAccountMarketingAndPromotion = $this->amzDateRangeRepo->getAccountMarketingAndPromotion(
             $reportDate,
             $clientCode,
             $supplierName,
@@ -188,7 +187,7 @@ class BillingStatementService
         $fees['clientAccountMarketingAndPromotion'] = $clientAccountMarketingAndPromotion ?
             $clientAccountMarketingAndPromotion[0]->Miscellaneous : 0;
 
-        $a4AccountMarketingAndPromotion = $amazonReportListRepository->getAccountMarketingAndPromotion(
+        $a4AccountMarketingAndPromotion = $this->amzDateRangeRepo->getAccountMarketingAndPromotion(
             $reportDate,
             $clientCode,
             $supplierName,
@@ -371,7 +370,7 @@ class BillingStatementService
 
         $settings = $commissionSetting->where('client_code', $clientCode)->first();
 
-        if ($settings->calculation_type === Commission::CALCULATION_TYPE_SKU) {
+        if ($settings->calculation_type === CommissionConstant::CALCULATION_TYPE_SKU) {
             //check unmatched record
             $haveUnmatchedRecord = $orderProductRepository->checkUnmatchedRecord($clientCode, $reportDate);
             if (!empty($haveUnmatchedRecord)) {
@@ -407,7 +406,7 @@ class BillingStatementService
         }
 
         //check if commission rate type is tiered
-        if ($settings->calculation_type === Commission::CALCULATION_TYPE_TIER) {
+        if ($settings->calculation_type === CommissionConstant::CALCULATION_TYPE_TIER) {
             return $this->getTieredInfo($clientCode, $totalSalesAmount);
         }
         return ['type' => 'base rate', 'value' => $settings->basic_rate, 'status' => 'success'];

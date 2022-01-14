@@ -143,7 +143,7 @@
             <hr class="my-2 w-100">
             <h3>(Standard) Calculation Type <span class="text-red">*</span></h3>
             <hr class="my-2 w-100">
-            @inject('commission', 'App\Constants\Commission')
+            @inject('commission', 'App\Constants\CommissionConstant')
             @php
                 $skuChecked = (optional($customer->commission)->calculation_type === $commission::CALCULATION_TYPE_SKU) ? 'checked' : '';
                 $tierChecked = (optional($customer->commission)->calculation_type === $commission::CALCULATION_TYPE_TIER) ? 'checked' : '';

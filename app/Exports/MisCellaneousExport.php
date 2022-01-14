@@ -5,7 +5,7 @@ namespace App\Exports;
 use App\Models\AmazonDateRangeReport;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
-use Log;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -97,7 +97,18 @@ class MisCellaneousExport implements
             ->where('amazon_date_range_report.active', 1)
             ->where('amazon_date_range_report.supplier', $this->clientCode)
             ->where('amazon_date_range_report.report_date', $this->reportDate)
-            ->whereNotIn('amazon_date_range_report.type', ['Order','Refund']);
+            ->whereNotIn(
+                'amazon_date_range_report.type',
+                [
+                    'Refund',
+                    'Order',
+                    'Debt',
+                    'Other FBA Inventory Fee',
+                    'Transfer',
+                    'Service Fee',
+                    'Liquidations'
+                ]
+            );
     }
 
     public function headings(): array
