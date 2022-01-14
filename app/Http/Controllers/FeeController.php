@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Exception;
 use Carbon\Carbon;
 use App\Models\BatchJob;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\PlatformAdFee;
 use App\Models\BillingStatement;
@@ -122,10 +123,9 @@ class FeeController extends Controller
     {
         $file = $request->file('file');
         $feeType = $request->inline_fee_type;
-        $inputReportDate = date('Y-m-d', strtotime($request->inline_report_date));
-        $reportDate = $inputReportDate ? date('Y-m-d', strtotime($inputReportDate)) : date('Y-m-d');
+        $reportDate = date('Y-m-d', strtotime($request->inline_report_date)) ?? date('Y-m-d');
 
-        $insertBatchID = BatchJob::insertGetId([
+        $batchJob = BatchJob::create([
             'user_id' => Auth::id(),
             'fee_type' => $feeType,
             'file_name' => $file->getClientOriginalName(),
@@ -138,47 +138,29 @@ class FeeController extends Controller
         //查詢該月是否已結算,如已結算則不得再更改
         $haveMonthlyReport = $this->billingStatement
             ->active()
-            ->where('report_date', $inputReportDate)
+            ->where('report_date', $reportDate)
             ->count();
 
         if ($haveMonthlyReport) {
-            BatchJob::where('id', $insertBatchID)->update(
+            $batchJob->update(
                 [
                     'status' => 'failed',
                     'exit_message' => 'The selected report date (year-month) was closed',
                 ]
             );
 
-            return false;
+            abort(Response::HTTP_FORBIDDEN, 'The selected report date (year-month) was closed');
         }
 
-        switch ($feeType) {
-            case "platform_ad_fees":
-                $import = new QueuePlatformAdFees(Auth::id(), $insertBatchID, $inputReportDate);
-
-                break;
-            case "amazon_date_range":
-                $import = new QueueAmazonDateRangeImport(Auth::id(), $insertBatchID, $inputReportDate);
-
-                break;
-            case "long_term_storage_fees":
-                $import = new QueueLongTermStorageFees(Auth::id(), $insertBatchID, $inputReportDate);
-
-                break;
-            case "monthly_storage_fees":
-                $import = new QueueMonthlyStorageFees(Auth::id(), $insertBatchID, $inputReportDate);
-
-                break;
-            case "first_mile_shipment_fees":
-                $import = new QueueFirstMileShipmentFees(Auth::id(), $insertBatchID, $inputReportDate);
-                break;
-            default:
-                $import = null;
+        $importClass = sprintf('App\\Imports\\Queue%sImport', Str::studly($feeType));
+        if (! class_exists($importClass)) {
+            abort(Response::HTTP_NOT_FOUND, "Class '{$importClass}' not found");
         }
 
-        if ($import) {
-            Excel::queueImport($import, $file)->allOnQueue('queue_excel');
-        }
+        Excel::queueImport(
+            new $importClass(Auth::id(), $batchJob->id, $reportDate),
+            $file
+        )->allOnQueue('queue_excel');
     }
 
     public function platformAdsView(Request $request)
