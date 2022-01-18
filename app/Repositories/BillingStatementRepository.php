@@ -3,32 +3,27 @@
 namespace App\Repositories;
 
 use App\Models\BillingStatement;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
-class BillingStatementRepository
+class BillingStatementRepository extends BaseRepository
 {
-    protected $billingStatement;
-
-    public function __construct(BillingStatement $billingStatement)
+    public function __construct()
     {
-        $this->billingStatement = $billingStatement;
+        parent::__construct(new BillingStatement);
     }
 
     public function getTableColumns(): array
     {
-        return Schema::getColumnListing($this->billingStatement->getTable());
-    }
-
-    public function create(array $data)
-    {
-        return $this->billingStatement->create($data);
+        return Schema::getColumnListing($this->model->getTable());
     }
 
     public function updateByDate(string $date, array $data): int
     {
         try {
-            return $this->billingStatement
+            return $this->model
                 ->active()
                 ->where('report_date', $date)
                 ->update($data);
@@ -41,7 +36,7 @@ class BillingStatementRepository
     //檢核若該月份已結算員工commission則提示訊息(需Revoke Approval)
     public function checkIfSettled(string $date): int
     {
-        return $this->billingStatement
+        return $this->model
             ->active()
             ->where('report_date', $date)
             ->whereNotNull('cutoff_time')
@@ -51,10 +46,36 @@ class BillingStatementRepository
     //檢核若該月份已結算員工commission則提示訊息(需Revoke Approval)
     public function checkIfDuplicated(string $date, string $clientCode): int
     {
-        return $this->billingStatement
+        return $this->model
             ->active()
             ->where('report_date', $date)
             ->where("client_code", $clientCode)
             ->count();
+    }
+
+    public function getIssueViewData(
+        string $clientCode = null,
+        string $reportDate = null
+    ) {
+        return $this->model
+            ->select(
+                'id',
+                'client_code',
+                'avolution_commission',
+                'commission_type',
+                'total_sales_orders',
+                'total_sales_amount',
+                'total_expenses',
+                DB::raw("date_format(report_date,'%b-%Y') as 'report_date'")
+            )->active()
+            ->when($clientCode, fn ($q) => $q->where('client_code', $clientCode))
+            ->when(
+                $reportDate,
+                fn ($q) => $q->where(
+                    'report_date',
+                    Carbon::parse($reportDate)->startOfMonth()->toDateString()
+                )
+            )
+            ->paginate(100);
     }
 }

@@ -141,9 +141,6 @@
 @endsection
 
 @push('js')
-    <script src="{{ asset('argon') }}/vendor/select2/dist/js/select2.min.js"></script>
-    <script src="{{ asset('argon') }}/vendor/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
-
     <script type="text/javascript">
         $(function () {
             $('#report_date').datepicker({
@@ -155,8 +152,6 @@
             });
 
             $('button.download_file').click(function () {
-                // let inlineSelectType = $('#inline_select_fee_type :selected').val();
-                // window.location(url);
                 let token = $(this).parent().parent().find('input[name="file_token"]').val();
 
                 window.location.href = origin + '/invoice/download/' + token;
@@ -169,40 +164,38 @@
                     title: "Are you sure?",
                     text: ("DELETE"),
                     icon: 'warning',
-                    buttons: true,
                     buttons: ["No,Cancel", "Yes,Delete it!"]
-                })
-                    .then(function (isConfirm) {
-                        if (isConfirm) {
-                            $.ajaxSetup({
-                                headers: {
-                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                                }
-                            });
+                }).then(function (isConfirm) {
+                    if (isConfirm) {
+                        $.ajaxSetup({
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            }
+                        });
 
-                            $.ajax({
-                                url: origin + '/invoice/' + invoiceID,
-                                type: 'delete',
-                                success: function (res) {
-                                    swal({
-                                        icon: res.icon,
-                                        text: res.msg
-                                    });
-                                }, error: function (e) {
-                                    // 顯示 Validate Error
-                                    let errors = [];
-                                    $.each(JSON.parse(e.responseText).errors, function (col, msg) {
-                                        errors.push(msg.toString());
-                                    });
+                        $.ajax({
+                            url: origin + '/invoice/' + invoiceID,
+                            type: 'delete',
+                            success: function (res) {
+                                swal({
+                                    icon: res.icon,
+                                    text: res.msg
+                                });
+                            }, error: function (e) {
+                                // 顯示 Validate Error
+                                let errors = [];
+                                $.each(JSON.parse(e.responseText).errors, function (col, msg) {
+                                    errors.push(msg.toString());
+                                });
 
-                                    swal({
-                                        icon: 'error',
-                                        text: errors.join("\n")
-                                    });
-                                }
-                            });
-                        }
-                    });
+                                swal({
+                                    icon: 'error',
+                                    text: errors.join("\n")
+                                });
+                            }
+                        });
+                    }
+                });
             });
         });
     </script>
