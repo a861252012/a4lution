@@ -305,34 +305,37 @@
                             $.colorbox.close();
                         }
                     });
+
+                uploadAjax(file, date, type);
+
                 //call api to check if monthly report exist and validate title
-                $.ajax({
-                    url: window.location.origin + '/fee/preValidation/' + date + '/' + type,
-                    type: 'post',
-                    processData: false,
-                    contentType: false,
-                    data: data,
-                    success: function (res) {
-                        if (res.status !== 200) {
-                            //如驗證失敗則可再次上傳
-                            $('#inline_submit').prop('disabled', false);
+                // $.ajax({
+                //     url: window.location.origin + '/fee/preValidation/' + date + '/' + type,
+                //     type: 'post',
+                //     processData: false,
+                //     contentType: false,
+                //     data: data,
+                //     success: function (res) {
+                //         if (res.status !== 200) {
+                //             //如驗證失敗則可再次上傳
+                //             $('#inline_submit').prop('disabled', false);
 
-                            swal({
-                                icon: "error",
-                                text: res.msg
-                            })
-                            return false;
-                        }
+                //             swal({
+                //                 icon: "error",
+                //                 text: res.msg
+                //             })
+                //             return false;
+                //         }
 
-                        uploadAjax(file, date, type);
-                    }, error: function (e) {
-                        console.log(e);
-                        swal({
-                            icon: 'error',
-                            text: 'upload error'
-                        });
-                    }
-                });
+                //         uploadAjax(file, date, type);
+                //     }, error: function (e) {
+                //         console.log(e);
+                //         swal({
+                //             icon: 'error',
+                //             text: 'upload error'
+                //         });
+                //     }
+                // });
             });
 
             //check file size
@@ -371,7 +374,7 @@
                     //如上傳成功則可再次上傳
                     $('#inline_submit').prop('disabled', false);
                 }, error: function (e) {
-                    // 顯示 Validate Error
+
                     let errors = [];
                     $.each(JSON.parse(e.responseText).errors, function (col, msg) {
                         errors.push(msg.toString());

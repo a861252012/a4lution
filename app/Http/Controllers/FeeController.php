@@ -152,15 +152,28 @@ class FeeController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'The selected report date (year-month) was closed');
         }
 
-        $importClass = sprintf('App\\Imports\\Queue%sImport', Str::studly($feeType));
+        $importClass = sprintf('App\\Imports\\%sImport', Str::studly($feeType));
         if (! class_exists($importClass)) {
             abort(Response::HTTP_NOT_FOUND, "Class '{$importClass}' not found");
         }
 
-        Excel::queueImport(
-            new $importClass(Auth::id(), $batchJob->id, $reportDate),
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setLoadSheetsOnly(["Amz Ads", "eBay Ads"]);
+        $spreadsheet = $reader->load($file);
+
+        dd($spreadsheet->getActiveSheet()->toArray());
+
+        // dd((new $importClass)->toCollection($file));
+        Excel::import(
+            new $importClass,
             $file
-        )->allOnQueue('queue_excel');
+        );
+        exit;
+
+        // Excel::queueImport(
+        //     new $importClass(Auth::id(), $batchJob->id, $reportDate),
+        //     $file
+        // )->allOnQueue('queue_excel');
     }
 
     public function platformAdsView(Request $request)
