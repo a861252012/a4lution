@@ -31,11 +31,11 @@
             <div class="step-tab-panel" data-step="step1">
                 <div class="row">
                     <div class="col">
-                        <div>Monthly Sales & OPEX Summary in HKD (for the period of {{$formattedStartDate ?? ''}} to
-                            {{$formattedEndDate ?? ''}})
+                        <div>Monthly Sales & OPEX Summary in HKD (for the period of {{ $formattedStartDate }} to
+                            {{ $formattedEndDate }})
                         </div>
                         <strong>
-                            {{$clientCode ?? 'S53A'}}
+                            {{ $clientCode }}
                         </strong>
                     </div>
                 </div>
@@ -68,7 +68,8 @@
                         <table class="ml-4">
                             <tr>
                                 <td class='w-75'>Avolution Commission</td>
-                                <td class='w-25'>${{ number_format($billingStatement->avolution_commission) ?: '-' }}</td>
+                                <td class='w-25'>
+                                    ${{ number_format($billingStatement->avolution_commission) ?: '-' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>Sales Tax Handling</td>
@@ -84,7 +85,8 @@
                             </tr>
                             <tr>
                                 <td class='w-75'>FBA & Storage Fee Invoice</td>
-                                <td class='w-25'>${{ number_format($billingStatement->fba_storage_fee_invoice) ?: '-' }}</td>
+                                <td class='w-25'>
+                                    ${{ number_format($billingStatement->fba_storage_fee_invoice) ?: '-' }}</td>
                             </tr>
                             <tr>
                                 <td class='w-75'>Final Credit</td>
@@ -96,97 +98,98 @@
                     <div class="col-8">
                         <table class="table _table table-striped table-bordered">
                             <thead>
-                                <tr>
-                                    <th scope="col"></th>
-                                    <th scope="col">A4LUTION ACCOUNT</th>
-                                    <th scope="col">CLIENT ACCOUNT</th>
-                                </tr>
+                            <tr>
+                                <th scope="col"></th>
+                                <th scope="col">A4LUTION ACCOUNT</th>
+                                <th scope="col">CLIENT ACCOUNT</th>
+                            </tr>
                             </thead>
 
                             <tbody>
-                                <tr>
-                                    <th scope="row"><strong>Expenses Breakdown</strong></th>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">-Logistics Fee</th>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->a4_account_logistics_fee) ?: '-' }}
-                                    </td>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->client_account_logistics_fee) ?: '-' }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">-FBA Fee</th>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->a4_account_fba_fee) ?: '-' }}
-                                    </td>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->client_account_fba_fee) ?: '-' }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">-FBA Storage Fee</th>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->a4_account_fba_storage_fee) ?: '-' }}
-                                    </td>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->client_account_fba_storage_fee) ?: '-' }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">-Platform Fee</th>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->a4_account_platform_fee) ?: '-' }}
-                                    </td>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->client_account_platform_fee) ?: '-' }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">-Refund and Resend</th>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->a4_account_refund_and_resend) ?: '-' }}
-                                    </td>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->client_account_refund_and_resend) ?: '-' }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">-Miscellaneous</th>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->a4_account_miscellaneous) ?: '-' }}
-                                    </td>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->client_account_miscellaneous) ?: '-' }}
-                                    </td>
-                                </tr>
-                                {{-- MARKETING FEE --}}
-                                <tr>
-                                    <th scope="row"><strong>Marketing Fee</strong></th>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr class="">
-                                    <th scope="row">-Advertisement</th>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->a4_account_advertisement) ?: '-' }}
-                                    </td>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->client_account_advertisement) ?: '-' }}
-                                    </td>
-                                </tr>
-                                <tr class="">
-                                    <th scope="row">-Marketing And Promotion</th>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->a4_account_marketing_and_promotion) ?: '-' }}
-                                    </td>
-                                    <td class="text-right">
-                                        ${{ number_format($billingStatement->client_account_marketing_and_promotion) ?: '-' }}
-                                    </td>
-                                </tr>
+                            <tr>
+                                <th scope="row"><strong>Expenses Breakdown</strong></th>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">-Logistics Fee</th>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->a4_account_logistics_fee) ?: '-' }}
+                                </td>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->client_account_logistics_fee) ?: '-' }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">-FBA Fee</th>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->a4_account_fba_fee) ?: '-' }}
+                                </td>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->client_account_fba_fee) ?: '-' }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">-FBA Storage Fee</th>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->a4_account_fba_storage_fee) ?: '-' }}
+                                </td>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->client_account_fba_storage_fee) ?: '-' }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">-Platform Fee</th>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->a4_account_platform_fee) ?: '-' }}
+                                </td>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->client_account_platform_fee) ?: '-' }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">-Refund and Resend</th>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->a4_account_refund_and_resend) ?: '-' }}
+                                </td>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->client_account_refund_and_resend) ?: '-' }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">-Miscellaneous</th>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->a4_account_miscellaneous) ?: '-' }}
+                                </td>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->client_account_miscellaneous) ?: '-' }}
+                                </td>
+                            </tr>
+                            {{-- MARKETING FEE --}}
+                            <tr>
+                                <th scope="row"><strong>Marketing Fee</strong></th>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr class="">
+                                <th scope="row">-Advertisement</th>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->a4_account_advertisement) ?: '-' }}
+                                </td>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->client_account_advertisement) ?: '-' }}
+                                </td>
+                            </tr>
+                            <tr class="">
+                                <th scope="row">-Marketing And Promotion</th>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->a4_account_marketing_and_promotion) ?: '-' }}
+                                </td>
+                                <td class="text-right">
+                                    ${{ number_format($billingStatement->client_account_marketing_and_promotion)
+                                    ?: '-' }}
+                                </td>
+                            </tr>
 
                             </tbody>
                         </table>
@@ -205,42 +208,43 @@
                         <div class="col-3 form-group">
                             <label class="form-control-label _fz-1" for="step_report_date">Report Date</label>
                             <input class="form-control _fz-1" name="step_report_date" id="step_report_date"
-                                placeholder="step_report_date"
-                                type="text" value="{{$formattedReportDate}}" readonly>
+                                   placeholder="step_report_date"
+                                   type="text" value="{{ $formattedReportDate }}" readonly>
                         </div>
 
                         <div class="col-3 form-group">
                             <label class="form-control-label _fz-1" for="issue_date">Issue Date</label>
                             <input class="form-control _fz-1" name="issue_date" id="issue_date" placeholder="issue_date"
-                                type="text" value="{{$currentDate}}">
+                                   type="text" value="{{ $currentDate }}">
                         </div>
 
                         <div class="col-4 form-group">
                             <label class="form-control-label _fz-1" for="client_contact">Client Contact</label>
                             <input class="form-control _fz-1" name="client_contact" id="client_contact"
-                                placeholder="client_contact"
-                                type="text" value="{{$customerInfo['contact_person']}}">
+                                   placeholder="client_contact"
+                                   type="text" value="{{ $customerInfo['contact_person'] }}">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-3 form-group">
                             <label class="form-control-label _fz-1" for="client_code">Client Code</label>
-                            <input class="form-control _fz-1" name="client_code" id="client_code" placeholder="client_code"
-                                type="text" value="{{$clientCode ?? ''}}" readonly>
+                            <input class="form-control _fz-1" name="client_code" id="client_code"
+                                   placeholder="client_code"
+                                   type="text" value="{{ $clientCode }}" readonly>
                         </div>
 
                         <div class="col-3 form-group">
                             <label class="form-control-label _fz-1" for="due_date">Due Date</label>
                             <input class="form-control _fz-1" name="due_date" id="due_date" placeholder="due_date"
-                                type="text" value="{{$nextMonthDate}}">
+                                   type="text" value="{{ $nextMonthDate }}">
                         </div>
 
                         <div class="col-4 form-group">
                             <label class="form-control-label _fz-1" for="client_company">Company Contact</label>
                             <input class="form-control _fz-1" name="client_company" id="client_company"
-                                placeholder="client_company" type="text"
-                                value="{{$customerInfo['company_name']}}">
+                                   placeholder="client_company" type="text"
+                                   value="{{ $customerInfo['company_name'] }}">
                         </div>
                     </div>
 
@@ -248,29 +252,30 @@
                         <div class="col-3 form-group">
                             <label class="form-control-label _fz-1" for="supplier_name">Supplier Name</label>
                             <input class="form-control _fz-1" name="supplier_name" id="supplier_name"
-                                placeholder="supplier_name"
-                                type="text" value="{{$supplierName ?? ''}}" readonly>
+                                   placeholder="supplier_name"
+                                   type="text" value="{{ $supplierName }}" readonly>
                         </div>
 
                         <div class="col-3 form-group">
-                            <label class="form-control-label _fz-1" for="payment_terms">Payment Terms (# days net)</label>
+                            <label class="form-control-label _fz-1" for="payment_terms">Payment Terms (# days
+                                net)</label>
                             <input class="form-control _fz-1" name="payment_terms" id="payment_terms"
-                                placeholder="payment_terms"
-                                type="text" value="10">
+                                   placeholder="payment_terms"
+                                   type="text" value="10">
                         </div>
 
                         <div class="col-3 form-group">
                             <label class="form-control-label _fz-1" for="client_address1">Street 1</label>
                             <input class="form-control _fz-1" name="client_address1" id="client_address1"
-                                placeholder="client_address1" type="text"
-                                value="{{$customerInfo['address1']}}">
+                                   placeholder="client_address1" type="text"
+                                   value="{{ $customerInfo['address1'] }}">
                         </div>
 
                         <div class="col-3 form-group">
                             <label class="form-control-label _fz-1" for="client_address2">Street 2</label>
                             <input class="form-control _fz-1" name="client_address2" id="client_address2"
-                                placeholder="client_address2" type="text"
-                                value="{{$customerInfo['address2']}}">
+                                   placeholder="client_address2" type="text"
+                                   value="{{ $customerInfo['address2'] }}">
                         </div>
                     </div>
 
@@ -278,30 +283,31 @@
                     <div class="row">
                         <div class="col-3 offset-6 form-group">
                             <label class="form-control-label _fz-1" for="client_city">City</label>
-                            <input class="form-control _fz-1" name="client_city" id="client_city" placeholder="client_city"
-                                type="text" value="{{$customerInfo['city']}}">
+                            <input class="form-control _fz-1" name="client_city" id="client_city"
+                                   placeholder="client_city"
+                                   type="text" value="{{ $customerInfo['city'] }}">
                         </div>
 
                         <div class="col-2 form-group">
                             <label class="form-control-label _fz-1"
-                                for="client_district">District</label>
+                                   for="client_district">District</label>
                             <input class="form-control _fz-1" name="client_district" id="client_district"
-                                placeholder="client_district" type="text" value="{{$customerInfo['district']}}">
+                                   placeholder="client_district" type="text" value="{{ $customerInfo['district'] }}">
                         </div>
 
                         <div class="col-1 form-group">
                             <label class="form-control-label _fz-1" for="client_zip">Zip</label>
                             <input class="form-control _fz-1" name="client_zip" id="client_zip" placeholder="client_zip"
-                                type="text" value="{{$customerInfo['zip']}}">
+                                   type="text" value="{{ $customerInfo['zip'] }}">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-3 offset-6 form-group">
                             <label class="form-control-label _fz-1"
-                                for="client_country">Country</label>
+                                   for="client_country">Country</label>
                             <input class="form-control _fz-1" name="client_country" id="client_country"
-                                placeholder="client_country" type="text" value="{{$customerInfo['country']}}">
+                                   placeholder="client_country" type="text" value="{{ $customerInfo['country'] }}">
                         </div>
                     </div>
 
@@ -329,7 +335,7 @@
 <!-- jquery.form JS -->
 <script src="{{ asset('argon') }}/js/jquery.form_4.3.0.js"></script>
 
-{{--<script src="{{ asset('argon') }}/vendor/jquery/dist/jquery-3.1.0.js"></script>--}}
+<!-- jquery.JS -->
 <script src="{{ asset('argon') }}/vendor/jquery/dist/jquery-1.9.1.js"></script>
 
 <!-- jquery colorbox JS -->
@@ -338,10 +344,6 @@
 <script src="{{ asset('argon') }}/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
 <script src="{{ asset('argon') }}/vendor/js-cookie/js.cookie.js"></script>
-
-<!-- Optional JS -->
-<script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.min.js"></script>
-<script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.extension.js"></script>
 
 <!-- jQuery Step JS -->
 <script src="{{ asset('argon') }}/vendor/jquery-steps/jquery.steps_1.1.2.js"></script>
