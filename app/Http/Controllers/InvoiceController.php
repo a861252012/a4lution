@@ -72,7 +72,7 @@ class InvoiceController extends Controller
 
     public function downloadFile(Request $request): RedirectResponse
     {
-        $token = data_get($request, 'token');
+        $token = $request->token;
 
         if (!$token) {
             return back()->with('message', 'failed to download');
@@ -305,13 +305,8 @@ class InvoiceController extends Controller
             $invoice->doc_status = 'deleted';
             $invoice->save();
         } catch (ModelNotFoundException $e) {
-            return response()->json(
-                [
-                    'msg' => 'wrong ID',
-                    'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                    'icon' => 'error'
-                ]
-            );
+            \Log::error($e);
+            abort(Response::HTTP_INTERNAL_SERVER_ERROR, 'delete failed');
         }
 
         return response()->json(

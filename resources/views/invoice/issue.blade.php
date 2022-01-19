@@ -589,7 +589,6 @@
                             }
                         });
                     }, error: function (e) {
-                        // 顯示 Validate Error
                         let errors = [];
                         $.each(JSON.parse(e.responseText).errors, function (col, msg) {
                             errors.push(msg.toString());
@@ -700,7 +699,6 @@
                                 });
 
                             }, error: function (e) {
-                                // 顯示 Validate Error
                                 let errors = [];
                                 $.each(JSON.parse(e.responseText).errors, function (col, msg) {
                                     errors.push(msg.toString());
@@ -822,7 +820,6 @@
 
                     location.reload();
                 }, error: function (e) {
-                    // 顯示 Validate Error
                     let errors = [];
                     $.each(JSON.parse(e.responseText).errors, function (col, msg) {
                         errors.push(msg.toString());
@@ -861,7 +858,6 @@
                         });
                     }
                 }, error: function (e) {
-                    // 顯示 Validate Error
                     let errors = [];
                     $.each(JSON.parse(e.responseText).errors, function (col, msg) {
                         errors.push(msg.toString());
