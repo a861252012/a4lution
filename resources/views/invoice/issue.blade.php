@@ -32,7 +32,7 @@
                                     <option value={{''}} @if(request('client_code') === 'all'){{ 'selected' }} @endif>
                                         {{'all'}}
                                     </option>
-                                    @forelse ($client_code_lists as $item)
+                                    @forelse ($clientCodeList as $item)
                                         <option value="{{$item}}" @if(request('sel_client_code') == $item)
                                             {{ 'selected' }} @endif>{{$item}}</option>
                                     @empty
@@ -116,7 +116,7 @@
                             <td class="total_expenses">{{ $item->total_expenses ?? '' }}</td>
                             <td>
                                 <button class="btn btn-primary issue_btn btn-sm _fz-1" type="button"
-                                        data-attr="{{ $item->id }}"
+                                        billing-statement-id="{{ $item->id }}"
                                 @if($item->commission_type === "manual") {{ 'disabled' }} @endif>
                                     <span class="btn-inner--text">Issue Invoice</span>
                                 </button>
@@ -166,7 +166,7 @@
 
                     <div class="col-2">
                         <select class="form-control" data-toggle="select" name="sel_client_code" id="cbx_client_code">
-                            @forelse ($client_code_lists as $item)
+                            @forelse ($clientCodeList as $item)
                                 <option value="{{$item}}" @if(request('sel_client_code') == $item) {{ 'selected' }}
                                         @endif>
                                     {{$item}}
@@ -649,7 +649,7 @@
                 data['report_date'] = $(this).parent().parent().find('[class="report_date"]').text();
                 data['client_code'] = $(this).parent().parent().find('[class="client_code"]').text();
                 data['_token'] = $('meta[name="csrf-token"]').attr('content');
-                data['billing_statement_id'] = $(this).attr('data-attr');
+                data['billing_statement_id'] = $(this).attr('billing-statement-id');
 
                 $.colorbox({
                     iframe: false,

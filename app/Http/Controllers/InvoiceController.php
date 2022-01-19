@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Invoice\EditRequest;
 use App\Jobs\Invoice\CreateZipToS3;
 use App\Jobs\Invoice\ExportInvoiceExcel;
 use App\Jobs\Invoice\ExportInvoicePDFs;
@@ -14,12 +15,12 @@ use App\Repositories\CustomerRelationRepository;
 use App\Repositories\InvoiceRepository;
 use App\Services\InvoiceService;
 use App\Support\ERPRequester;
-use App\Http\Requests\Invoice\EditRequest;
 use Carbon\Carbon;
 use Illuminate\Bus\Batch;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -55,7 +56,7 @@ class InvoiceController extends Controller
 
     public function listView(Request $request)
     {
-        $data['lists'] = empty(count($request->all()))
+        $lists = empty(count($request->all()))
             ? []
             : $this->invoiceRepository->getListViewData(
                 $request->client_code,
@@ -64,12 +65,12 @@ class InvoiceController extends Controller
             );
 
         //取得登入用戶的對應 client_code列表
-        $data['client_code_lists'] = $this->customerRelationRepo->getClientCodeList();
+        $clientCodeList = $this->customerRelationRepo->getClientCodeList();
 
-        return view('invoice/list', $data);
+        return view('invoice/list', compact('lists', 'clientCodeList'));
     }
 
-    public function downloadFile(Request $request)
+    public function downloadFile(Request $request): RedirectResponse
     {
         $token = data_get($request, 'token');
 
@@ -96,7 +97,7 @@ class InvoiceController extends Controller
 
     public function issueView(Request $request)
     {
-        $data['lists'] = empty(count($request->all()))
+        $lists = empty(count($request->all()))
             ? []
             : $this->billingStatementRepository->getIssueViewData(
                 $request->sel_client_code,
@@ -104,9 +105,9 @@ class InvoiceController extends Controller
             );
 
         //取得登入用戶的對應 client_code列表
-        $data['client_code_lists'] = $this->customerRelationRepo->getClientCodeList();
+        $clientCodeList = $this->customerRelationRepo->getClientCodeList();
 
-        return view('invoice/issue', $data);
+        return view('invoice/issue', compact('lists', 'clientCodeList'));
     }
 
     public function createBill(Request $request): JsonResponse
@@ -119,13 +120,8 @@ class InvoiceController extends Controller
         try {
             $this->billingStatementRepository->create($data->all());
         } catch (QueryException $exception) {
-            return response()->json(
-                [
-                    'msg' => $exception->errorInfo,
-                    'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                ],
-                Response::HTTP_INTERNAL_SERVER_ERROR
-            );
+            \Log::error($exception);
+            abort(Response::HTTP_INTERNAL_SERVER_ERROR, 'create failed');
         }
 
         return response()->json(
@@ -136,11 +132,11 @@ class InvoiceController extends Controller
         );
     }
 
-    public function reportValidation(): JsonResponse
+    public function reportValidation(Request $request): JsonResponse
     {
         $res = $this->invoiceService->reportValidation(
-            request()->route('date'),
-            request()->route('clientCode')
+            $request->date,
+            $request->clientCode
         );
 
         return response()->json(
@@ -153,21 +149,18 @@ class InvoiceController extends Controller
 
     public function editView(EditRequest $request)
     {
-        $data['clientCode'] = data_get($request, 'client_code');
-        $data['reportDate'] = data_get($request, 'report_date');
-        $data['status'] = data_get($request, 'status');
+        $clientCode = $request->client_code;
+        $reportDate = Carbon::parse($request->report_date);
 
-        $reportDate = Carbon::parse($data['reportDate']);
+        $formattedStartDate = $reportDate->format('jS F Y');
+        $formattedEndDate = $reportDate->endOfMonth()->format('jS F Y');
+        $formattedReportDate = $reportDate->endOfMonth()->format('F Y');
+        $currentDate = date("m/d/Y");
+        $nextMonthDate = date("m/d/Y", strtotime('+30 days', strtotime($currentDate)));
 
-        $data['formattedStartDate'] = $reportDate->format('jS F Y');
-        $data['formattedEndDate'] = $reportDate->endOfMonth()->format('jS F Y');
-        $data['formattedReportDate'] = $reportDate->endOfMonth()->format('F Y');
-        $data['currentDate'] = date("m/d/Y");
-        $data['nextMonthDate'] = date("m/d/Y", strtotime('+30 days', strtotime($data['currentDate'])));
+        $billingStatement = $this->billingStatement->find($request->billing_statement_id);
 
-        $data['billingStatement'] = $this->billingStatement->find($request->billing_statement_id);
-
-        $data['customerInfo'] = $this->customer
+        $customerInfo = $this->customer
             ->select(
                 'contact_person',
                 'company_name',
@@ -176,24 +169,34 @@ class InvoiceController extends Controller
                 'city',
                 'district',
                 'zip',
-                'country'
+                'country',
+                'supplier_code'
             )
-            ->where('client_code', $data['clientCode'])
-            ->first()
-            ->toArray();
-
-        //打api取 SupplierName
-        $getSupplierCode = $this->customer->where('client_code', $data['clientCode'])->value('supplier_code');
+            ->where('client_code', $clientCode)
+            ->first();
 
         $getSupplierName = app(ERPRequester::class)->send(
             config('services.erp.wmsUrl'),
             self::GET_SUPPLIER_INFO,
-            ["supplierCode" => $getSupplierCode],
+            ["supplierCode" => $customerInfo->supplier_code],
         );
 
-        $data['supplierName'] = data_get($getSupplierName, 'data.supplierName', '');
+        $supplierName = data_get($getSupplierName, 'data.supplierName', '');
 
-        return view('invoice/edit', $data);
+        return view(
+            'invoice/edit',
+            compact(
+                'clientCode',
+                'formattedStartDate',
+                'formattedEndDate',
+                'formattedReportDate',
+                'currentDate',
+                'nextMonthDate',
+                'billingStatement',
+                'customerInfo',
+                'supplierName'
+            )
+        );
     }
 
     public function ajaxExport(Request $request)
