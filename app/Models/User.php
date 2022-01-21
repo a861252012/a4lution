@@ -66,6 +66,7 @@ class User extends Authenticatable
                 'view_permission' // pivot table: role <-> view
             ])
             ->where('level', 1)
+            ->where('views.active', 1)
             ->orderByRaw('views.module , views.level , views.order');
     }
 

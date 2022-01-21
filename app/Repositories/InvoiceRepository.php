@@ -3,6 +3,8 @@
 namespace App\Repositories;
 
 use App\Models\Invoice;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class InvoiceRepository extends BaseRepository
@@ -38,5 +40,35 @@ class InvoiceRepository extends BaseRepository
             ->where('report_date', $date)
             ->where("client_code", $clientCode)
             ->count();
+    }
+
+    public function getListViewData(
+        string $clientCode = null,
+        string $status = null,
+        string $reportDate = null
+    ) {
+        return $this->model
+            ->select(
+                DB::raw("date_format(report_date,'%M-%Y') AS report_date"),
+                'id',
+                'client_code',
+                'opex_invoice_no',
+                'doc_file_name',
+                'doc_status',
+                'doc_storage_token',
+                'created_at'
+            )
+            ->active()
+            ->when($clientCode, fn ($q) => $q->where('client_code', $clientCode))
+            ->when($status, fn ($q) => $q->where('doc_status', $status))
+            ->when(
+                $reportDate,
+                fn ($q) => $q->where(
+                    'report_date',
+                    Carbon::parse($reportDate)->startOfMonth()->toDateString()
+                )
+            )
+            ->orderByDesc('id')
+            ->paginate(100);
     }
 }
