@@ -18,7 +18,7 @@ class View extends Model
     public function subViews()
     {
         return $this->hasMany(View::class, 'module', 'module')
+            ->where('active', 1)
             ->where('level', 2);
     }
-
 }
