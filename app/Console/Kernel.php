@@ -31,10 +31,6 @@ class Kernel extends ConsoleKernel
         $schedule->command('order_data_sync')
             ->timezone(config('services.timezone.taipei'))
             ->monthlyOn(15, '09:00');
-
-        $schedule->command('calculate_commission')
-            ->timezone(config('services.timezone.taipei'))
-            ->monthlyOn(15, '00:00');
     }
 
     /**
