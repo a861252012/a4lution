@@ -6,20 +6,17 @@ use Exception;
 use Carbon\Carbon;
 use App\Models\BatchJob;
 use Illuminate\Support\Str;
+use App\Services\FeeService;
 use Illuminate\Http\Request;
 use App\Models\PlatformAdFee;
-use InvalidArgumentException;
 use App\Models\BillingStatement;
 use App\Models\ExtraordinaryItem;
 use App\Models\MonthlyStorageFee;
 use Illuminate\Http\JsonResponse;
 use App\Models\LongTermStorageFee;
-use App\Services\FeeImportService;
-use App\Support\SimpleExcelReader;
 use Illuminate\Support\Facades\DB;
 use App\Constants\BatchJobConstant;
 use Illuminate\Support\Facades\Log;
-use App\Imports\QueuePlatformAdFees;
 use App\Models\FirstMileShipmentFee;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
@@ -28,17 +25,12 @@ use App\Models\AmazonDateRangeReport;
 use App\Constants\ImportTitleConstant;
 use App\Exports\AmazonDateRangeExport;
 use Maatwebsite\Excel\HeadingRowImport;
-use App\Imports\QueueMonthlyStorageFees;
 use App\Repositories\CustomerRepository;
 use App\Exports\MonthlyStorageFeesExport;
-use App\Imports\QueueLongTermStorageFees;
 use App\Exports\LongTermStorageFeesExport;
 use App\Services\SalesReportImportService;
 use App\Exports\FirstMileShipmentFeeExport;
-use App\Imports\QueueAmazonDateRangeImport;
-use App\Imports\QueueFirstMileShipmentFees;
 use App\Repositories\ExchangeRateRepository;
-use App\Services\FeeService;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -633,94 +625,5 @@ class FeeController extends Controller
                 ]
             );
         }
-    }
-
-    public function preValidation(Request $request): JsonResponse
-    {
-        $reportDate = Carbon::parse($request->route('date'));
-
-        // 1. exchange rate validation
-        $exchangeRate = (new ExchangeRateRepository)->getByQuotedDate($reportDate->startOfMonth()->toDateString());
-
-        if ($exchangeRate->isEmpty()) {
-            return response()->json(
-                [
-                    'status' => Response::HTTP_FORBIDDEN,
-                    'msg' => "Currency Exchange Rate Not Found Error"
-                ]
-            );
-        }
-
-        // 2. check if monthly report exist
-        $hasMonthlyBilling = $this->billingStatement
-            ->active()
-            ->whereRaw(
-                "DATE_FORMAT(report_date,'%Y%m') = ?",
-                [$reportDate->format('Ym')]
-            )
-            ->count();
-
-        if ($hasMonthlyBilling) {
-            $formattedDate = $reportDate->format('Y-m');
-
-            return response()->json(
-                [
-                    'status' => Response::HTTP_FORBIDDEN,
-                    'msg' => "The {$formattedDate} sales summary was generated.
-                            Please delete the sales summary and reupload it."
-                ]
-            );
-        }
-
-        // 3. validate excel title
-        $headings = (new HeadingRowImport)->toCollection($request->file('file')) ?
-            (new HeadingRowImport)->toCollection($request->file('file'))->collapse()->collapse()->filter() : null;
-
-        if (!$headings) {
-            return response()->json(
-                [
-                    'status' => Response::HTTP_FORBIDDEN,
-                    'msg' => "Title unmatched"
-                ]
-            );
-        }
-
-        switch ($request->route('type')) {
-            case 'platform_ad_fees':
-                $diff = $headings->diff(ImportTitleConstant::PLATFORM_AD) ?? null;
-                break;
-            case 'amazon_date_range':
-                $diff = $headings->diff(ImportTitleConstant::AMZ_DATE_RANGE) ?? null;
-                break;
-            case 'long_term_storage_fees':
-                $diff = $headings->diff(ImportTitleConstant::LONG_TERM) ?? null;
-                break;
-            case 'monthly_storage_fees':
-                $diff = $headings->diff(ImportTitleConstant::MONTHLY_STORAGE) ?? null;
-                break;
-            case 'first_mile_shipment_fees':
-                $diff = $headings->diff(ImportTitleConstant::FIRST_MILE_SHIPMENT) ?? null;
-                break;
-
-            default:
-                $diff = null;
-                break;
-        }
-
-        if ($diff->isNotEmpty()) {
-            return response()->json(
-                [
-                    'status' => Response::HTTP_FORBIDDEN,
-                    'msg' => "Title : {$diff->implode(', ')} unmatched"
-                ]
-            );
-        }
-
-        return response()->json(
-            [
-                'status' => Response::HTTP_OK,
-                'msg' => "success"
-            ]
-        );
     }
 }
