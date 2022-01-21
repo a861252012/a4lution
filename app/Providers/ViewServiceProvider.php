@@ -27,15 +27,14 @@ class ViewServiceProvider extends ServiceProvider
     public function boot()
     {
         View::composer('layouts.navbars.sidebar', function ($views) {
-
             $sidebarMenu = Auth::user()
                 ->load('mainViews.subViews')
                 ->getRelation('mainViews');
 
             $nowView = ViewModel::where(
-                    'path', 
-                    request()->getPathInfo()
-                )->first();
+                'path',
+                request()->getPathInfo()
+            )->first();
 
             $views->with(compact('sidebarMenu', 'nowView'));
         });
