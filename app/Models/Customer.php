@@ -106,5 +106,10 @@ class Customer extends Model
         return ! (bool) $this->active;
     }
 
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('active', 1);
+    }
+
 }
 
