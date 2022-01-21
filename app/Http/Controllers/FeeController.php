@@ -8,11 +8,14 @@ use App\Models\BatchJob;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\PlatformAdFee;
+use InvalidArgumentException;
 use App\Models\BillingStatement;
 use App\Models\ExtraordinaryItem;
 use App\Models\MonthlyStorageFee;
 use Illuminate\Http\JsonResponse;
 use App\Models\LongTermStorageFee;
+use App\Services\FeeImportService;
+use App\Support\SimpleExcelReader;
 use Illuminate\Support\Facades\DB;
 use App\Constants\BatchJobConstant;
 use Illuminate\Support\Facades\Log;
@@ -30,10 +33,12 @@ use App\Repositories\CustomerRepository;
 use App\Exports\MonthlyStorageFeesExport;
 use App\Imports\QueueLongTermStorageFees;
 use App\Exports\LongTermStorageFeesExport;
+use App\Services\SalesReportImportService;
 use App\Exports\FirstMileShipmentFeeExport;
 use App\Imports\QueueAmazonDateRangeImport;
 use App\Imports\QueueFirstMileShipmentFees;
 use App\Repositories\ExchangeRateRepository;
+use App\Services\FeeService;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -121,9 +126,20 @@ class FeeController extends Controller
 
     public function uploadFile(Request $request)
     {
+        $feeService = new FeeService;
+
         $file = $request->file('file');
         $feeType = $request->inline_fee_type;
-        $reportDate = date('Y-m-d', strtotime($request->inline_report_date)) ?? date('Y-m-d');
+        $reportDate = Carbon::parse($request->inline_report_date);
+
+        // $feeService->validate($reportDate);
+
+        // 處理 A4lution Sales Report Import
+        if ($feeType == BatchJobConstant::FEE_TYPE_SALES_REPORT) {
+            return (new SalesReportImportService($file, $reportDate->toDateString()))->import();
+        }
+
+        // $feeService->checkExcelHeader($file, $feeType);
 
         $batchJob = BatchJob::create([
             'user_id' => Auth::id(),
@@ -135,43 +151,19 @@ class FeeController extends Controller
             'created_at' => now()->toDateTimeString(),
         ]);
 
-        //查詢該月是否已結算,如已結算則不得再更改
-        $haveMonthlyReport = $this->billingStatement
-            ->active()
-            ->where('report_date', $reportDate)
-            ->count();
-
-        if ($haveMonthlyReport) {
-            $batchJob->update(
-                [
-                    'status' => 'failed',
-                    'exit_message' => 'The selected report date (year-month) was closed',
-                ]
-            );
-
-            abort(Response::HTTP_FORBIDDEN, 'The selected report date (year-month) was closed');
-        }
-
-        $importClass = sprintf('App\\Imports\\%sImport', Str::studly($feeType));
+        $importClass = sprintf('App\\Imports\\Fee\\%sImport', Str::studly($feeType));
         if (! class_exists($importClass)) {
             abort(Response::HTTP_NOT_FOUND, "Class '{$importClass}' not found");
         }
 
-        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
-        $reader->setLoadSheetsOnly(["Amz Ads", "eBay Ads"]);
-        $spreadsheet = $reader->load($file);
-
-        dd($spreadsheet->getActiveSheet()->toArray());
-
-        // dd((new $importClass)->toCollection($file));
+        // 測試用
         Excel::import(
-            new $importClass,
+            new $importClass(Auth::id(), $batchJob->id, $reportDate->toDateString()),
             $file
         );
-        exit;
 
         // Excel::queueImport(
-        //     new $importClass(Auth::id(), $batchJob->id, $reportDate),
+        //     new $importClass(Auth::id(), $batchJob->id, $reportDate->toDateString()),
         //     $file
         // )->allOnQueue('queue_excel');
     }

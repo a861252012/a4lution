@@ -6,9 +6,10 @@ use App\Models\CommissionSkuSetting;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\WithStartRow;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 
-class SkuCommissionImport implements ToModel, WithStartRow, WithValidation
+class SkuCommissionImport implements ToModel, WithStartRow, WithValidation, WithHeadingRow
 {
     use Importable;
 

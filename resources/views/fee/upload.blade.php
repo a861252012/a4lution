@@ -282,9 +282,6 @@
                 let file = $('#inline_file')[0].files[0];
                 let fileType = file.name.slice((file.name.lastIndexOf(".") - 1 >>> 0) + 2);
 
-                let data = new FormData();
-                data.append('file', file);
-
                 if (fileType !== 'xlsx') {
                     swal({
                         icon: "error",
@@ -293,49 +290,10 @@
                     return false;
                 }
 
-                //暫時禁止用戶再次上傳檔案
+                // 暫時禁止用戶再次上傳檔案
                 $('#inline_submit').prop('disabled', true);
 
-                swal({
-                    icon: "success",
-                    text: "processing"
-                })
-                    .then(function (isConfirm) {
-                        if (isConfirm) {
-                            $.colorbox.close();
-                        }
-                    });
-
                 uploadAjax(file, date, type);
-
-                //call api to check if monthly report exist and validate title
-                // $.ajax({
-                //     url: window.location.origin + '/fee/preValidation/' + date + '/' + type,
-                //     type: 'post',
-                //     processData: false,
-                //     contentType: false,
-                //     data: data,
-                //     success: function (res) {
-                //         if (res.status !== 200) {
-                //             //如驗證失敗則可再次上傳
-                //             $('#inline_submit').prop('disabled', false);
-
-                //             swal({
-                //                 icon: "error",
-                //                 text: res.msg
-                //             })
-                //             return false;
-                //         }
-
-                //         uploadAjax(file, date, type);
-                //     }, error: function (e) {
-                //         console.log(e);
-                //         swal({
-                //             icon: 'error',
-                //             text: 'upload error'
-                //         });
-                //     }
-                // });
             });
 
             //check file size
@@ -371,8 +329,16 @@
                 contentType: false,
                 data: data,
                 success: function () {
-                    //如上傳成功則可再次上傳
+
+                    $.colorbox.close();
+
+                    swal({
+                        icon: 'success',
+                        text: 'upload processing',
+                    });
+
                     $('#inline_submit').prop('disabled', false);
+
                 }, error: function (e) {
 
                     let errors = [];
@@ -385,10 +351,11 @@
                         text: errors.join("\n")
                     });
 
-                    //如上傳失敗則可再次上傳
                     $('#inline_submit').prop('disabled', false);
+
                 }
             });
+
         }
     </script>
 @endpush

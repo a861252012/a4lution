@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Imports;
+namespace App\Imports\Fee;
 
 use App\Models\AmazonDateRangeReport;
 use App\Models\BatchJob;
@@ -22,7 +22,7 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
 
-class QueueAmazonDateRangeImport implements
+class AmazonDateRangeImport implements
     ToModel,
     WithChunkReading,
     ShouldQueue,

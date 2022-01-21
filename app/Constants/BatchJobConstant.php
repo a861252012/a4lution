@@ -4,15 +4,26 @@ namespace App\Constants;
 
 class BatchJobConstant
 {
+    const STATUS_PROCESSING = 'processing';
+    const STATUS_COMPLETED = 'completed';
+    const STATUS_FAILED = 'failed';
+
+    const FEE_TYPE_SALES_REPORT = 'a4lution_sales_reports';
+    const FEE_TYPE_PLATFORM_AD_FEES = 'platform_ad_fees';
+    const FEE_TYPE_AMAZON_DATE_RANGE = 'amazon_date_range';
+    const FEE_TYPE_LONG_TERM_STORAGE_FEES = 'long_term_storage_fees';
+    const FEE_TYPE_MONTHLY_STORAGE_FEES = 'monthly_storage_fees';
+    const FEE_TYPE_FIRST_MILE_SHIPMENT_FEES = 'first_mile_shipment_fees';
+
     public static function mapFeeType(): array
     {
         return [
-            'a4lution_sales_reports' => 'A4lution Sales Report',
-            'platform_ad_fees' => 'Platform Advertisement Fee',
-            'amazon_date_range' => 'Amazon Date Range Report',
-            'long_term_storage_fees' => 'FBA Long Term Storage Fee',
-            'monthly_storage_fees' => 'FBA Monthly Storage Fee',
-            'first_mile_shipment_fees' => 'First Mile Shipment Fee',
+            self::FEE_TYPE_SALES_REPORT => 'A4lution Sales Report',
+            self::FEE_TYPE_PLATFORM_AD_FEES => 'Platform Advertisement Fee',
+            self::FEE_TYPE_AMAZON_DATE_RANGE => 'Amazon Date Range Report',
+            self::FEE_TYPE_LONG_TERM_STORAGE_FEES => 'FBA Long Term Storage Fee',
+            self::FEE_TYPE_MONTHLY_STORAGE_FEES => 'FBA Monthly Storage Fee',
+            self::FEE_TYPE_FIRST_MILE_SHIPMENT_FEES => 'First Mile Shipment Fee',
         ];
     }
 

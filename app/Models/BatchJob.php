@@ -10,9 +10,7 @@ class BatchJob extends Model
 {
     protected $table = "batch_jobs";
 
-    protected $guarded = ['id'];
-
-    protected $fillable = ['user_id'];
+    protected $guarded = [];
 
     public $timestamps = false;
 

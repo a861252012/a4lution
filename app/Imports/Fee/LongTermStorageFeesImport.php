@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Imports;
+namespace App\Imports\Fee;
 
 use App\Models\BatchJob;
 use App\Models\LongTermStorageFee;
@@ -22,7 +22,7 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
 
-class QueueLongTermStorageFees implements
+class LongTermStorageFeesImport implements
     ToModel,
     WithHeadingRow,
     ShouldQueue,
@@ -55,7 +55,7 @@ class QueueLongTermStorageFees implements
     {
         ++$this->rows;
 
-        return new longTermStorageFee([
+        return new LongTermStorageFee([
             'account' => $row['account'],
             'snapshot_date' => $row['snapshot_date'],
             'sku' => $row['sku'],
