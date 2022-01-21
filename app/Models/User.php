@@ -2,13 +2,11 @@
 
 namespace App\Models;
 
-use App\Models\Role;
-use App\Models\View;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Staudenmeir\EloquentHasManyDeep\HasRelationships;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Staudenmeir\EloquentHasManyDeep\HasRelationships;
 
 class User extends Authenticatable
 {
@@ -61,11 +59,13 @@ class User extends Authenticatable
     public function mainViews()
     {
         return $this->hasManyDeep(View::class, [
-                'role_assignment', // pivot table: user <-> role
-                Role::class, // many-to-many model
-                'view_permission' // pivot table: role <-> view
-            ])
+            'role_assignment', // pivot table: user <-> role
+            Role::class, // many-to-many model
+            'view_permission' // pivot table: role <-> view
+        ])
+            ->has('subViews')
             ->where('level', 1)
+            ->where('views.active', 1)
             ->orderByRaw('views.module , views.level , views.order');
     }
 
