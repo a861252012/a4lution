@@ -21,3 +21,13 @@
     padding: 0;
     white-space: normal;
 }
+
+.required:after {
+    content: " *";
+    color: red;
+}
+
+._required-before:before {
+    content: " *";
+    color: red;
+}
