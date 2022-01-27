@@ -115,5 +115,16 @@ Route::group(['middleware' => 'auth'], function () {
         ->name('ajax.sku_commission.upload.store');
     Route::get('/sku-commissions/export', 'SkuCommissionController@export')->name('sku_commission.export');
 
+    //billing-monthly-fee-transaction
+    Route::get('/billing/monthly-fee-transaction', 'BillingController@monthlyFeeTransactionView')
+        ->name('monthly_fee_transaction.view');
+    Route::prefix('/ajax/billing')->group(function () {
+        Route::get('/monthly-fee-transaction/{id}', 'BillingController@ajaxGetEditData');
+        Route::put('/monthly-fee-transaction/{id}', 'BillingController@ajaxUpdate');
+        Route::delete('/monthly-fee/{id}', 'BillingController@ajaxDelete');
+        Route::post('/monthly-fee-transaction', 'BillingController@ajaxCreate');
+        Route::get('/monthly-fee/{client_code}', 'BillingController@ajaxGetMonthlyFee');
+    });
+
     Route::get('{page}', 'PageController@index')->name('page.index');
 });
