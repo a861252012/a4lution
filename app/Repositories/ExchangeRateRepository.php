@@ -15,10 +15,11 @@ class ExchangeRateRepository extends BaseRepository
         parent::__construct(new ExchangeRate);
     }
 
-    public function getAllCurrency()
+    public function getAllCurrency(bool $isOrderDesc = false)
     {
         return ExchangeRate::selectRaw('DISTINCT base_currency')
             ->active()
+            ->when($isOrderDesc, fn ($q) => $q->orderByDesc('base_currency'))
             ->pluck('base_currency');
     }
 
