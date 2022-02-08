@@ -48,18 +48,18 @@ class SalesReportImportService
 
     public function import()
     {
-        $this->checkSheetTitle();
+        $this->checkSheetsTitle();
 
         $batchIds = $this->createBatchJobsAndGetBatchIds();
 
         $fileName = $this->uploadFile();
 
-        ImportSalesReport::dispatchSync(Auth::id(), storage_path('sales_report'), $fileName, $this->reportDate, $batchIds);
+        ImportSalesReport::dispatchSync(auth()->id(), storage_path('sales_report'), $fileName, $this->reportDate, $batchIds);
         // ImportSalesReport::dispatch()->onQueue('queue_excel');
         
     }
 
-    private function checkSheetTitle(){
+    private function checkSheetsTitle(){
         $excel = SimpleExcelReader::create($this->file, 'xlsx');
         $reader = $excel->getReader();
         $reader->open($this->file);
@@ -111,9 +111,7 @@ class SalesReportImportService
             $fileName,
         );
 
-        // TODO: 筆記: 如果 $file 沒使用 ->get() 不會轉換成 contents，因此無法自己設定檔名，系統會自己建一個亂碼檔案名
-        // Storage::disk('s3-a4lution-import')->put($path, $file); // 系統建一個亂碼檔案名
-        Storage::disk('s3-a4lution-import')->put($s3Path, $this->file->get()); // 依據我設定的 path 建立檔案名
+        Storage::disk('s3-a4lution-import')->put($s3Path, $this->file->get());
 
         // 存在本地端供 Queue 處理
         $this->file->move(storage_path('sales_report'), $fileName);
@@ -123,6 +121,6 @@ class SalesReportImportService
 
     public static function sheets()
     {
-        return array_keys(self::sheetsWithHeader);
+        return array_keys(self::sheetsHeader);
     }
 }

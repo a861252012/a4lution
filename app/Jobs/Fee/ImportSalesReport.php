@@ -96,32 +96,32 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
         // TODO: 刪除本地檔案
     }
     
-    public function importAmzAds(LazyCollection $collection)
+    private function importAmzAds(LazyCollection $collection)
     {
         $this->importAdFee($collection);
     }
 
-    public function importEbayAds(LazyCollection $collection)
+    private function importEbayAds(LazyCollection $collection)
     {
         $this->importAdFee($collection);
     }
 
-    public function importWalmartAds(LazyCollection $collection)
+    private function importWalmartAds(LazyCollection $collection)
     {
         $this->importAdFee($collection);
     }
 
-    public function importLazadaAds(LazyCollection $collection)
+    private function importLazadaAds(LazyCollection $collection)
     {
         $this->importAdFee($collection);
     }
 
-    public function importShopeeAds(LazyCollection $collection)
+    private function importShopeeAds(LazyCollection $collection)
     {
         $this->importAdFee($collection);
     }
 
-    public function importAdFee(LazyCollection $collection)
+    private function importAdFee(LazyCollection $collection)
     {
         $batchId = $this->batchIds[BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES];
 
@@ -176,7 +176,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
             ]);
     }
 
-    public function importDateRange(LazyCollection $collection)
+    private function importDateRange(LazyCollection $collection)
     {
         $batchId = $this->batchIds[BatchJobConstant::FEE_TYPE_AMAZON_DATE_RANGE];
 
@@ -246,7 +246,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
         ]);
     }
 
-    public function importMonthlyStorageFees(LazyCollection $collection)
+    private function importMonthlyStorageFees(LazyCollection $collection)
     {
         $batchId = $this->batchIds[BatchJobConstant::FEE_TYPE_MONTHLY_STORAGE_FEES];
 
@@ -256,7 +256,6 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
 
                 $data = [];
                 foreach ($rows as $row) {
-                    dd($row);
                     if (isset($row['account'])) {
                         $data[] = [
                             'account' => $row['account'],
@@ -317,7 +316,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
         ]);
     }
 
-    public function importLongTermStorageFeeCharge(LazyCollection $collection)
+    private function importLongTermStorageFeeCharge(LazyCollection $collection)
     {
         $batchId = $this->batchIds[BatchJobConstant::FEE_TYPE_LONG_TERM_STORAGE_FEES];
 
