@@ -27,6 +27,7 @@ class Statement extends Model
             $statement->created_by = Auth::id();
             $statement->transaction_type = 'deposit';
             $statement->amount_type = 'monthly_fee';
+            $statement->is_dirty = 1;
             $statement->active = 1;
         });
 
