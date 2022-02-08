@@ -18,6 +18,7 @@ use App\Models\AmazonDateRangeReport;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\LazyCollection;
 use Illuminate\Queue\InteractsWithQueue;
+use App\Services\SalesReportImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -78,18 +79,18 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
         } catch (\Throwable $e) {
             DB::rollBack();
 
+            Log::channel('daily_queue_import')
+                ->error("[A4lutionSalesReport.errors]" . $e);
+
             BatchJob::whereIn('id', $this->batchIds)
                 ->update([
                     'status' => BatchJobConstant::STATUS_FAILED,
-                    'total_count' => $this->getRowCount(),
-                    'exit_message' => $e->getException(),
-                    'user_error_msg' => (new ImportService)->getUserErrorMsg($e->getException())
+                    'total_count' => 0,
+                    // 'exit_message' => $e->getMessage(),
+                    // 'user_error_msg' => (new ImportService)->getUserErrorMsg($e->getMessage())
                 ]);
 
             abort(Response::HTTP_INTERNAL_SERVER_ERROR, 'Error');
-
-            Log::channel('daily_queue_import')
-                ->error("[A4lutionSalesReport.errors]" . $e);
         }
 
 
@@ -172,7 +173,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
 
             BatchJob::findOrFail($batchId)->update([
                 'status' => BatchJobConstant::STATUS_COMPLETED,
-                'total_count' => $collection->count()
+                'total_count' => PlatformAdFee::where('upload_id', $batchId)->where('active', 1)->count(),
             ]);
     }
 
@@ -242,7 +243,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
 
         BatchJob::findOrFail($batchId)->update([
             'status' => BatchJobConstant::STATUS_COMPLETED,
-            'total_count' => $collection->count()
+            'total_count' => AmazonDateRangeReport::where('upload_id', $batchId)->where('active', 1)->count(),
         ]);
     }
 
@@ -312,7 +313,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
 
         BatchJob::findOrFail($batchId)->update([
             'status' => BatchJobConstant::STATUS_COMPLETED,
-            'total_count' => $collection->count()
+            'total_count' => MonthlyStorageFee::where('upload_id', $batchId)->where('active', 1)->count(),
         ]);
     }
 
@@ -369,7 +370,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
 
         BatchJob::findOrFail($batchId)->update([
             'status' => BatchJobConstant::STATUS_COMPLETED,
-            'total_count' => $collection->count()
+            'total_count' => LongTermStorageFee::where('upload_id', $batchId)->where('active', 1)->count(),
         ]);
     }
 }

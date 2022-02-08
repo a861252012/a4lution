@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SalesReportImportService
 {
-    private $sheetsHeader = [
+    private static $sheetsHeader = [
         // 'erp_orders' => ImportTitleConstant::,
         'amz_ads' => ImportTitleConstant::PLATFORM_AD,
         'ebay_ads' => ImportTitleConstant::PLATFORM_AD,
@@ -74,7 +74,7 @@ class SalesReportImportService
                     abort(Response::HTTP_FORBIDDEN, "Sheet: [{$sheetName}] Title unmatched");
                 }
 
-                $diff = collect($header)->diff($this->sheetsHeader[$sheetName]);
+                $diff = collect($header)->diff(self::$sheetsHeader[$sheetName]);
                 if ( $diff->isNotEmpty() ) {
                     abort(Response::HTTP_FORBIDDEN, "Sheet: [{$sheetName}] Title : [{$diff->implode(', ')}] unmatched");
                 }
@@ -95,10 +95,10 @@ class SalesReportImportService
                 'total_count' => 0,
                 'status' => BatchJobConstant::STATUS_PROCESSING,
                 'created_at' => now(),
-            ]);
+            ])->id;
         }
 
-        return collect($batchJobs)->map(fn($batchJob) => $batchJob->id)->toArray();
+        return $batchJobs;
     }
 
     private function uploadFile()
@@ -121,6 +121,6 @@ class SalesReportImportService
 
     public static function sheets()
     {
-        return array_keys(self::sheetsHeader);
+        return array_keys(self::$sheetsHeader);
     }
 }

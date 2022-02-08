@@ -26,7 +26,8 @@ class ImportTitleConstant
         "sales_amount",
         "sales_amount_hkd",
         "acos",
-        "exchange_rate"
+        "exchange_rate",
+        "country"
     ];
 
     //amazon_date_range_report
