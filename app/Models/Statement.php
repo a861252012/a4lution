@@ -15,6 +15,11 @@ class Statement extends Model
 
     protected $guarded = ['id'];
 
+    public function getCreatedAtAttribute(): Carbon
+    {
+        return Carbon::parse($this->attributes['created_at'])->setTimezone((config('services.timezone.taipei')));
+    }
+
     /**
      * The "booted" method of the model.
      *
