@@ -17,9 +17,6 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('test', 'TestController@test');
-Route::get('order_sync', 'TestController@orderSync');
-
 Route::get('/phpinfo', function () {
     return phpinfo();
 });
