@@ -12,10 +12,11 @@ class CustomerRepository extends BaseRepository
         parent::__construct(new Customer);
     }
 
-    public function getAllClientCode()
+    public function getAllClientCode(bool $isActive = true)
     {
-        return Customer::select('client_code')
-            ->where('active', 1)
+        return $this->model
+            ->select('client_code')
+            ->when($isActive, fn ($q) => $q->where('active', 1))
             ->pluck('client_code');
     }
 
@@ -29,7 +30,6 @@ class CustomerRepository extends BaseRepository
             $customer = $this->model
                 ->where('client_code', $clientCode)
                 ->first();
-
         } catch (\Throwable $e) {
             LaravelLoggerUtil::loggerException($e);
             $customer = null;

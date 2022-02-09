@@ -19,8 +19,6 @@ Route::get('dashboard', 'HomeController@index')->name('home');
 Route::get('pricing', 'PageController@pricing')->name('page.pricing');
 Route::get('lock', 'PageController@lock')->name('page.lock');
 
-Route::get('/test', 'TestController@test');
-
 Route::group(['middleware' => 'auth'], function () {
     Route::resource('category', 'CategoryController', ['except' => ['show']]);
     Route::resource('tag', 'TagController', ['except' => ['show']]);
@@ -93,15 +91,8 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/invoice/export', 'InvoiceController@ajaxExport')->name('ajax.invoice.export');
     });
 
-    Route::prefix('employee')->group(function () {
-        Route::get('/commissionpay', 'EmployeeController@commissionPayView')->name('employeeCommission.view');
-        Route::get('/commissionpay/detail/{userID?}/{date?}', 'EmployeeController@commissionDetail');
-    });
-
     Route::prefix('admin/approvaladmin')->group(function () {
         Route::get('/', 'AdminController@approvalAdminView')->name('admin.adminView');
-        Route::put('/batch/{date}', 'AdminController@batchApprove');
-        Route::put('/revoke/{date}', 'AdminController@revokeApprove');
     });
 
     Route::prefix('management')->group(function () {
@@ -111,7 +102,6 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/exchangeRate/{currency}/{startDate}/{endDate}', 'ExchangeRateController@ajaxGetExchangeRate');
     });
 
-
     Route::get('/customers', 'CustomerController@index')->name('customer.index');
     Route::post('/ajax/customers/create', 'CustomerController@ajaxCreate')->name('ajax.customer.create');
     Route::post('/ajax/customers/store', 'CustomerController@ajaxStore')->name('ajax.customer.store');
@@ -119,10 +109,22 @@ Route::group(['middleware' => 'auth'], function () {
     Route::patch('/ajax/customers/{client_code}', 'CustomerController@ajaxUpdate')->name('ajax.customer.update');
 
     Route::get('/sku-commissions', 'SkuCommissionController@index')->name('sku_commission.index');
-    Route::get('/ajax/sku-commissions/upload', 'SkuCommissionController@ajaxUpload')->name('ajax.sku_commission.upload');
-    Route::post('/ajax/sku-commissions/upload/store', 'SkuCommissionController@ajaxUploadStore')->name('ajax.sku_commission.upload.store');
+    Route::get('/ajax/sku-commissions/upload', 'SkuCommissionController@ajaxUpload')
+        ->name('ajax.sku_commission.upload');
+    Route::post('/ajax/sku-commissions/upload/store', 'SkuCommissionController@ajaxUploadStore')
+        ->name('ajax.sku_commission.upload.store');
     Route::get('/sku-commissions/export', 'SkuCommissionController@export')->name('sku_commission.export');
 
+    //billing-monthly-fee-transaction
+    Route::get('/billing/monthly-fee-transaction', 'BillingController@monthlyFeeTransactionView')
+        ->name('monthly_fee_transaction.view');
+    Route::prefix('/ajax/billing')->group(function () {
+        Route::get('/monthly-fee-transaction/{id}', 'BillingController@ajaxGetEditData');
+        Route::put('/monthly-fee-transaction/{id}', 'BillingController@ajaxUpdate');
+        Route::delete('/monthly-fee/{id}', 'BillingController@ajaxDelete');
+        Route::post('/monthly-fee-transaction', 'BillingController@ajaxCreate');
+        Route::get('/monthly-fee/{client_code}', 'BillingController@ajaxGetMonthlyFee');
+    });
 
     Route::get('{page}', 'PageController@index')->name('page.index');
 });
