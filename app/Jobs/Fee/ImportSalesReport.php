@@ -49,50 +49,26 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
 
         $sheetNames = SalesReportImportService::sheets();
 
-        DB::beginTransaction();
+        $excel = SimpleExcelReader::create($file, 'xlsx');
+        $reader = $excel->getReader();
+        $reader->open($file);
 
-        try {
-            $excel = SimpleExcelReader::create($file, 'xlsx');
-            $reader = $excel->getReader();
-            $reader->open($file);
-
-            foreach ($reader->getSheetIterator() as $sheet) {
-                $sheetName = Str::slug($sheet->getName(), '_');
-                
-                // dump($sheetName);
-                if (in_array($sheetName, $sheetNames)) {
-
-                    if (! method_exists($this, $method = 'import' . Str::studly($sheetName))) {
-                        throw new InvalidArgumentException("Unsupported import [{$sheetName}] sheet.");
-                    }
-
-                    // 資料匯入
-                    $this->{$method}(
-                        $excel->headersToSnakeCase()->getRowsBySheet($sheet),
-                    );
-                }
-            }
-
+        foreach ($reader->getSheetIterator() as $sheet) {
+            $sheetName = Str::slug($sheet->getName(), '_');
             
-            DB::commit();
+            // dump($sheetName);
+            if (in_array($sheetName, $sheetNames)) {
 
-        } catch (\Throwable $e) {
-            DB::rollBack();
+                if (! method_exists($this, $method = 'import' . Str::studly($sheetName))) {
+                    throw new InvalidArgumentException("Unsupported import [{$sheetName}] sheet.");
+                }
 
-            Log::channel('daily_queue_import')
-                ->error("[A4lutionSalesReport.errors]" . $e);
-
-            BatchJob::whereIn('id', $this->batchIds)
-                ->update([
-                    'status' => BatchJobConstant::STATUS_FAILED,
-                    'total_count' => 0,
-                    // 'exit_message' => $e->getMessage(),
-                    // 'user_error_msg' => (new ImportService)->getUserErrorMsg($e->getMessage())
-                ]);
-
-            abort(Response::HTTP_INTERNAL_SERVER_ERROR, 'Error');
+                // 資料匯入
+                $this->{$method}(
+                    $excel->headersToSnakeCase()->getRowsBySheet($sheet),
+                );
+            }
         }
-
 
         // TODO: 刪除本地檔案
     }
@@ -125,33 +101,35 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
     private function importAdFee(LazyCollection $collection)
     {
         $batchId = $this->batchIds[BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES];
+        $batchJob = BatchJob::findOrFail($batchId);
 
-        $collection
-            ->chunk(10000)
-            ->each(function ($rows) use ($batchId) {
+        foreach ($collection->chunk(1000) as $adFees) {
+            DB::beginTransaction();
+
+            try {
 
                 $data = [];
-                foreach ($rows as $row) {
-                    if (isset($row['client_code'])) {
+                foreach ($adFees as $adFee) {
+                    if (isset($adFee['client_code'])) {
                         $data[] = [
-                            'client_code' => $row['client_code'],
-                            'client_type' => $row['client_type'],
-                            'platform' => $row['platform'],
-                            'account' => $row['account'],
-                            'campagin_type' => $row['campagin_type'],
-                            'campagin' => $row['campagin'],
-                            'currency' => $row['currency'],
-                            'Impressions' => $row['impressions'],
-                            'clicks' => $row['clicks'],
-                            'ctr' => $row['ctr'],
-                            'spendings' => $row['spendings'],
-                            'spendings_hkd' => $row['spendings_hkd'],
-                            'cpc' => $row['cpc'],
-                            'sales_qty' => $row['sales_qty'],
-                            'sales_amount' => $row['sales_amount'],
-                            'sales_amount_hkd' => $row['sales_amount_hkd'],
-                            'acos' => $row['acos'],
-                            'exchange_rate' => $row['exchange_rate'],
+                            'client_code' => $adFee['client_code'],
+                            'client_type' => $adFee['client_type'],
+                            'platform' => $adFee['platform'],
+                            'account' => $adFee['account'],
+                            'campagin_type' => $adFee['campagin_type'],
+                            'campagin' => $adFee['campagin'],
+                            'currency' => $adFee['currency'],
+                            'Impressions' => $adFee['impressions'],
+                            'clicks' => $adFee['clicks'],
+                            'ctr' => $adFee['ctr'],
+                            'spendings' => $adFee['spendings'],
+                            'spendings_hkd' => $adFee['spendings_hkd'],
+                            'cpc' => $adFee['cpc'],
+                            'sales_qty' => $adFee['sales_qty'],
+                            'sales_amount' => $adFee['sales_amount'],
+                            'sales_amount_hkd' => $adFee['sales_amount_hkd'],
+                            'acos' => $adFee['acos'],
+                            'exchange_rate' => $adFee['exchange_rate'],
                             'upload_id' => $batchId,
                             'report_date' => $this->reportDate,
                             'active' => 1,
@@ -164,64 +142,87 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                 }
 
                 PlatformAdFee::insert($data);
-            });
 
-            PlatformAdFee::where('report_date', $this->reportDate)
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+
+                Log::channel('daily_queue_import')
+                    ->error("[A4lutionSalesReport.errors]" . $e);
+
+                $batchJob->platformAdFees()->update(['active' => 0]);
+
+                $batchJob->update([
+                    'status' => BatchJobConstant::STATUS_FAILED,
+                    'total_count' => 0,
+                    'exit_message' => $e->getMessage(),
+                    'user_error_msg' => (new ImportService)->getUserErrorMsg($e->getMessage())
+                ]);
+
+                return;
+            }
+        }
+
+        PlatformAdFee::where('report_date', $this->reportDate)
                 ->where('upload_id', '!=', $batchId)
                 ->active()
                 ->update(['active' => 0]);
 
-            BatchJob::findOrFail($batchId)->update([
-                'status' => BatchJobConstant::STATUS_COMPLETED,
-                'total_count' => PlatformAdFee::where('upload_id', $batchId)->where('active', 1)->count(),
-            ]);
+        $batchJob->update([
+            'status' => BatchJobConstant::STATUS_COMPLETED,
+            'total_count' => PlatformAdFee::where('upload_id', $batchId)->active()->count(),
+        ]);
     }
 
     private function importDateRange(LazyCollection $collection)
     {
+        
         $batchId = $this->batchIds[BatchJobConstant::FEE_TYPE_AMAZON_DATE_RANGE];
+        $batchJob = BatchJob::findOrFail($batchId);
 
-        $collection
-            ->chunk(10000)
-            ->each(function ($rows) use ($batchId) {
+        foreach ($collection->chunk(1000) as $dateRanges) {
 
+            DB::beginTransaction();
+
+            try {
                 $data = [];
-                foreach ($rows as $row) {
-                    if (isset($row['account'])) {
+                foreach ($dateRanges as $dateRange) {
+                    if (isset($dateRange['account'])) {
+
                         $data[] = [
-                            'account' => $row['account'],
-                            'country' => $row['country'],
-                            'paid_date' => $row['paid_date'],
-                            'shipped_date' => $row['shipped_date'],
-                            'settlement_id' => $row['settlement_id'],
-                            'type' => $row['type'],
-                            'description' => $row['description'],
-                            'order_id' => $row['order_id'],
-                            'order_type' => $row['order_type'],
-                            'msku' => $row['msku'],
-                            'asin' => $row['asin'],
-                            'product_name' => $row['product_name'],
-                            'sku' => $row['sku'],
-                            'supplier_type' => $row['supplier_type'],
-                            'supplier' => $row['supplier'],
-                            'marketplace' => $row['marketplace'],
-                            'fulfillment' => $row['fulfillment'],
-                            'quantity' => $row['quantity'],
-                            'currency' => $row['currency'],
-                            'product_sales' => $row['product_sales'],
-                            'shipping_credits' => $row['shipping_credits'],
-                            'gift_wrap_credits' => $row['gift_wrap_credits'],
-                            'promotional_rebates' => $row['promotional_rebates'],
-                            'cost_of_point' => $row['cost_of_point'],
-                            'tax' => $row['tax'],
-                            'marketplace_withheld_tax' => $row['marketplace_withheld_tax'],
-                            'selling_fees' => $row['selling_fees'],
-                            'fba_fees' => $row['fba_fees'],
-                            'other_transaction_fees' => $row['other_transaction_fees'],
-                            'other' => $row['other'],
-                            'amazon_total' => $row['amazon_total'],
-                            'hkd_rate' => $row['hkd_rate'],
-                            'amazon_total_hkd' => $row['amazon_total_hkd'],
+                            'account' => $dateRange['account'],
+                            'country' => $dateRange['country'],
+                            'paid_date' => $dateRange['paid_date'],
+                            'shipped_date' => $dateRange['shipped_date'],
+                            'settlement_id' => $dateRange['settlement_id'],
+                            'type' => $dateRange['type'],
+                            'description' => $dateRange['description'],
+                            'order_id' => $dateRange['order_id'],
+                            'order_type' => $dateRange['order_type'],
+                            'msku' => $dateRange['msku'],
+                            'asin' => $dateRange['asin'],
+                            'product_name' => $dateRange['product_name'],
+                            'sku' => $dateRange['sku'],
+                            'supplier_type' => $dateRange['supplier_type'],
+                            'supplier' => $dateRange['supplier'],
+                            'marketplace' => $dateRange['marketplace'],
+                            'fulfillment' => $dateRange['fulfillment'],
+                            'quantity' => $dateRange['quantity'],
+                            'currency' => $dateRange['currency'],
+                            'product_sales' => $dateRange['product_sales'],
+                            'shipping_credits' => $dateRange['shipping_credits'],
+                            'gift_wrap_credits' => $dateRange['gift_wrap_credits'],
+                            'promotional_rebates' => $dateRange['promotional_rebates'],
+                            'cost_of_point' => $dateRange['cost_of_point'],
+                            'tax' => $dateRange['tax'],
+                            'marketplace_withheld_tax' => $dateRange['marketplace_withheld_tax'],
+                            'selling_fees' => $dateRange['selling_fees'],
+                            'fba_fees' => $dateRange['fba_fees'],
+                            'other_transaction_fees' => $dateRange['other_transaction_fees'],
+                            'other' => $dateRange['other'],
+                            'amazon_total' => $dateRange['amazon_total'],
+                            'hkd_rate' => $dateRange['hkd_rate'],
+                            'amazon_total_hkd' => $dateRange['amazon_total_hkd'],
                             'upload_id' => $batchId,
                             'report_date' => $this->reportDate,
                             'active' => 1,
@@ -234,64 +235,85 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                 }
 
                 AmazonDateRangeReport::insert($data);
-            });
+
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+    
+                Log::channel('daily_queue_import')
+                    ->error("[A4lutionSalesReport.errors]" . $e);
+
+                $batchJob->amazonDateRangeReports()->update(['active' => 0]);
+    
+                $batchJob->update([
+                    'status' => BatchJobConstant::STATUS_FAILED,
+                    'total_count' => 0,
+                    'exit_message' => $e->getMessage(),
+                    'user_error_msg' => (new ImportService)->getUserErrorMsg($e->getMessage())
+                ]);
+
+                return;
+            }
+        }
 
         AmazonDateRangeReport::where('report_date', $this->reportDate)
             ->where('upload_id', '!=', $batchId)
             ->active()
             ->update(['active' => 0]);
 
-        BatchJob::findOrFail($batchId)->update([
+        $batchJob->update([
             'status' => BatchJobConstant::STATUS_COMPLETED,
-            'total_count' => AmazonDateRangeReport::where('upload_id', $batchId)->where('active', 1)->count(),
+            'total_count' => AmazonDateRangeReport::where('upload_id', $batchId)->active()->count(),
         ]);
     }
 
     private function importMonthlyStorageFees(LazyCollection $collection)
     {
         $batchId = $this->batchIds[BatchJobConstant::FEE_TYPE_MONTHLY_STORAGE_FEES];
+        $batchJob = BatchJob::findOrFail($batchId);
 
-        $collection
-            ->chunk(10000)
-            ->each(function ($rows) use ($batchId) {
+        foreach ($collection->chunk(1000) as $fees) {
 
+            DB::beginTransaction();
+
+            try {
                 $data = [];
-                foreach ($rows as $row) {
-                    if (isset($row['account'])) {
+                foreach ($fees as $fee) {
+                    if (isset($fee['account'])) {
                         $data[] = [
-                            'account' => $row['account'],
-                            'asin' => $row['asin'],
-                            'fnsku' => $row['fnsku'],
-                            'product_name' => $row['product_name'],
-                            'fulfilment_center' => $row['fulfilment_center'],
-                            'country_code' => $row['country_code'],
-                            'supplier_type' => $row['supplier_type'],
-                            'supplier' => $row['supplier'],
-                            'longest_side' => $row['longest_side'],
-                            'median_side' => $row['median_side'],
-                            'shortest_side' => $row['shortest_side'],
-                            'measurement_units' => $row['measurement_units'],
-                            'weight' => $row['weight'],
-                            'weight_units' => $row['weight_units'],
-                            'item_volume' => $row['item_volume'],
-                            'volume_units' => $row['volume_units'],
-                            'product_size_tier' => $row['product_size_tier'],
-                            'average_quantity_on_hand' => $row['average_quantity_on_hand'],
-                            'average_quantity_pending_removal' => $row['average_quantity_pending_removal'],
-                            'total_item_volume_est' => $row['total_item_volume_est'],
-                            'month_of_charge' => $row['month_of_charge'],
-                            'storage_rate' => $row['storage_rate'],
-                            'currency' => $row['currency'],
-                            'hkd' => $row['hkd'],
-                            'monthly_storage_fee_est' => $row['monthly_storage_fee_est'],
-                            'hkd_rate' => $row['hkd_rate'],
-                            'dangerous_goods_storage_type' => $row['dangerous_goods_storage_type'],
-                            'category' => $row['category'],
-                            'eligible_for_discount' => $row['eligible_for_discount'],
-                            'qualified_for_discount' => $row['qualified_for_discount'],
-                            'total_incentive_fee_amount' => $row['total_incentive_fee_amount'],
-                            'breakdown_incentive_fee_amount' => $row['breakdown_incentive_fee_amount'],
-                            'average_quantity_customer_orders' => $row['average_quantity_customer_orders'],
+                            'account' => $fee['account'],
+                            'asin' => $fee['asin'],
+                            'fnsku' => $fee['fnsku'],
+                            'product_name' => $fee['product_name'],
+                            'fulfilment_center' => $fee['fulfilment_center'],
+                            'country_code' => $fee['country_code'],
+                            'supplier_type' => $fee['supplier_type'],
+                            'supplier' => $fee['supplier'],
+                            'longest_side' => $fee['longest_side'],
+                            'median_side' => $fee['median_side'],
+                            'shortest_side' => $fee['shortest_side'],
+                            'measurement_units' => $fee['measurement_units'],
+                            'weight' => $fee['weight'],
+                            'weight_units' => $fee['weight_units'],
+                            'item_volume' => $fee['item_volume'],
+                            'volume_units' => $fee['volume_units'],
+                            'product_size_tier' => $fee['product_size_tier'],
+                            'average_quantity_on_hand' => $fee['average_quantity_on_hand'],
+                            'average_quantity_pending_removal' => $fee['average_quantity_pending_removal'],
+                            'total_item_volume_est' => $fee['total_item_volume_est'],
+                            'month_of_charge' => $fee['month_of_charge'],
+                            'storage_rate' => $fee['storage_rate'],
+                            'currency' => $fee['currency'],
+                            'hkd' => $fee['hkd'],
+                            'monthly_storage_fee_est' => $fee['monthly_storage_fee_est'],
+                            'hkd_rate' => $fee['hkd_rate'],
+                            'dangerous_goods_storage_type' => $fee['dangerous_goods_storage_type'],
+                            'category' => $fee['category'],
+                            'eligible_for_discount' => $fee['eligible_for_discount'],
+                            'qualified_for_discount' => $fee['qualified_for_discount'],
+                            'total_incentive_fee_amount' => $fee['total_incentive_fee_amount'],
+                            'breakdown_incentive_fee_amount' => $fee['breakdown_incentive_fee_amount'],
+                            'average_quantity_customer_orders' => $fee['average_quantity_customer_orders'],
                             'upload_id' => $batchId,
                             'report_date' => $this->reportDate,
                             'active' => 1,
@@ -304,51 +326,73 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                 }
 
                 MonthlyStorageFee::insert($data);
-            });
+
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+
+                Log::channel('daily_queue_import')
+                    ->error("[A4lutionSalesReport.errors]" . $e);
+
+                $batchJob->monthlyStorageFees()->update(['active' => 0]);
+
+                $batchJob->update([
+                    'status' => BatchJobConstant::STATUS_FAILED,
+                    'total_count' => 0,
+                    'exit_message' => $e->getMessage(),
+                    'user_error_msg' => (new ImportService)->getUserErrorMsg($e->getMessage())
+                ]);
+
+                return;
+            }
+
+        }
 
         MonthlyStorageFee::where('report_date', $this->reportDate)
             ->where('upload_id', '!=', $batchId)
             ->active()
             ->update(['active' => 0]);
 
-        BatchJob::findOrFail($batchId)->update([
+        $batchJob->update([
             'status' => BatchJobConstant::STATUS_COMPLETED,
-            'total_count' => MonthlyStorageFee::where('upload_id', $batchId)->where('active', 1)->count(),
+            'total_count' => MonthlyStorageFee::where('upload_id', $batchId)->active()->count(),
         ]);
     }
 
     private function importLongTermStorageFeeCharge(LazyCollection $collection)
     {
         $batchId = $this->batchIds[BatchJobConstant::FEE_TYPE_LONG_TERM_STORAGE_FEES];
+        $batchJob = BatchJob::findOrFail($batchId);
 
-        $collection
-            ->chunk(10000)
-            ->each(function ($rows) use ($batchId) {
+        foreach ($collection->chunk(1000) as $fees) {
 
+            DB::beginTransaction();
+
+            try {
                 $data = [];
-                foreach ($rows as $row) {
-                    if (isset($row['account'])) {
+                foreach ($fees as $fee) {
+                    if (isset($fee['account'])) {
                         $data[] = [
-                            'account' => $row['account'],
-                            'snapshot_date' => $row['snapshot_date'],
-                            'sku' => $row['sku'],
-                            'fnsku' => $row['fnsku'],
-                            'asin' => $row['asin'],
-                            'product_name' => $row['product_name'],
-                            'supplier_type' => $row['supplier_type'],
-                            'supplier' => $row['supplier'],
-                            'condition' => $row['condition'],
-                            'qty_charged_12_mo_long_term_storage_fee' => $row['qty_charged_12_mo_long_term_storage_fee'],
-                            'per_unit_volume' => $row['per_unit_volume'],
-                            'currency' => $row['currency'],
-                            '12_mo_long_terms_storage_fee' => $row['12_mo_long_terms_storage_fee'],
-                            'hkd' => $row['hkd'],
-                            'hkd_rate' => $row['hkd_rate'],
-                            'qty_charged_6_mo_long_term_storage_fee' => $row['qty_charged_6_mo_long_term_storage_fee'],
-                            '6_mo_long_terms_storage_fee' => $row['6_mo_long_terms_storage_fee'],
-                            'volume_unit' => $row['volume_unit'],
-                            'country' => $row['country'],
-                            'enrolled_in_small_and_light' => $row['enrolled_in_small_and_light'],
+                            'account' => $fee['account'],
+                            'snapshot_date' => $fee['snapshot_date'],
+                            'sku' => $fee['sku'],
+                            'fnsku' => $fee['fnsku'],
+                            'asin' => $fee['asin'],
+                            'product_name' => $fee['product_name'],
+                            'supplier_type' => $fee['supplier_type'],
+                            'supplier' => $fee['supplier'],
+                            'condition' => $fee['condition'],
+                            'qty_charged_12_mo_long_term_storage_fee' => $fee['qty_charged_12_mo_long_term_storage_fee'],
+                            'per_unit_volume' => $fee['per_unit_volume'],
+                            'currency' => $fee['currency'],
+                            '12_mo_long_terms_storage_fee' => $fee['12_mo_long_terms_storage_fee'],
+                            'hkd' => $fee['hkd'],
+                            'hkd_rate' => $fee['hkd_rate'],
+                            'qty_charged_6_mo_long_term_storage_fee' => $fee['qty_charged_6_mo_long_term_storage_fee'],
+                            '6_mo_long_terms_storage_fee' => $fee['6_mo_long_terms_storage_fee'],
+                            'volume_unit' => $fee['volume_unit'],
+                            'country' => $fee['country'],
+                            'enrolled_in_small_and_light' => $fee['enrolled_in_small_and_light'],
                             'upload_id' => $batchId,
                             'report_date' => $this->reportDate,
                             'active' => 1,
@@ -361,16 +405,36 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                 }
 
                 LongTermStorageFee::insert($data);
-            });
+
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+
+                Log::channel('daily_queue_import')
+                    ->error("[A4lutionSalesReport.errors]" . $e);
+
+                $batchJob->longTermStorageFees()->update(['active' => 0]);
+
+                $batchJob->update([
+                    'status' => BatchJobConstant::STATUS_FAILED,
+                    'total_count' => 0,
+                    'exit_message' => $e->getMessage(),
+                    'user_error_msg' => (new ImportService)->getUserErrorMsg($e->getMessage())
+                ]);
+
+                return;
+            }
+        }
+        
 
         LongTermStorageFee::where('report_date', $this->reportDate)
             ->where('upload_id', '!=', $batchId)
             ->active()
             ->update(['active' => 0]);
 
-        BatchJob::findOrFail($batchId)->update([
+        $batchJob->update([
             'status' => BatchJobConstant::STATUS_COMPLETED,
-            'total_count' => LongTermStorageFee::where('upload_id', $batchId)->where('active', 1)->count(),
+            'total_count' => LongTermStorageFee::where('upload_id', $batchId)->active()->count(),
         ]);
     }
 }

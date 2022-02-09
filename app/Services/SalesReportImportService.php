@@ -16,8 +16,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SalesReportImportService
 {
+    // excel each sheet name & header
     private static $sheetsHeader = [
-        // 'erp_orders' => ImportTitleConstant::,
+        // 'erp_orders' => ImportTitleConstant::ERP_ORDERS,
         'amz_ads' => ImportTitleConstant::PLATFORM_AD,
         'ebay_ads' => ImportTitleConstant::PLATFORM_AD,
         'walmart_ads' => ImportTitleConstant::PLATFORM_AD,
@@ -28,11 +29,12 @@ class SalesReportImportService
         'long_term_storage_fee_charge' => ImportTitleConstant::LONG_TERM,
     ];
 
-    private $feeTypes = [
+    private $batchJobFeeTypes = [
         BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
         BatchJobConstant::FEE_TYPE_AMAZON_DATE_RANGE,
         BatchJobConstant::FEE_TYPE_LONG_TERM_STORAGE_FEES,
         BatchJobConstant::FEE_TYPE_MONTHLY_STORAGE_FEES,
+        BatchJobConstant::IMPORT_TYPE_ERP_ORDERS,
     ];
 
     public $file;
@@ -74,7 +76,7 @@ class SalesReportImportService
                     abort(Response::HTTP_FORBIDDEN, "Sheet: [{$sheetName}] Title unmatched");
                 }
 
-                $diff = collect($header)->diff(self::$sheetsHeader[$sheetName]);
+                $diff = collect($header)->filter()->diff(self::$sheetsHeader[$sheetName]);
                 if ( $diff->isNotEmpty() ) {
                     abort(Response::HTTP_FORBIDDEN, "Sheet: [{$sheetName}] Title : [{$diff->implode(', ')}] unmatched");
                 }
@@ -85,7 +87,7 @@ class SalesReportImportService
     private function createBatchJobsAndGetBatchIds()
     {
         $batchJobs = [];
-        foreach ($this->feeTypes as $feeType) {
+        foreach ($this->batchJobFeeTypes as $feeType) {
 
             $batchJobs[$feeType] = BatchJob::create([
                 'user_id' => Auth::id(),
