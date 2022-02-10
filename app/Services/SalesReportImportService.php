@@ -18,7 +18,7 @@ class SalesReportImportService
 {
     // excel each sheet name & header
     private static $sheetsHeader = [
-        // 'erp_orders' => ImportTitleConstant::ERP_ORDERS,
+        'erp_orders' => ImportTitleConstant::ERP_ORDERS,
         'amz_ads' => ImportTitleConstant::PLATFORM_AD,
         'ebay_ads' => ImportTitleConstant::PLATFORM_AD,
         'walmart_ads' => ImportTitleConstant::PLATFORM_AD,

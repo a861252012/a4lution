@@ -2,14 +2,18 @@
 
 namespace App\Jobs\Fee;
 
+use Carbon\Carbon;
+use App\Models\Order;
 use App\Models\BatchJob;
 use Illuminate\Support\Str;
+use App\Models\OrderProduct;
 use App\Models\PlatformAdFee;
 use Illuminate\Bus\Queueable;
 use InvalidArgumentException;
 use App\Services\ImportService;
 use App\Models\MonthlyStorageFee;
 use App\Models\LongTermStorageFee;
+use App\Models\OrderSkuCostDetail;
 use App\Support\SimpleExcelReader;
 use Illuminate\Support\Facades\DB;
 use App\Constants\BatchJobConstant;
@@ -56,7 +60,6 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
         foreach ($reader->getSheetIterator() as $sheet) {
             $sheetName = Str::slug($sheet->getName(), '_');
             
-            // dump($sheetName);
             if (in_array($sheetName, $sheetNames)) {
 
                 if (! method_exists($this, $method = 'import' . Str::studly($sheetName))) {
@@ -70,7 +73,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
             }
         }
 
-        // TODO: 刪除本地檔案
+        unlink($file);
     }
     
     private function importAmzAds(LazyCollection $collection)
@@ -435,6 +438,157 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
         $batchJob->update([
             'status' => BatchJobConstant::STATUS_COMPLETED,
             'total_count' => LongTermStorageFee::where('upload_id', $batchId)->active()->count(),
+        ]);
+    }
+
+    private function importErpOrders(LazyCollection $collection)
+    {
+        $batchId = $this->batchIds[BatchJobConstant::IMPORT_TYPE_ERP_ORDERS];
+        $batchJob = BatchJob::findOrFail($batchId);
+
+        foreach ($collection->collect()->groupBy('package_id')->chunk(500) as $packageIdWithOrders) {
+
+            $orderData = [];
+            $orderProductData = [];
+            $orderSkuCostData = [];
+
+            DB::beginTransaction();
+
+            try {
+                foreach ($packageIdWithOrders as $packageId => $orders) {
+
+                    // 建立 Order
+                    $main = $orders->first();
+
+                    // TODO: warehouse 解析字串再確認
+                    $warehouse_name = trim(Str::between($main['warehouse'], '[', ']'));
+                    $warehouse_code = trim(Str::before($main['warehouse'], '['));
+
+                    $orderData[] = [
+                        'correlation_id' => Carbon::parse($main['shipped_date'])->format('Ymd'),
+                        'platform' => $main['platform'],
+                        'order_code' => $main['package_id'],
+                        'reference_no' => $main['site_order_id'],
+                        'seller_id' => $main['acc_nick_name'],
+                        'sm_code' => $main['shipping_method'],
+                        'add_time' => Carbon::parse($main['audit_date'])->toDateTimeString(),
+                        'order_paydate' => Carbon::parse($main['paid_date'])->toDateTimeString(),
+                        'order_status' => 8,
+                        // 'warehouse_id' => $main[''],
+                        // 'process_time' => $main[''],
+                        // 'pack_time' => $main[''],
+                        'ship_time' => Carbon::parse($main['shipped_date'])->toDateTimeString(),
+                        // 'cutoff_time' => $main[''],
+                        // 'process_user_id' => $main[''],
+                        // 'packager_id' => $main[''],
+                        // 'pack_user_id' => $main[''],
+                        // 'ship_user_id' => $main[''],
+                        // 'import_user_id' => $main[''],
+                        // 'import_time' => $main[''],
+                        // 'dismountable_time' => $main[''],
+                        // 'service_number_convert' => $main[''],
+                        'tracking_number' => $main['tracking'],
+                        'so_weight' => $main['product_weight'],
+                        'platform_user_name' => $main['acc_name'],
+                        'platform_ref_no' => $main['erp_order_id'],
+                        // 'buyer_id' => $main[''],
+                        // 'buyer_name' => $main[''],
+                        'warehouse_name' => $warehouse_name,
+                        'warehouse_code' => $warehouse_code,
+                        'created_at' => now(),
+                        'order_type' => $main['order_type'],
+                        'package_type' => $main['package_type'],
+                    ];
+
+                    
+                    foreach ($orders as $order) {
+                        $orderProductData[] = [
+                            'correlation_id' => Carbon::parse($order['shipped_date'])->format('Ymd'),
+                            'order_code' => $main['package_id'],
+                            'sku' => $order['sku'],
+                            'weight' => $order['product_weight'],
+                            'supplier_type' => $order['supplier_type'],
+                            'supplier' => $order['supplier'],
+                            'currency_code' => $order['original_currency'],
+                            'sales_amount' => $order['order_price_original_currency'],
+                            'paypal_fee' => $order['paypal_fee_original_currency'],
+                            'transaction_fee' => $order['transaction_fee_original_currency'],
+                            'fba_fee' => $order['fba_fee_original_currency'],
+                            'first_mile_shipping_fee' => $order['first_mile_shipping_fee_original_currency'],
+                            'first_mile_tariff' => $order['first_mile_tariff_original_currency'],
+                            'last_mile_shipping_fee' => $order['last_mile_shipping_fee_original_currency'],
+                            'other_fee' => $order['other_fee_original_currency'],
+                            'purchase_shipping_fee' => $order['purchase_shipping_fee_original_currency'],
+                            'product_cost' => $order['product_cost_original_currency'],
+                            'marketplace_tax' => $order['marketplace_tax_original_currency'],
+                            'cost_of_point' => $order['cost_of_point_original_currency'],
+                            'exclusives_referral_fee' => $order['exclusives_referral_fee_original_currency'],
+                            'gross_profit' => $order['gross_profit_original_currency'],
+                            'other_transaction' => $order['other_fee_original_currency'],
+                            'created_at' => now(),
+                            'created_by' => $this->userId,
+                            'updated_at' => now(),
+                            'updated_by' => $this->userId,
+                            'active' => 1,
+                            'promotion_discount_rate' => 0,
+                            'promotion_amount' => 0,
+                            // 'sku_commission_rate' => $order[''],
+                            // 'sku_commission_amount' => $order[''],
+                            // 'sku_commission_computed_at' => $order[''],
+                        ];
+
+                        $orderSkuCostData[] = [
+                            'correlation_id' => Carbon::parse($order['shipped_date'])->format('Ymd'),
+                            'platform' => $order['platform'],
+                            'product_barcode' => $order['sku'],
+                            'reference_no' => $order['package_id'],
+                            'site_id' => $order['site'],
+                            'currency_code_org' => $order['original_currency'],
+                            'order_total_amount_org' => $order['order_price_original_currency'],
+                            'order_platform_type' => $order['order_type'],
+                            'product_title' => $order['product_name'],
+                            'quantity' => $order['qty'],
+                            'product_barcode' => $order['sku'],
+                            'currency_code' => $order['hkd'],
+                            'currency_rate' => $order['hkd_rate'],
+                            'created_at' => now(),
+                        ];
+                    }
+
+                }
+                
+                Order::insert($orderData);
+                OrderProduct::insert($orderProductData);
+                OrderSkuCostDetail::insert($orderSkuCostData);
+
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+
+                Log::channel('daily_queue_import')
+                    ->error("[A4lutionSalesReport.errors]" . $e);
+
+                // $batchJob->platformAdFees()->update(['active' => 0]);
+
+                $batchJob->update([
+                    'status' => BatchJobConstant::STATUS_FAILED,
+                    'total_count' => 0,
+                    'exit_message' => $e->getMessage(),
+                    'user_error_msg' => (new ImportService)->getUserErrorMsg($e->getMessage())
+                ]);
+
+                return;
+            }
+        }
+
+        // PlatformAdFee::where('report_date', $this->reportDate)
+        //         ->where('upload_id', '!=', $batchId)
+        //         ->active()
+        //         ->update(['active' => 0]);
+
+        $batchJob->update([
+            'status' => BatchJobConstant::STATUS_COMPLETED,
+            'total_count' => PlatformAdFee::where('upload_id', $batchId)->active()->count(),
         ]);
     }
 }
