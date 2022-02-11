@@ -61,8 +61,8 @@ class SalesReportImportService
 
         $fileName = $this->uploadFile();
 
-        ImportSalesReport::dispatchSync(auth()->id(), storage_path('sales_report'), $fileName, $this->reportDate, $batchIds);
-        // ImportSalesReport::dispatch()->onQueue('queue_excel');
+        // ImportSalesReport::dispatchSync(auth()->id(), storage_path('sales_report'), $fileName, $this->reportDate, $batchIds);
+        ImportSalesReport::dispatch(auth()->id(), storage_path('sales_report'), $fileName, $this->reportDate, $batchIds)->onQueue('queue_excel');
         
     }
 

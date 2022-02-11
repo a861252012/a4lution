@@ -124,7 +124,7 @@ class FeeController extends Controller
         $feeType = $request->inline_fee_type;
         $reportDate = Carbon::parse($request->inline_report_date);
 
-        // $feeService->validate($reportDate);
+        $feeService->validate($reportDate);
 
         // 處理 A4lution Sales Report Import
         if ($feeType == BatchJobConstant::FEE_TYPE_SALES_REPORT) {
@@ -134,7 +134,7 @@ class FeeController extends Controller
             return;
         }
 
-        // $feeService->checkExcelHeader($file, $feeType);
+        $feeService->checkExcelHeader($file, $feeType);
 
         $batchJob = BatchJob::create([
             'user_id' => Auth::id(),
@@ -151,16 +151,10 @@ class FeeController extends Controller
             abort(Response::HTTP_NOT_FOUND, "Class '{$importClass}' not found");
         }
 
-        // 測試用
-        Excel::import(
+        Excel::queueImport(
             new $importClass(Auth::id(), $batchJob->id, $reportDate->toDateString()),
             $file
-        );
-
-        // Excel::queueImport(
-        //     new $importClass(Auth::id(), $batchJob->id, $reportDate->toDateString()),
-        //     $file
-        // )->allOnQueue('queue_excel');
+        )->allOnQueue('queue_excel');
     }
 
     public function platformAdsView(Request $request)
