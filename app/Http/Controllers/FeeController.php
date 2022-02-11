@@ -129,7 +129,7 @@ class FeeController extends Controller
         // 處理 A4lution Sales Report Import
         if ($feeType == BatchJobConstant::FEE_TYPE_SALES_REPORT) {
 
-            (new SalesReportImportService($file, $reportDate->toDateString()))->import();
+            (new SalesReportImportService($file, $reportDate))->import();
 
             return;
         }

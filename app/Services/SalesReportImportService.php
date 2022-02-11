@@ -46,7 +46,7 @@ class SalesReportImportService
     public $reportDate;
     
 
-    public function __construct($file, $reportDate)
+    public function __construct($file, Carbon $reportDate)
     {
         $this->file = $file;
         $this->reportDate = $reportDate;
@@ -99,20 +99,26 @@ class SalesReportImportService
 
         foreach ($reader->getSheetIterator() as $sheet) {
             $sheetName = Str::slug($sheet->getName(), '_');
-            $feeType = $this->sheetsFeeType[$sheetName];
+            
 
-            if (in_array($sheetName, self::sheets()) && !isset($batchJobs[$feeType])) {
-
-                $batchJobs[$feeType] = BatchJob::create([
-                    'user_id' => Auth::id(),
-                    'fee_type' => $feeType,
-                    'file_name' => $this->file->getClientOriginalName(),
-                    'report_date' => $this->reportDate,
-                    'total_count' => 0,
-                    'status' => BatchJobConstant::STATUS_PROCESSING,
-                    'created_at' => now(),
-                ])->id;
+            if ( ! in_array($sheetName, self::sheets()) ) {
+                continue;
             }
+
+            $feeType = $this->sheetsFeeType[$sheetName];
+            if ( isset($batchJobs[$feeType]) ) {
+                continue;
+            }
+
+            $batchJobs[$feeType] = BatchJob::create([
+                'user_id' => Auth::id(),
+                'fee_type' => $feeType,
+                'file_name' => $this->file->getClientOriginalName(),
+                'report_date' => $this->reportDate->toDateString(),
+                'total_count' => 0,
+                'status' => BatchJobConstant::STATUS_PROCESSING,
+                'created_at' => now(),
+            ])->id;
         }
 
         return $batchJobs;

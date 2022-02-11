@@ -39,7 +39,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
     private $batchIds;
     private $adFeeCollection;
 
-    public function __construct($userId, $path, $fileName, $reportDate, $batchIds)
+    public function __construct($userId, $path, $fileName, Carbon $reportDate, $batchIds)
     {
         $this->userId = $userId;
         $this->path = $path;
@@ -146,7 +146,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                             'acos' => $adFee['acos'],
                             'exchange_rate' => $adFee['exchange_rate'],
                             'upload_id' => $batchId,
-                            'report_date' => $this->reportDate,
+                            'report_date' => $this->reportDate->toDateString(),
                             'active' => 1,
                             'created_at' => date('Y-m-d h:i:s'),
                             'created_by' => $this->userId,
@@ -178,7 +178,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
             }
         }
 
-        PlatformAdFee::where('report_date', $this->reportDate)
+        PlatformAdFee::where('report_date', $this->reportDate->toDateString())
                 ->where('upload_id', '!=', $batchId)
                 ->active()
                 ->update(['active' => 0]);
@@ -239,7 +239,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                             'hkd_rate' => $dateRange['hkd_rate'],
                             'amazon_total_hkd' => $dateRange['amazon_total_hkd'],
                             'upload_id' => $batchId,
-                            'report_date' => $this->reportDate,
+                            'report_date' => $this->reportDate->toDateString(),
                             'active' => 1,
                             'created_at' => date('Y-m-d h:i:s'),
                             'created_by' => $this->userId,
@@ -271,7 +271,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
             }
         }
 
-        AmazonDateRangeReport::where('report_date', $this->reportDate)
+        AmazonDateRangeReport::where('report_date', $this->reportDate->toDateString())
             ->where('upload_id', '!=', $batchId)
             ->active()
             ->update(['active' => 0]);
@@ -330,7 +330,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                             'breakdown_incentive_fee_amount' => $fee['breakdown_incentive_fee_amount'],
                             'average_quantity_customer_orders' => $fee['average_quantity_customer_orders'],
                             'upload_id' => $batchId,
-                            'report_date' => $this->reportDate,
+                            'report_date' => $this->reportDate->toDateString(),
                             'active' => 1,
                             'created_at' => date('Y-m-d h:i:s'),
                             'created_by' => $this->userId,
@@ -363,7 +363,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
 
         }
 
-        MonthlyStorageFee::where('report_date', $this->reportDate)
+        MonthlyStorageFee::where('report_date', $this->reportDate->toDateString())
             ->where('upload_id', '!=', $batchId)
             ->active()
             ->update(['active' => 0]);
@@ -409,7 +409,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                             'country' => $fee['country'],
                             'enrolled_in_small_and_light' => $fee['enrolled_in_small_and_light'],
                             'upload_id' => $batchId,
-                            'report_date' => $this->reportDate,
+                            'report_date' => $this->reportDate->toDateString(),
                             'active' => 1,
                             'created_at' => date('Y-m-d h:i:s'),
                             'created_by' => $this->userId,
@@ -442,7 +442,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
         }
         
 
-        LongTermStorageFee::where('report_date', $this->reportDate)
+        LongTermStorageFee::where('report_date', $this->reportDate->toDateString())
             ->where('upload_id', '!=', $batchId)
             ->active()
             ->update(['active' => 0]);
@@ -455,8 +455,14 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
 
     private function importErpOrders(LazyCollection $collection)
     {
+        $reportDate = $this->reportDate->format('Ymd');
+
         $batchId = $this->batchIds[BatchJobConstant::IMPORT_TYPE_ERP_ORDERS];
         $batchJob = BatchJob::findOrFail($batchId);
+
+        Order::where('correlation_id', $reportDate)->active()->update(['active' => 0]);
+        OrderProduct::where('correlation_id', $reportDate)->active()->update(['active' => 0]);
+        OrderSkuCostDetail::where('correlation_id', $reportDate)->active()->update(['active' => 0]);
 
         foreach ($collection->groupBy('package_id')->chunk(500) as $packageIdWithOrders) {
 
@@ -476,7 +482,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                     $warehouse_code = trim(Str::before($main['warehouse'], '['));
 
                     $orderData[] = [
-                        'correlation_id' => Carbon::parse($main['shipped_date'])->format('Ymd'),
+                        'correlation_id' => $reportDate,
                         'platform' => $main['platform'],
                         'order_code' => $main['package_id'],
                         'reference_no' => $main['site_order_id'],
@@ -503,7 +509,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                         $order = $orders->first();
 
                         $orderProductData[] = [
-                            'correlation_id' => Carbon::parse($order['shipped_date'])->format('Ymd'),
+                            'correlation_id' => $reportDate,
                             'order_code' => $main['package_id'],
                             'sku' => $order['sku'],
                             'weight' => $order['product_weight'],
@@ -535,7 +541,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                         ];
 
                         $orderSkuCostData[] = [
-                            'correlation_id' => Carbon::parse($order['shipped_date'])->format('Ymd'),
+                            'correlation_id' => $reportDate,
                             'platform' => $order['platform'],
                             'product_barcode' => $order['sku'],
                             'reference_no' => $order['package_id'],
@@ -566,7 +572,15 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                 Log::channel('daily_queue_import')
                     ->error("[A4lutionSalesReport.errors]" . $e);
 
-                // $batchJob->platformAdFees()->update(['active' => 0]);
+                // 刪除已匯入資料
+                Order::where('correlation_id', $reportDate)->active()->delete();
+                OrderProduct::where('correlation_id', $reportDate)->active()->delete();
+                OrderSkuCostDetail::where('correlation_id', $reportDate)->active()->delete();  
+
+                // 還原舊資料
+                Order::where('correlation_id', $reportDate)->inactive()->update(['active' => 1]);
+                OrderProduct::where('correlation_id', $reportDate)->inactive()->update(['active' => 1]);
+                OrderSkuCostDetail::where('correlation_id', $reportDate)->inactive()->update(['active' => 1]);       
 
                 $batchJob->update([
                     'status' => BatchJobConstant::STATUS_FAILED,
@@ -579,14 +593,14 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
             }
         }
 
-        // PlatformAdFee::where('report_date', $this->reportDate)
-        //         ->where('upload_id', '!=', $batchId)
-        //         ->active()
-        //         ->update(['active' => 0]);
+        // 刪除舊資料
+        Order::where('correlation_id', $reportDate)->inactive()->delete();
+        OrderProduct::where('correlation_id', $reportDate)->inactive()->delete();
+        OrderSkuCostDetail::where('correlation_id', $reportDate)->inactive()->delete(); 
 
         $batchJob->update([
             'status' => BatchJobConstant::STATUS_COMPLETED,
-            'total_count' => PlatformAdFee::where('upload_id', $batchId)->active()->count(),
+            'total_count' => Order::where('correlation_id', $reportDate)->active()->count(),
         ]);
     }
 }
