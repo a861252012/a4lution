@@ -37,6 +37,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
     private $fileName;
     private $reportDate;
     private $batchIds;
+    private $adFeeCollection;
 
     public function __construct($userId, $path, $fileName, $reportDate, $batchIds)
     {
@@ -45,6 +46,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
         $this->fileName = $fileName;
         $this->reportDate = $reportDate;
         $this->batchIds = $batchIds;
+        $this->adFeeCollection = LazyCollection::make();
     }
 
     public function handle()
@@ -73,40 +75,50 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
             }
         }
 
+        // Ad Fee 匯入
+        if ($this->adFeeCollection->isNotEmpty()) {
+            $this->importAdFee();
+        }
+
         unlink($file);
     }
     
     private function importAmzAds(LazyCollection $collection)
     {
-        $this->importAdFee($collection);
+        $this->mergeAdFee($collection);
     }
 
     private function importEbayAds(LazyCollection $collection)
     {
-        $this->importAdFee($collection);
+        $this->mergeAdFee($collection);
     }
 
     private function importWalmartAds(LazyCollection $collection)
     {
-        $this->importAdFee($collection);
+        $this->mergeAdFee($collection);
     }
 
     private function importLazadaAds(LazyCollection $collection)
     {
-        $this->importAdFee($collection);
+        $this->mergeAdFee($collection);
     }
 
     private function importShopeeAds(LazyCollection $collection)
     {
-        $this->importAdFee($collection);
+        $this->mergeAdFee($collection);
     }
 
-    private function importAdFee(LazyCollection $collection)
+    private function mergeAdFee(LazyCollection $collection)
+    {
+        $this->adFeeCollection = $this->adFeeCollection->merge($collection->all());
+    }
+
+    private function importAdFee()
     {
         $batchId = $this->batchIds[BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES];
         $batchJob = BatchJob::findOrFail($batchId);
 
-        foreach ($collection->chunk(1000) as $adFees) {
+        foreach ($this->adFeeCollection->chunk(1000) as $adFees) {
             DB::beginTransaction();
 
             try {
@@ -446,7 +458,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
         $batchId = $this->batchIds[BatchJobConstant::IMPORT_TYPE_ERP_ORDERS];
         $batchJob = BatchJob::findOrFail($batchId);
 
-        foreach ($collection->collect()->groupBy('package_id')->chunk(500) as $packageIdWithOrders) {
+        foreach ($collection->groupBy('package_id')->chunk(500) as $packageIdWithOrders) {
 
             $orderData = [];
             $orderProductData = [];
@@ -460,7 +472,6 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                     // 建立 Order
                     $main = $orders->first();
 
-                    // TODO: warehouse 解析字串再確認
                     $warehouse_name = trim(Str::between($main['warehouse'], '[', ']'));
                     $warehouse_code = trim(Str::before($main['warehouse'], '['));
 
@@ -474,34 +485,23 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                         'add_time' => Carbon::parse($main['audit_date'])->toDateTimeString(),
                         'order_paydate' => Carbon::parse($main['paid_date'])->toDateTimeString(),
                         'order_status' => 8,
-                        // 'warehouse_id' => $main[''],
-                        // 'process_time' => $main[''],
-                        // 'pack_time' => $main[''],
                         'ship_time' => Carbon::parse($main['shipped_date'])->toDateTimeString(),
-                        // 'cutoff_time' => $main[''],
-                        // 'process_user_id' => $main[''],
-                        // 'packager_id' => $main[''],
-                        // 'pack_user_id' => $main[''],
-                        // 'ship_user_id' => $main[''],
-                        // 'import_user_id' => $main[''],
-                        // 'import_time' => $main[''],
-                        // 'dismountable_time' => $main[''],
-                        // 'service_number_convert' => $main[''],
                         'tracking_number' => $main['tracking'],
                         'so_weight' => $main['product_weight'],
                         'platform_user_name' => $main['acc_name'],
                         'platform_ref_no' => $main['erp_order_id'],
-                        // 'buyer_id' => $main[''],
-                        // 'buyer_name' => $main[''],
                         'warehouse_name' => $warehouse_name,
                         'warehouse_code' => $warehouse_code,
                         'created_at' => now(),
                         'order_type' => $main['order_type'],
                         'package_type' => $main['package_type'],
+                        'active' => 1,
                     ];
 
-                    
-                    foreach ($orders as $order) {
+                    foreach ($orders->groupBy('sku') as $sku => $orders) {
+
+                        $order = $orders->first();
+
                         $orderProductData[] = [
                             'correlation_id' => Carbon::parse($order['shipped_date'])->format('Ymd'),
                             'order_code' => $main['package_id'],
@@ -532,9 +532,6 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                             'active' => 1,
                             'promotion_discount_rate' => 0,
                             'promotion_amount' => 0,
-                            // 'sku_commission_rate' => $order[''],
-                            // 'sku_commission_amount' => $order[''],
-                            // 'sku_commission_computed_at' => $order[''],
                         ];
 
                         $orderSkuCostData[] = [
@@ -547,11 +544,12 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                             'order_total_amount_org' => $order['order_price_original_currency'],
                             'order_platform_type' => $order['order_type'],
                             'product_title' => $order['product_name'],
-                            'quantity' => $order['qty'],
+                            'quantity' => collect($orders)->sum('qty'),
                             'product_barcode' => $order['sku'],
                             'currency_code' => $order['hkd'],
                             'currency_rate' => $order['hkd_rate'],
                             'created_at' => now(),
+                            'active' => 1,
                         ];
                     }
 

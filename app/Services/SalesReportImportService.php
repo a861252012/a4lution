@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SalesReportImportService
 {
-    // excel each sheet name & header
+    // 每個分頁對應的表頭欄位
     private static $sheetsHeader = [
         'erp_orders' => ImportTitleConstant::ERP_ORDERS,
         'amz_ads' => ImportTitleConstant::PLATFORM_AD,
@@ -29,12 +29,17 @@ class SalesReportImportService
         'long_term_storage_fee_charge' => ImportTitleConstant::LONG_TERM,
     ];
 
-    private $batchJobFeeTypes = [
-        BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
-        BatchJobConstant::FEE_TYPE_AMAZON_DATE_RANGE,
-        BatchJobConstant::FEE_TYPE_LONG_TERM_STORAGE_FEES,
-        BatchJobConstant::FEE_TYPE_MONTHLY_STORAGE_FEES,
-        BatchJobConstant::IMPORT_TYPE_ERP_ORDERS,
+    // 每個分頁對應的 Fee Type
+    private $sheetsFeeType = [
+        'erp_orders' => BatchJobConstant::IMPORT_TYPE_ERP_ORDERS,
+        'amz_ads' => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
+        'ebay_ads' => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
+        'walmart_ads' => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
+        'lazada_ads' => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
+        'shopee_ads' => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
+        'date_range' => BatchJobConstant::FEE_TYPE_AMAZON_DATE_RANGE,
+        'monthly_storage_fees' => BatchJobConstant::FEE_TYPE_MONTHLY_STORAGE_FEES,
+        'long_term_storage_fee_charge' => BatchJobConstant::FEE_TYPE_LONG_TERM_STORAGE_FEES,
     ];
 
     public $file;
@@ -87,17 +92,27 @@ class SalesReportImportService
     private function createBatchJobsAndGetBatchIds()
     {
         $batchJobs = [];
-        foreach ($this->batchJobFeeTypes as $feeType) {
 
-            $batchJobs[$feeType] = BatchJob::create([
-                'user_id' => Auth::id(),
-                'fee_type' => $feeType,
-                'file_name' => $this->file->getClientOriginalName(),
-                'report_date' => $this->reportDate,
-                'total_count' => 0,
-                'status' => BatchJobConstant::STATUS_PROCESSING,
-                'created_at' => now(),
-            ])->id;
+        $excel = SimpleExcelReader::create($this->file, 'xlsx');
+        $reader = $excel->getReader();
+        $reader->open($this->file);
+
+        foreach ($reader->getSheetIterator() as $sheet) {
+            $sheetName = Str::slug($sheet->getName(), '_');
+            $feeType = $this->sheetsFeeType[$sheetName];
+
+            if (in_array($sheetName, self::sheets()) && !isset($batchJobs[$feeType])) {
+
+                $batchJobs[$feeType] = BatchJob::create([
+                    'user_id' => Auth::id(),
+                    'fee_type' => $feeType,
+                    'file_name' => $this->file->getClientOriginalName(),
+                    'report_date' => $this->reportDate,
+                    'total_count' => 0,
+                    'status' => BatchJobConstant::STATUS_PROCESSING,
+                    'created_at' => now(),
+                ])->id;
+            }
         }
 
         return $batchJobs;
@@ -106,7 +121,7 @@ class SalesReportImportService
     private function uploadFile()
     {
         // 上傳至 aws s3
-        $fileName = date('Him'). '-' .$this->file->getClientOriginalName();
+        $fileName = date('YmdHim'). '-' .$this->file->getClientOriginalName();
         $s3Path = sprintf(
             'a4lution-sales-report/%s/%s',
             date('Ymd'),
