@@ -13,7 +13,7 @@ class FeeService
     // 在上傳檔案前做驗證
     public function validate($reportDate)
     {
-        // 1. exchange rate
+        // 1. exchange rate check
         $exchangeRate = (new ExchangeRateRepository)->getByQuotedDate($reportDate->toDateString());
 
         if ($exchangeRate->isEmpty()) {

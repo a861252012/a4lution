@@ -62,7 +62,13 @@ class SalesReportImportService
         $fileName = $this->uploadFile();
 
         // ImportSalesReport::dispatchSync(auth()->id(), storage_path('sales_report'), $fileName, $this->reportDate, $batchIds);
-        ImportSalesReport::dispatch(auth()->id(), storage_path('sales_report'), $fileName, $this->reportDate, $batchIds)->onQueue('queue_excel');
+        ImportSalesReport::dispatch(
+            auth()->id(), 
+            storage_path('sales_report'), 
+            $fileName, 
+            $this->reportDate, 
+            $batchIds
+        )->onQueue('queue_excel');
         
     }
 
@@ -129,7 +135,8 @@ class SalesReportImportService
         // 上傳至 aws s3
         $fileName = date('YmdHim'). '-' .$this->file->getClientOriginalName();
         $s3Path = sprintf(
-            'a4lution-sales-report/%s/%s',
+            'a4lution-sales-report/%s/%s/%s',
+            app()->environment('production') ? 'prod' : 'dev',
             date('Ymd'),
             $fileName,
         );
