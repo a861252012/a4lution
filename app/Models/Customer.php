@@ -107,12 +107,6 @@ class Customer extends Model
         return ! (bool) $this->active;
     }
 
-    /**
-     * Scope a query to only include active users.
-     *
-     * @param Builder $query
-     * @return Builder
-     */
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('active', 1);

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrderSkuCostDetail extends Model
 {
@@ -15,4 +16,14 @@ class OrderSkuCostDetail extends Model
     protected $guarded = [];
 
     public $timestamps = false;
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('active', 1);
+    }
+
+    public function scopeInActive(Builder $query): Builder
+    {
+        return $query->where('active', 0);
+    }
 }
