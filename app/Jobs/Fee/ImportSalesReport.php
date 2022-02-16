@@ -539,13 +539,16 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                             'promotion_discount_rate' => 0,
                             'promotion_amount' => 0,
                         ];
-
+                        
                         $orderSkuCostData[] = [
                             'correlation_id' => $reportDate,
                             'platform' => $order['platform'],
+                            'sm_code' => trim(Str::before($order['shipping_method'], '[')),
+                            'op_platform_sales_sku' => $order['platform_sku'],
                             'product_barcode' => $order['sku'],
                             'reference_no' => $order['package_id'],
                             'site_id' => $order['site'],
+                            'seller_id' => $order['acc_nick_name'],
                             'currency_code_org' => $order['original_currency'],
                             'order_total_amount_org' => $order['order_price_original_currency'],
                             'order_platform_type' => $order['order_type'],

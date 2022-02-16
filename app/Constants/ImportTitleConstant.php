@@ -157,7 +157,7 @@ class ImportTitleConstant
         "remark",
     ];
 
-    // ERP Orders (Fee Type = A4lution Sales Reports )
+    // ERP Orders
     const ERP_ORDERS = [
         "platform",
         "acc_nick_name",
@@ -218,5 +218,19 @@ class ImportTitleConstant
         "gross_profit_hkd",
         "gross_margin",
         "order_quantity_statistics",
+    ];
+
+    // Contin Storage Fee
+    const CONTIN_STORAGE = [
+        'transaction_no',
+        'billing_period',
+        'warehouse_code',
+        'supplier',
+        'transaction_datetime',
+        'billing_flag',
+        'volume',
+        'quantity',
+        'amount',
+        'currency',
     ];
 }

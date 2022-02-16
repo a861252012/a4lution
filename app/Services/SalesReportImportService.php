@@ -27,11 +27,13 @@ class SalesReportImportService
         'date_range' => ImportTitleConstant::AMZ_DATE_RANGE,
         'monthly_storage_fees' => ImportTitleConstant::MONTHLY_STORAGE,
         'long_term_storage_fee_charge' => ImportTitleConstant::LONG_TERM,
+        'contin_storage_fee' => ImportTitleConstant::CONTIN_STORAGE,
+        
     ];
 
     // 每個分頁對應的 Fee Type
     private $sheetsFeeType = [
-        'erp_orders' => BatchJobConstant::IMPORT_TYPE_ERP_ORDERS,
+        'erp_orders' => 'erp_orders',
         'amz_ads' => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
         'ebay_ads' => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
         'walmart_ads' => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
@@ -40,11 +42,11 @@ class SalesReportImportService
         'date_range' => BatchJobConstant::FEE_TYPE_AMAZON_DATE_RANGE,
         'monthly_storage_fees' => BatchJobConstant::FEE_TYPE_MONTHLY_STORAGE_FEES,
         'long_term_storage_fee_charge' => BatchJobConstant::FEE_TYPE_LONG_TERM_STORAGE_FEES,
+        'contin_storage_fee' => 'contin_storage_fee',
     ];
 
     public $file;
     public $reportDate;
-    
 
     public function __construct($file, Carbon $reportDate)
     {
