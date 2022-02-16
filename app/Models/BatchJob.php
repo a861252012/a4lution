@@ -47,4 +47,9 @@ class BatchJob extends Model
     {
         return $this->hasMany(MonthlyStorageFee::class, 'upload_id');
     }
+
+    public function continStorageFees()
+    {
+        return $this->hasMany(ContinStorageFee::class, 'upload_id');
+    }
 }
