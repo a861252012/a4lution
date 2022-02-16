@@ -620,7 +620,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
             try {
                 $data = [];
                 foreach ($fees as $fee) {
-                    if (isset($fee['account'])) {
+                    if (isset($fee['transaction_no'])) {
                         $data[] = [
                             'transaction_no' => $fee['transaction_no'],
                             'billing_period' => $fee['billing_period'],

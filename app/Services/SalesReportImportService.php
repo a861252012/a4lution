@@ -86,12 +86,17 @@ class SalesReportImportService
                 $header = $excel->headersToSnakeCase()->getHeadersBySheet($sheet);
 
                 if (!$header) {
-                    abort(Response::HTTP_FORBIDDEN, "Sheet: [{$sheetName}] Title unmatched");
+                    abort(Response::HTTP_FORBIDDEN, "Sheet [{$sheetName}]: no Title!");
+                }
+
+                // 如果 header 是中文，會產生全部空字串內容
+                if (collect($header)->filter()->isEmpty()) {
+                    abort(Response::HTTP_FORBIDDEN, "Sheet [{$sheetName}]: no Title!");
                 }
 
                 $diff = collect($header)->filter()->diff(self::$sheetsHeader[$sheetName]);
                 if ( $diff->isNotEmpty() ) {
-                    abort(Response::HTTP_FORBIDDEN, "Sheet: [{$sheetName}] Title : [{$diff->implode(', ')}] unmatched");
+                    abort(Response::HTTP_FORBIDDEN, "Sheet [{$sheetName}]: Title [{$diff->implode(', ')}] unmatched");
                 }
             }
         }
