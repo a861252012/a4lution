@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use App\Constants\BatchJobConstant;
 use Illuminate\Support\Facades\Log;
 use App\Models\AmazonDateRangeReport;
+use App\Models\ContinStorageFee;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\LazyCollection;
 use Illuminate\Queue\InteractsWithQueue;
@@ -539,13 +540,16 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                             'promotion_discount_rate' => 0,
                             'promotion_amount' => 0,
                         ];
-
+                        
                         $orderSkuCostData[] = [
                             'correlation_id' => $reportDate,
                             'platform' => $order['platform'],
+                            'sm_code' => trim(Str::before($order['shipping_method'], '[')),
+                            'op_platform_sales_sku' => $order['platform_sku'],
                             'product_barcode' => $order['sku'],
                             'reference_no' => $order['package_id'],
                             'site_id' => $order['site'],
+                            'seller_id' => $order['acc_nick_name'],
                             'currency_code_org' => $order['original_currency'],
                             'order_total_amount_org' => $order['order_price_original_currency'],
                             'order_platform_type' => $order['order_type'],
@@ -601,6 +605,75 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
         $batchJob->update([
             'status' => BatchJobConstant::STATUS_COMPLETED,
             'total_count' => Order::where('correlation_id', $reportDate)->active()->count(),
+        ]);
+    }
+
+    private function importContinStorageFee(LazyCollection $collection)
+    {
+        $batchId = $this->batchIds[BatchJobConstant::IMPORT_TYPE_CONTIN_STORAGE_FEE];
+        $batchJob = BatchJob::findOrFail($batchId);
+
+        foreach ($collection->chunk(1000) as $fees) {
+
+            DB::beginTransaction();
+
+            try {
+                $data = [];
+                foreach ($fees as $fee) {
+                    if (isset($fee['transaction_no'])) {
+                        $data[] = [
+                            'transaction_no' => $fee['transaction_no'],
+                            'billing_period' => $fee['billing_period'],
+                            'warehouse_code' => $fee['warehouse_code'],
+                            'supplier' => $fee['supplier'],
+                            'transaction_datetime' => $fee['transaction_datetime'],
+                            'billing_flag' => $fee['billing_flag'],
+                            'volume' => $fee['volume'],
+                            'quantity' => $fee['quantity'],
+                            'amount' => $fee['amount'],
+                            'currency' => $fee['currency'],
+                            'upload_id' => $batchId,
+                            'report_date' => $this->reportDate->toDateString(),
+                            'active' => 1,
+                            'created_at' => date('Y-m-d h:i:s'),
+                            'created_by' => $this->userId,
+                            'updated_at' => date('Y-m-d h:i:s'),
+                            'updated_by' => $this->userId,
+                        ];
+                    }
+                }
+
+                ContinStorageFee::insert($data);
+
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+
+                Log::channel('daily_queue_import')
+                    ->error("[A4lutionSalesReport.errors]" . $e);
+
+                $batchJob->continStorageFees()->update(['active' => 0]);
+
+                $batchJob->update([
+                    'status' => BatchJobConstant::STATUS_FAILED,
+                    'total_count' => 0,
+                    'exit_message' => $e->getMessage(),
+                    'user_error_msg' => (new ImportService)->getUserErrorMsg($e->getMessage())
+                ]);
+
+                return;
+            }
+        }
+        
+
+        ContinStorageFee::where('report_date', $this->reportDate->toDateString())
+            ->where('upload_id', '!=', $batchId)
+            ->active()
+            ->update(['active' => 0]);
+
+        $batchJob->update([
+            'status' => BatchJobConstant::STATUS_COMPLETED,
+            'total_count' => ContinStorageFee::where('upload_id', $batchId)->active()->count(),
         ]);
     }
 }

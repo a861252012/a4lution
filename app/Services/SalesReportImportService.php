@@ -27,6 +27,8 @@ class SalesReportImportService
         'date_range' => ImportTitleConstant::AMZ_DATE_RANGE,
         'monthly_storage_fees' => ImportTitleConstant::MONTHLY_STORAGE,
         'long_term_storage_fee_charge' => ImportTitleConstant::LONG_TERM,
+        'contin_storage_fee' => ImportTitleConstant::CONTIN_STORAGE,
+        
     ];
 
     // 每個分頁對應的 Fee Type
@@ -40,11 +42,11 @@ class SalesReportImportService
         'date_range' => BatchJobConstant::FEE_TYPE_AMAZON_DATE_RANGE,
         'monthly_storage_fees' => BatchJobConstant::FEE_TYPE_MONTHLY_STORAGE_FEES,
         'long_term_storage_fee_charge' => BatchJobConstant::FEE_TYPE_LONG_TERM_STORAGE_FEES,
+        'contin_storage_fee' => BatchJobConstant::IMPORT_TYPE_CONTIN_STORAGE_FEE,
     ];
 
     public $file;
     public $reportDate;
-    
 
     public function __construct($file, Carbon $reportDate)
     {
@@ -84,12 +86,17 @@ class SalesReportImportService
                 $header = $excel->headersToSnakeCase()->getHeadersBySheet($sheet);
 
                 if (!$header) {
-                    abort(Response::HTTP_FORBIDDEN, "Sheet: [{$sheetName}] Title unmatched");
+                    abort(Response::HTTP_FORBIDDEN, "Sheet [{$sheetName}]: no Title!");
+                }
+
+                // 如果 header 是中文，會產生全部空字串內容
+                if (collect($header)->filter()->isEmpty()) {
+                    abort(Response::HTTP_FORBIDDEN, "Sheet [{$sheetName}]: no Title!");
                 }
 
                 $diff = collect($header)->filter()->diff(self::$sheetsHeader[$sheetName]);
                 if ( $diff->isNotEmpty() ) {
-                    abort(Response::HTTP_FORBIDDEN, "Sheet: [{$sheetName}] Title : [{$diff->implode(', ')}] unmatched");
+                    abort(Response::HTTP_FORBIDDEN, "Sheet [{$sheetName}]: Title [{$diff->implode(', ')}] unmatched");
                 }
             }
         }
