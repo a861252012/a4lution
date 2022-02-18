@@ -16,33 +16,44 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SalesReportImportService
 {
+    const SHEET_ERP_ORDERS = 'erp_orders';
+    const SHEET_AMZ_ADS = 'amz_ads';
+    const SHEET_EBAY_ADS = 'ebay_ads';
+    const SHEET_WALMART_ADS = 'walmart_ads';
+    const SHEET_LAZADA_ADS = 'lazada_ads';
+    const SHEET_SHOPEE_ADS = 'shopee_ads';
+    const SHEET_DATE_RANGE = 'date_range';
+    const SHEET_MONTHLY_STORAGE_FEES = 'monthly_storage_fees';
+    const SHEET_LONG_TERM_STORAGE_FEE_CHARGE = 'long_term_storage_fee_charge';
+    const SHEET_CONTIN_STORAGE_FEE = 'contin_storage_fee';
+
     // 每個分頁對應的表頭欄位
     private static $sheetsHeader = [
-        'erp_orders' => ImportTitleConstant::ERP_ORDERS,
-        'amz_ads' => ImportTitleConstant::PLATFORM_AD,
-        'ebay_ads' => ImportTitleConstant::PLATFORM_AD,
-        'walmart_ads' => ImportTitleConstant::PLATFORM_AD,
-        'lazada_ads' => ImportTitleConstant::PLATFORM_AD,
-        'shopee_ads' => ImportTitleConstant::PLATFORM_AD,
-        'date_range' => ImportTitleConstant::AMZ_DATE_RANGE,
-        'monthly_storage_fees' => ImportTitleConstant::MONTHLY_STORAGE,
-        'long_term_storage_fee_charge' => ImportTitleConstant::LONG_TERM,
-        'contin_storage_fee' => ImportTitleConstant::CONTIN_STORAGE,
+        self::SHEET_ERP_ORDERS => ImportTitleConstant::ERP_ORDERS,
+        self::SHEET_AMZ_ADS => ImportTitleConstant::PLATFORM_AD,
+        self::SHEET_EBAY_ADS => ImportTitleConstant::PLATFORM_AD,
+        self::SHEET_WALMART_ADS => ImportTitleConstant::PLATFORM_AD,
+        self::SHEET_LAZADA_ADS => ImportTitleConstant::PLATFORM_AD,
+        self::SHEET_SHOPEE_ADS => ImportTitleConstant::PLATFORM_AD,
+        self::SHEET_DATE_RANGE => ImportTitleConstant::AMZ_DATE_RANGE,
+        self::SHEET_MONTHLY_STORAGE_FEES => ImportTitleConstant::MONTHLY_STORAGE,
+        self::SHEET_LONG_TERM_STORAGE_FEE_CHARGE => ImportTitleConstant::LONG_TERM,
+        self::SHEET_CONTIN_STORAGE_FEE => 0,
         
     ];
 
     // 每個分頁對應的 Fee Type
     private $sheetsFeeType = [
-        'erp_orders' => BatchJobConstant::IMPORT_TYPE_ERP_ORDERS,
-        'amz_ads' => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
-        'ebay_ads' => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
-        'walmart_ads' => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
-        'lazada_ads' => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
-        'shopee_ads' => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
-        'date_range' => BatchJobConstant::FEE_TYPE_AMAZON_DATE_RANGE,
-        'monthly_storage_fees' => BatchJobConstant::FEE_TYPE_MONTHLY_STORAGE_FEES,
-        'long_term_storage_fee_charge' => BatchJobConstant::FEE_TYPE_LONG_TERM_STORAGE_FEES,
-        'contin_storage_fee' => BatchJobConstant::IMPORT_TYPE_CONTIN_STORAGE_FEE,
+        self::SHEET_ERP_ORDERS => BatchJobConstant::IMPORT_TYPE_ERP_ORDERS,
+        self::SHEET_AMZ_ADS => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
+        self::SHEET_EBAY_ADS => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
+        self::SHEET_WALMART_ADS => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
+        self::SHEET_LAZADA_ADS => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
+        self::SHEET_SHOPEE_ADS => BatchJobConstant::FEE_TYPE_PLATFORM_AD_FEES,
+        self::SHEET_DATE_RANGE => BatchJobConstant::FEE_TYPE_AMAZON_DATE_RANGE,
+        self::SHEET_MONTHLY_STORAGE_FEES => BatchJobConstant::FEE_TYPE_MONTHLY_STORAGE_FEES,
+        self::SHEET_LONG_TERM_STORAGE_FEE_CHARGE => BatchJobConstant::FEE_TYPE_LONG_TERM_STORAGE_FEES,
+        self::SHEET_CONTIN_STORAGE_FEE => BatchJobConstant::IMPORT_TYPE_CONTIN_STORAGE_FEE,
     ];
 
     public $file;
@@ -87,6 +98,11 @@ class SalesReportImportService
 
                 if (!$header) {
                     abort(Response::HTTP_FORBIDDEN, "Sheet [{$sheetName}]: no Title!");
+                }
+
+                // 不比對，用index行列獲取內容
+                if (!self::$sheetsHeader[$sheetName]) {
+                    continue;
                 }
 
                 // 如果 header 是中文，會產生全部空字串內容

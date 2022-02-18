@@ -64,4 +64,11 @@ class SimpleExcelReader extends SpatieSimpleExcelReader
     {
         return Str::slug($header, '_');
     }
+
+    public function withHeaderRow(): self
+    {
+        $this->processHeader = true;
+
+        return $this;
+    }
 }

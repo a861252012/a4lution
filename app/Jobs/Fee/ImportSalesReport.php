@@ -27,7 +27,6 @@ use App\Services\SalesReportImportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
-use Symfony\Component\HttpFoundation\Response;
 
 class ImportSalesReport implements ShouldQueue, ShouldBeUnique
 {
@@ -39,6 +38,10 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
     private $reportDate;
     private $batchIds;
     private $adFeeCollection;
+
+    private $sheetsByIndexRow = [
+        SalesReportImportService::SHEET_CONTIN_STORAGE_FEE,
+    ];
 
     public function __construct($userId, $path, $fileName, Carbon $reportDate, $batchIds)
     {
@@ -71,8 +74,11 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
 
                 // 資料匯入
                 $this->{$method}(
-                    $excel->headersToSnakeCase()->getRowsBySheet($sheet),
+                    in_array($sheetName, $this->sheetsByIndexRow)
+                        ? $excel->noHeaderRow()->getRowsBySheet($sheet)
+                        : $excel->withHeaderRow()->headersToSnakeCase()->getRowsBySheet($sheet)
                 );
+                
             }
         }
 
@@ -613,6 +619,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
         $batchId = $this->batchIds[BatchJobConstant::IMPORT_TYPE_CONTIN_STORAGE_FEE];
         $batchJob = BatchJob::findOrFail($batchId);
 
+        $collection = $collection->skip(1); // skip header
         foreach ($collection->chunk(1000) as $fees) {
 
             DB::beginTransaction();
@@ -620,18 +627,18 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
             try {
                 $data = [];
                 foreach ($fees as $fee) {
-                    if (isset($fee['transaction_no'])) {
+                    if (isset($fee[0])) {
                         $data[] = [
-                            'transaction_no' => $fee['transaction_no'],
-                            'billing_period' => $fee['billing_period'],
-                            'warehouse_code' => $fee['warehouse_code'],
-                            'supplier' => $fee['supplier'],
-                            'transaction_datetime' => $fee['transaction_datetime'],
-                            'billing_flag' => $fee['billing_flag'],
-                            'volume' => $fee['volume'],
-                            'quantity' => $fee['quantity'],
-                            'amount' => $fee['amount'],
-                            'currency' => $fee['currency'],
+                            'transaction_no' => $fee[0],
+                            'billing_period' => $fee[1],
+                            'warehouse_code' => $fee[3],
+                            'supplier' => $fee[4],
+                            'transaction_datetime' => $fee[5],
+                            'billing_flag' => $fee[6],
+                            'volume' => $fee[7],
+                            'quantity' => $fee[8],
+                            'amount' => $fee[9],
+                            'currency' => $fee[10],
                             'upload_id' => $batchId,
                             'report_date' => $this->reportDate->toDateString(),
                             'active' => 1,
