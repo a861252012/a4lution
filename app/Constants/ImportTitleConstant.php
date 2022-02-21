@@ -219,18 +219,4 @@ class ImportTitleConstant
         "gross_margin",
         "order_quantity_statistics",
     ];
-
-    // Contin Storage Fee
-    const CONTIN_STORAGE = [
-        'transaction_no',
-        'billing_period',
-        'warehouse_code',
-        'supplier',
-        'transaction_datetime',
-        'billing_flag',
-        'volume',
-        'quantity',
-        'amount',
-        'currency',
-    ];
 }
