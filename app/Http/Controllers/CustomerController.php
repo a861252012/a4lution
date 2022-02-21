@@ -20,26 +20,16 @@ class CustomerController extends Controller
 {
     public function index(IndexRequest $request)
     {
-        $query = [
-            'client_code' => $request->client_code ?? null,
-            'active' => $request->active ?? null,
-            'sales_region' => $request->sales_region ?? null,
-        ];
+        $customers = empty($request->all()) 
+            ? []
+            : Customer::query()
+                ->with('salesReps', 'accountServices', 'operationUsers', 'updater')
+                ->when($request->client_code, fn($q) => $q->where('client_code', $request->client_code))
+                ->when(isset($request->active), fn($q) => $q->where('active', $request->active))
+                ->oldest('client_code')
+                ->paginate();
 
-        if (empty($request->all())) {
-            $customers = [];
-            return view('customer.index', compact('customers', 'query'));
-        }
-
-        $customers = Customer::query()
-            ->with('salesReps', 'accountServices', 'updater')
-            ->when($request->client_code, fn($q) => $q->where('client_code', $request->client_code))
-            ->when(isset($request->active), fn($q) => $q->where('active', $request->active))
-            ->when($request->sales_region, fn($q) => $q->where('sales_region', $request->sales_region))
-            ->oldest('client_code')
-            ->paginate();
-
-        return view('customer.index', compact('customers', 'query'));
+        return view('customer.index', compact('customers'));
     }
 
     public function ajaxCreate()
@@ -74,8 +64,10 @@ class CustomerController extends Controller
                 'district' => $request->district,
                 'zip' => $request->zip,
                 'country' => $request->country,
-                'sales_region' => $request->sales_region,
-                'contract_date' => $request->contract_date,
+                'region' => $request->region,
+                'contract_period_start' => $request->contract_period_start,
+                'contract_period_end' => $request->contract_period_end,
+                'commission_deduct_refund_cxl_order' => $request->commission_deduct_refund_cxl_order,
                 'active' => $request->active,
             ]);
 
@@ -178,8 +170,10 @@ class CustomerController extends Controller
                     'district' => $request->district,
                     'zip' => $request->zip,
                     'country' => $request->country,
-                    'sales_region' => $request->sales_region,
-                    'contract_date' => $request->contract_date,
+                    'region' => $request->region,
+                    'contract_period_start' => $request->contract_period_start,
+                    'contract_period_end' => $request->contract_period_end,
+                    'commission_deduct_refund_cxl_order' => $request->commission_deduct_refund_cxl_order,
                     'active' => $request->active,
                 ]);
 
