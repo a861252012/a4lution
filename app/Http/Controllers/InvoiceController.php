@@ -2,37 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Constants\CommissionConstant;
 use App\Jobs\Invoice\CreateZipToS3;
 use App\Jobs\Invoice\ExportInvoiceExcel;
 use App\Jobs\Invoice\ExportInvoicePDFs;
 use App\Jobs\Invoice\SetSaveDir;
 use App\Models\BillingStatement;
-use App\Models\CommissionSetting;
 use App\Models\Customer;
-use App\Models\FirstMileShipmentFee;
 use App\Models\Invoice;
-use App\Models\OrderProduct;
-use App\Models\Role;
-use App\Models\RoleAssignment;
-use App\Repositories\AmazonReportListRepository;
 use App\Repositories\BillingStatementRepository;
 use App\Repositories\CustomerRelationRepository;
-use App\Repositories\FirstMileShipmentFeeRepository;
 use App\Repositories\InvoiceRepository;
-use App\Repositories\OrderProductRepository;
 use App\Services\InvoiceService;
 use App\Support\ERPRequester;
-use Illuminate\Support\Facades\Bus;
 use Carbon\Carbon;
 use Illuminate\Bus\Batch;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class InvoiceController extends Controller
@@ -40,157 +31,25 @@ class InvoiceController extends Controller
     private const GET_SUPPLIER_INFO = 'getSupplierInfo';
     private Invoice $invoice;
     private CustomerRelationRepository $customerRelationRepo;
-    private RoleAssignment $roleAssignment;
-    private Role $role;
     private BillingStatement $billingStatement;
     private Customer $customer;
-    private OrderProductRepository $orderProductRepository;
-    private AmazonReportListRepository $amazonReportListRepository;
-    private FirstMileShipmentFeeRepository $firstMileShipmentFeeRepository;
-    private BillingStatementRepository $billingStatementRepository;
-    private FirstMileShipmentFee $firstMileShipmentFee;
+    private BillingStatementRepository $billingStatementRepo;
     private InvoiceService $invoiceService;
 
     public function __construct(
-        Invoice                        $invoice,
-        CustomerRelationRepository     $customerRelationRepo,
-        Customer                       $customer,
-        RoleAssignment                 $roleAssignment,
-        Role                           $role,
-        BillingStatement               $billingStatement,
-        OrderProductRepository         $orderProductRepository,
-        AmazonReportListRepository     $amazonReportListRepository,
-        FirstMileShipmentFeeRepository $firstMileShipmentFeeRepository,
-        FirstMileShipmentFee           $firstMileShipmentFee,
-        InvoiceService                 $invoiceService,
-        BillingStatementRepository     $billingStatementRepository
+        Invoice                    $invoice,
+        CustomerRelationRepository $customerRelationRepo,
+        Customer                   $customer,
+        BillingStatement           $billingStatement,
+        InvoiceService             $invoiceService,
+        BillingStatementRepository $billingStatementRepo
     ) {
-        // TODO: 很多 new object，但下面 Methods 沒使用
         $this->invoice = $invoice;
         $this->customerRelationRepo = $customerRelationRepo;
-        $this->roleAssignment = $roleAssignment;
-        $this->role = $role;
         $this->billingStatement = $billingStatement;
         $this->customer = $customer;
-        $this->orderProductRepository = $orderProductRepository;
-        $this->amazonReportListRepository = $amazonReportListRepository;
-        $this->firstMileShipmentFeeRepository = $firstMileShipmentFeeRepository;
-        $this->billingStatementRepository = $billingStatementRepository;
-        $this->firstMileShipmentFee = $firstMileShipmentFee;
+        $this->billingStatementRepo = $billingStatementRepo;
         $this->invoiceService = $invoiceService;
-    }
-
-    public function getAvolutionCommission(
-        string $clientCode,
-        string $shipDate,
-        float  $tieredParam,
-        array  $commissionRate
-    ) {
-        switch ($commissionRate['type']) {
-            case 'sku':
-                $orderProductRepository = new OrderProductRepository();
-
-                return $orderProductRepository->getSkuAvolutionCommission($clientCode, $shipDate) ?: 0;
-            case 'promotion':
-                return $commissionRate['value'];
-            case 'tiered':
-                return $tieredParam * $commissionRate['value'];
-        }
-    }
-
-    public function getCommissionRate(string $clientCode, string $reportDate, float $totalSalesAmount)
-    {
-        $commissionSetting = new CommissionSetting();
-        $orderProductRepository = new OrderProductRepository();
-
-        $settings = $commissionSetting->where('client_code', $clientCode)->first();
-
-        if ($settings->calculation_type === CommissionConstant::CALCULATION_TYPE_SKU) {
-            //check unmatched record
-            $haveUnmatchedRecord = $orderProductRepository->checkUnmatchedRecord($clientCode, $reportDate);
-            if (!empty($haveUnmatchedRecord)) {
-                return [
-                    'msg' => 'SKU-level commissions list need to match up with SKUs',
-                    'status' => 'error',
-                ];
-            }
-
-            $orders = $orderProductRepository->getFitOrder($clientCode, $reportDate);
-            if ($orders) {
-                foreach ($orders as $item) {
-                    $thisOrder = OrderProduct::find($item->id);
-
-                    $thisOrder->sku_commission_rate = $this->getSkuCommissionRate(
-                        $item,
-                        (float)$item->selling_price,
-                        (float)$item->threshold
-                    );
-                    $thisOrder->sku_commission_amount = (float)$item->selling_price * (float)$thisOrder->sku_commission_rate;
-                    $thisOrder->sku_commission_computed_at = date('Y-m-d h:i:s');
-                    $thisOrder->save();
-                }
-                return ['type' => 'sku', 'value' => '0', 'status' => 'success'];
-            }
-        }
-
-        //check if commission rate type is promotion
-        $maxDiscountRate = $orderProductRepository->getMaxDiscountRate($clientCode, $reportDate);
-
-        if ((float)$settings->promotion_threshold >= (float)$maxDiscountRate) {
-            return ['type' => 'promotion', 'value' => $settings->tier_promotion, 'status' => 'success'];
-        }
-
-        //check if commission rate type is tiered
-        if ($settings->calculation_type === CommissionConstant::CALCULATION_TYPE_TIER) {
-            return $this->getTieredInfo($clientCode, $totalSalesAmount);
-        }
-        return ['type' => 'tiered', 'value' => $settings->basic_rate, 'status' => 'success'];
-    }
-
-    public function getSkuCommissionRate(object $item, float $sellingPrice, float $threshold)
-    {
-        if ($sellingPrice > $threshold) {
-            return $item->upper_bound_rate;
-        }
-
-        return $item->basic_rate;
-    }
-
-    public function getTieredInfo(string $clientCode, float $totalSalesAmount): array
-    {
-        $setting = CommissionSetting::where('client_code', $clientCode)->first();
-
-        if (!empty($setting) & $totalSalesAmount >= $setting->tier_1_threshold) {
-            $newLevel = 1;
-            for ($i = 1; $i <= 4; $i++) {
-                $key = "tier_{$i}_threshold";
-                $val = $setting->$key;
-                if ($totalSalesAmount >= $val) {
-                    $newLevel = $i;
-                }
-            }
-            //如有amount則先取amount
-            $amountKey = "tier_{$newLevel}_amount";
-            if (!empty((float)$setting->$amountKey)) {
-                return ['type' => 'tiered', 'value' => $setting->$amountKey, 'status' => 'success'];
-            }
-
-            $rateKey = "tier_{$newLevel}_rate";
-
-            return ['type' => 'tiered', 'value' => $setting->$rateKey, 'status' => 'success'];
-        }
-
-        return ['type' => 'tiered', 'value' => $setting->basic_rate, 'status' => 'success'];
-    }
-
-    public function getSumValue(array $fees): float
-    {
-        $sum = 0;
-        foreach ($fees as $v) {
-            $sum += (float)$v;
-        }
-
-        return (float)$sum;
     }
 
     public function listView(Request $request)
@@ -285,7 +144,7 @@ class InvoiceController extends Controller
 
     public function createBill(Request $request): JsonResponse
     {
-        $data = collect($request)->only($this->billingStatementRepository->getTableColumns());
+        $data = collect($request)->only($this->billingStatementRepo->getTableColumns());
 
         $data->put('report_date', date('Y-m-d', strtotime($data['report_date'])));
         $data->put('created_at', date('Y-m-d h:i:s'));
@@ -294,7 +153,7 @@ class InvoiceController extends Controller
         $data->put('commission_type', 'manual');
 
         try {
-            $this->billingStatementRepository->create($data->all());
+            $this->billingStatementRepo->create($data->all());
         } catch (QueryException $exception) {
             return response()->json(
                 [

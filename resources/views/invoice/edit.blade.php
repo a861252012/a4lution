@@ -31,11 +31,11 @@
             <div class="step-tab-panel" data-step="step1">
                 <div class="row">
                     <div class="col">
-                        <div>Monthly Sales & OPEX Summary in HKD (for the period of {{$formattedStartDate ?? ''}} to
-                            {{$formattedEndDate ?? ''}})
+                        <div>Monthly Sales & OPEX Summary in HKD (for the period of {{ $formattedStartDate }} to
+                            {{ $formattedEndDate }})
                         </div>
                         <strong>
-                            {{$clientCode ?? 'S53A'}}
+                            {{ $clientCode }}
                         </strong>
                     </div>
                 </div>
@@ -194,12 +194,10 @@
                 </div>
                 {{-- ./ row --}}
 
-                
             </div>
 
             {{-- step2 --}}
             <div class="step-tab-panel" data-step="step2">
-                {{--                <form id="step_form" method="POST" action="/invoice/runReport" role="form" class="form">--}}
                 <form id="step_form" role="form" class="form">
                     @csrf
                     <input type="hidden" name="billing_statement_id" value="{{ $billingStatement->id }}">
@@ -323,222 +321,27 @@
 
         </div>
     </div>
-    {{-- Button --}}
-    {{--            <div class="row justify-content-center align-items-center">--}}
-    {{--                <div class="col-3">--}}
-    {{--                    <button class="btn btn-primary" type="button" id="inline_submit">Submit</button>--}}
-    {{--                </div>--}}
-    {{--                <div class="col-3">--}}
-    {{--                    <button class="btn btn-primary" type="button" id="cancel_btn">Cancel</button>--}}
-    {{--                </div>--}}
-    {{--            </div>--}}
-
 </div>
-</div>
-
-{{--</div>--}}
-
-
-{{--        </div>--}}
-{{--    </div>--}}
 <!-- colorbox html part end -->
 
 <!-- sweetalert JS -->
 <script src="{{ asset('js') }}/sweetalert.min.js"></script>
 
 <script src="{{ asset('argon') }}/vendor/jquery/dist/jquery-3.1.0.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.3.0/jquery.form.min.js"
-        integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4ycVxyn"
-        crossorigin="anonymous"></script>
-{{--<script src="{{ asset('argon') }}/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>--}}
-{{--<script src="{{ asset('argon') }}/vendor/js-cookie/js.cookie.js"></script>--}}
-{{--<script src="{{ asset('argon') }}/vendor/jquery.scrollbar/jquery.scrollbar.min.js"></script>--}}
-{{--<script src="{{ asset('argon') }}/vendor/jquery-scroll-lock/dist/jquery-scrollLock.min.js"></script>--}}
-{{--<script src="{{ asset('argon') }}/vendor/lavalamp/js/jquery.lavalamp.min.js"></script>--}}
 
-<!-- Optional JS -->
-{{--<script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.min.js"></script>--}}
-{{--<script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.extension.js"></script>--}}
+<!-- jquery.form JS -->
+<script src="{{ asset('argon') }}/js/jquery.form_4.3.0.js"></script>
 
 <!-- jquery colorbox JS -->
 <script src="{{ asset('argon') }}/vendor/colorbox/js/jquery.colorbox.js"></script>
 
-{{--<script src="https://code.jquery.com/jquery-3.1.0.js"></script>--}}
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
-        crossorigin="anonymous"></script>
-<script src="{{ asset('argon') }}/vendor/js-cookie/js.cookie.js"></script>
-<!-- Optional JS -->
-<script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.min.js"></script>
-<script src="{{ asset('argon') }}/vendor/chart.js/dist/Chart.extension.js"></script>
-
-{{-- TODO need to download plugin file --}}
-<script src="https://cdn.jsdelivr.net/npm/smartwizard@5/dist/js/jquery.smartWizard.min.js"
-        type="text/javascript"></script>
-
-{{--<script src="{{ base_path() }}/vendor/techlab/smartwizard/dist/js/jquery.smartWizard.min.js"--}}
-{{--        type="text/javascript"></script>--}}
-
+<!-- bootstrap.bundle JS -->
+<script src="{{ asset('argon') }}/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 @stack('js')
 
 <!-- Argon CSS -->
 <link type="text/css" href="{{ asset('argon') }}/vendor/colorbox/css/colorbox.css" rel="stylesheet">
 
-<!-- smart_wizard_all CSS  TODO NEED TO BE DOWNLOAD-->
-{{--<link href="https://cdn.jsdelivr.net/npm/smartwizard@5/dist/css/smart_wizard_all.min.css" rel="stylesheet"--}}
-{{--      type="text/css">--}}
-
-
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery.steps@1.1.2/dist/jquery-steps.min.css">
 <script src="https://cdn.jsdelivr.net/npm/jquery.steps@1.1.2/dist/jquery-steps.min.js"></script>
-
 @stack('css')
-
-@push('js')
-    <script type="text/javascript">
-        // $(function () {
-            // $('#smartwizard').smartWizard({
-            //     selected: 2, // Initial selected step, 0 = first step
-            //     theme: 'default', // theme for the wizard, related css need to include for other than default theme
-            //     justified: true, // Nav menu justification. true/false
-            //     darkMode: false, // Enable/disable Dark Mode if the theme supports. true/false
-            //     autoAdjustHeight: true, // Automatically adjust content height
-            //     cycleSteps: false, // Allows to cycle the navigation of steps
-            //     backButtonSupport: true, // Enable the back button support
-            //     enableURLhash: true, // Enable selection of the step based on url hash
-            //     transition: {
-            //         animation: 'none', // Effect on navigation, none/fade/slide-horizontal/slide-vertical/slide-swing
-            //         speed: '400', // Transion animation speed
-            //         easing: '' // Transition animation easing. Not supported without a jQuery easing plugin
-            //     },
-            //     toolbarSettings: {
-            //         toolbarPosition: 'bottom', // none, top, bottom, both
-            //         toolbarButtonPosition: 'right', // left, right, center
-            //         showNextButton: true, // show/hide a Next button
-            //         showPreviousButton: true, // show/hide a Previous button
-            //         toolbarExtraButtons: [] // Extra buttons to show on toolbar, array of jQuery input/buttons elements
-            //     },
-            //     anchorSettings: {
-            //         anchorClickable: true, // Enable/Disable anchor navigation
-            //         enableAllAnchors: false, // Activates all anchors clickable all times
-            //         markDoneStep: true, // Add done state on navigation
-            //         markAllPreviousStepsAsDone: true, // When a step selected by url hash, all previous steps are marked done
-            //         removeDoneStepOnNavigateBack: false, // While navigate back done step after active step will be cleared
-            //         enableAnchorOnDoneStep: true // Enable/Disable the done steps navigation
-            //     },
-            //     keyboardSettings: {
-            //         keyNavigation: true, // Enable/Disable keyboard navigation(left and right keys are used if enabled)
-            //         keyLeft: [37], // Left key code
-            //         keyRight: [39] // Right key code
-            //     },
-            //     lang: { // Language variables for button
-            //         next: 'Next',
-            //         previous: 'Previous'
-            //     },
-            //     disabledSteps: [], // Array Steps disabled
-            //     errorSteps: [], // Highlight step with errors
-            //     hiddenSteps: [] // Hidden steps
-            // });
-
-            // $('#smartwizard').smartWizard();
-
-
-            // $(document).on("click", "button#cancel_btn", function () {
-            //     $.colorbox.close();
-            // return false;
-            // });
-        // });
-
-        // $(document).bind('cbox_complete', function () {
-        //     $('button#inline_submit').hide();
-        //
-        //     $(document).on("click", "button#cancel_btn", function () {
-        //         // $.colorbox.close();
-        //         // parent.$.colorbox.close();
-        //
-        //         $('#cboxOverlay').remove();
-        //         $('#colorbox').remove();
-        //
-        //         // return false;
-        //     });
-        //
-        //     //edit function
-        //     $(document).on("click", "button#edit_btn", function () {
-        //         let shipped_date = $("div .inline_shipped_date").attr("data-attr");
-        //         let _token = $('meta[name="csrf-token"]').attr('content');
-        //         let supplier = $('div#supplier').attr('data-label');
-        //
-        //         $.ajax({
-        //             url: origin + '/orders/checkEditQualification',
-        //             data: {shipped_date: shipped_date, _token: _token, supplier: supplier},
-        //             type: 'post',
-        //             success: function (res) {
-        //                 if (res.status !== 'failed') {
-        //                     swal({
-        //                         icon: 'success',
-        //                         text: 'editable now'
-        //                     });
-        //                     $('input[type=text]').attr('readonly', false);
-        //                     $('button#inline_submit').show();
-        //                 } else {
-        //                     swal({
-        //                         icon: 'error',
-        //                         text: res.msg
-        //                     });
-        //                     $('button#inline_submit').hide();
-        //                 }
-        //             }
-        //         });
-        //     });
-        //
-        //     //submit function
-        //     $(document).on("click", "button#inline_submit", function () {
-        //         let data = {};
-        //
-        //         data.first_mile_shipping_fee = $("input[name='first_mile_shipping_fee']").val();
-        //         data.first_mile_tariff = $("input[name='first_mile_tariff']").val();
-        //         data.last_mile_shipping_fee = $("input[name='last_mile_shipping_fee']").val();
-        //         data.paypal_fee = $("input[name='paypal_fee']").val();
-        //         data.transaction_fee = $("input[name='transaction_fee']").val();
-        //         data.fba_fee = $("input[name='fba_fee']").val();
-        //         data.other_fee = $("input[name='other_fee']").val();
-        //         data.marketplace_tax = $("input[name='marketplace_tax']").val();
-        //         data.cost_of_point = $("input[name='cost_of_point']").val();
-        //         data.exclusives_referral_fee = $("input[name='exclusives_referral_fee']").val();
-        //         data.product_id = $("button#edit_btn").attr('data-attr');
-        //
-        //         $.ajaxSetup({
-        //             headers: {
-        //                 'X-CSRF-TOKEN': $('#csrf_token').val()
-        //             }
-        //         });
-        //
-        //         $.ajax({
-        //             url: origin + '/orders/edit/orderDetail',
-        //             data: data,
-        //             type: 'post',
-        //             success: function (res) {
-        //                 if (res.status === 'failed') {
-        //                     swal({
-        //                         icon: 'error',
-        //                         text: 'update failed'
-        //                     });
-        //                 } else {
-        //                     swal({
-        //                         icon: res.status,
-        //                         text: res.msg
-        //                     });
-        //                     $('input[type=text]').attr('readonly', false);
-        //                 }
-        //             }, error: function (error) {
-        //                 swal({
-        //                     icon: 'error',
-        //                     text: error
-        //                 });
-        //             }
-        //         });
-        //     });
-        // });
-    </script>
-@endpush

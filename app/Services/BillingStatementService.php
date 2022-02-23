@@ -2,219 +2,171 @@
 
 namespace App\Services;
 
-use Carbon\Carbon;
-use App\Models\OrderProduct;
 use App\Constants\CommissionConstant;
-use App\Support\ERPRequester;
+use App\Http\Requests\BillingStatement\AjaxStoreRequest;
 use App\Models\CommissionSetting;
-use App\Models\ExtraordinaryItem;
-use Illuminate\Support\Facades\Auth;
-use App\Repositories\OrderRepository;
-use App\Repositories\CustomerRepository;
-use App\Repositories\OrderProductRepository;
 use App\Repositories\AmazonDateRangeReportRepository;
 use App\Repositories\BillingStatementRepository;
+use App\Repositories\ContinStorageFeeRepository;
+use App\Repositories\ExtraordinaryRepository;
 use App\Repositories\FirstMileShipmentFeeRepository;
-use App\Http\Requests\BillingStatement\AjaxStoreRequest;
+use App\Repositories\OrderProductRepository;
+use App\Repositories\OrderRepository;
+use App\Repositories\PlatformAdFeeRepository;
+use App\Repositories\RmaRefundListRepository;
+use App\Repositories\CustomerRepository;
+use App\Support\Calculation;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class BillingStatementService
 {
     private BillingStatementRepository $billingStatementRepo;
     private AmazonDateRangeReportRepository $amzDateRangeRepo;
+    private OrderProductRepository $orderProductRepo;
+    private OrderRepository $orderRepo;
+    private Calculation $calculation;
 
     public function __construct(
-        BillingStatementRepository $billingStatementRepo,
-        AmazonDateRangeReportRepository $amzDateRangeRepo
+        BillingStatementRepository      $billingStatementRepo,
+        AmazonDateRangeReportRepository $amzDateRangeRepo,
+        OrderProductRepository          $orderProductRepo,
+        OrderRepository                 $orderRepo,
+        Calculation                     $calculation
     ) {
         $this->billingStatementRepo = $billingStatementRepo;
         $this->amzDateRangeRepo = $amzDateRangeRepo;
+        $this->orderProductRepo = $orderProductRepo;
+        $this->orderRepo = $orderRepo;
+        $this->calculation = $calculation;
     }
 
-    // TODO: do all repository
     public function create(AjaxStoreRequest $request)
     {
         $reportDate = Carbon::parse($request->report_date)->format('Y-m-d');
         $clientCode = $request->client_code;
 
         //getReportFees
-        $supplierCode = (new CustomerRepository)->findByClientCode($clientCode)->supplier_code;
-
-        $getSupplierName = app(ERPRequester::class)->send(
-            config('services.erp.wmsUrl'),
-            'getSupplierInfo',
-            ["supplierCode" => $supplierCode]
-        );
-
-        $supplierName = $getSupplierName['data']['supplierName'] ?? null;
-
-        $orderRepository = new OrderRepository();
-        $clientReportFees = $orderRepository->getReportFees(
+        $clientReportFees = $this->orderRepo->getReportFees(
             $reportDate,
             $clientCode,
-            $supplierName,
-            true
-        );
-
-        $fees['clientShippingFeeHKD'] = $clientReportFees ? $clientReportFees[0]->shipping_fee_hkd : 0;
-        $clientPlatformFeeHKD = $clientReportFees ? $clientReportFees[0]->platform_fee_hkd : 0;
-        $fees['clientFBAFeesHKD'] = $clientReportFees ? $clientReportFees[0]->FBA_fees_hkd : 0;
-        $fees['clientOtherTransactionFeesHKD'] = $clientReportFees ? $clientReportFees[0]->other_transaction_fees_hkd
-            : 0;
-        $fees['clientPlatformFeeHKD'] = (float)$clientPlatformFeeHKD + (float)$fees['clientOtherTransactionFeesHKD'];
-
-        $a4ReportFees = $orderRepository->getReportFees(
-            $reportDate,
-            $clientCode,
-            $supplierName,
             false
         );
 
-        $fees['a4ShippingFeeHKD'] = $a4ReportFees ? $a4ReportFees[0]->shipping_fee_hkd : 0;
-        $a4PlatformFeeHKD = $a4ReportFees ? $a4ReportFees[0]->platform_fee_hkd : 0;
-        $fees['a4FBAFeesHKD'] = $a4ReportFees ? $a4ReportFees[0]->FBA_fees_hkd : 0;
-        $fees['a4OtherTransactionFeesHKD'] = $a4ReportFees ? $a4ReportFees[0]->other_transaction_fees_hkd : 0;
-        $fees['a4PlatformFeeHKD'] = (float)$a4PlatformFeeHKD + (float)$fees['a4OtherTransactionFeesHKD'];
+        $fees['clientShippingFeeHKD'] = (float)optional($clientReportFees)->shipping_fee_hkd;
+        $fees['clientPlatformFeeHKD'] =  (float)optional($clientReportFees)->platform_fee_hkd;
+        $fees['clientFBAFeesHKD'] = (float)optional($clientReportFees)->FBA_fees_hkd;
+
+        $a4ReportFees = $this->orderRepo->getReportFees(
+            $reportDate,
+            $clientCode,
+            true
+        );
+
+        $fees['a4ShippingFeeHKD'] = (float)optional($a4ReportFees)->shipping_fee_hkd;
+        $fees['a4PlatformFeeHKD'] = (float)optional($a4ReportFees)->platform_fee_hkd;
+        $fees['a4FBAFeesHKD'] = (float)optional($a4ReportFees)->FBA_fees_hkd;
 
         //getAccountRefund
-        $clientRefundFees = $orderRepository->getAccountRefund(
+        $clientRefundFees = abs(app(RmaRefundListRepository::class)->getAccountRefund(
             $reportDate,
             $clientCode,
-            $supplierName,
-            true
-        );
-
-        $clientRefundFees = $clientRefundFees ? $clientRefundFees[0]->refund_amount_hkd : 0;
-
-        $a4RefundFees = $orderRepository->getAccountRefund(
-            $reportDate,
-            $clientCode,
-            $supplierName,
             false
-        );
+        ));
 
-        $a4RefundFees = $a4RefundFees ? $a4RefundFees[0]->refund_amount_hkd : 0;
+        $a4RefundFees = abs(app(RmaRefundListRepository::class)->getAccountRefund(
+            $reportDate,
+            $clientCode,
+            true
+        ));
 
         //getAccountResend
-        $clientAccountResend = $orderRepository->getAccountResend(
+        $clientAccountResend = abs($this->orderRepo->getAccountResend(
             $reportDate,
             $clientCode,
-            $supplierName,
-            true
-        );
-
-        $clientAccountResend = $clientAccountResend ? $clientAccountResend[0]->total_sales_hkd : 0;
-
-        $a4AccountResend = $orderRepository->getAccountResend(
-            $reportDate,
-            $clientCode,
-            $supplierName,
             false
-        );
+        ));
 
-        $a4AccountResend = $a4AccountResend ? $a4AccountResend[0]->total_sales_hkd : 0;
-
-        $clientAccountAmazonTotal = $orderRepository->getAccountAmzTotal(
+        $a4AccountResend = abs($this->orderRepo->getAccountResend(
             $reportDate,
             $clientCode,
-            $supplierName,
             true
-        );
+        ));
 
-        $clientAccountAmazonTotal = $clientAccountAmazonTotal ?
-            $clientAccountAmazonTotal[0]->amazon_total_hkd : 0;
-
-        $a4AccountAmazonTotal = $orderRepository->getAccountAmzTotal(
+        $clientAmazonTotal = abs($this->amzDateRangeRepo->getTotalAmount(
             $reportDate,
             $clientCode,
-            $supplierName,
             false
-        );
+        ));
 
-        $a4AccountAmazonTotal = $a4AccountAmazonTotal ? $a4AccountAmazonTotal[0]->amazon_total_hkd : 0;
+        $a4AccountAmazonTotal = abs($this->amzDateRangeRepo->getTotalAmount(
+            $reportDate,
+            $clientCode,
+            true
+        ));
 
-        $fees['a4_account_refund_and_resend'] = abs((float)$a4RefundFees + (float)$a4AccountResend + (float)$a4AccountAmazonTotal);
+        $fees['a4_account_refund_and_resend'] = $a4AccountAmazonTotal + $a4RefundFees + $a4AccountResend;
 
-        $fees['client_account_refund_and_resend'] = abs((float)$clientAccountAmazonTotal + (float)$clientAccountResend + (float)$clientRefundFees);
+        $fees['client_account_refund_and_resend'] = $clientAmazonTotal + $clientRefundFees + $clientAccountResend;
 
         //getAccountMiscellaneous
-        $clientAccountMiscellaneous = $this->amzDateRangeRepo->getAccountMiscellaneous(
+        $fees['clientAccountMiscellaneous'] = -1 * abs($this->amzDateRangeRepo->getAccountMiscellaneous(
             $reportDate,
             $clientCode,
-            $supplierName,
-            true
-        );
-
-        $fees['clientAccountMiscellaneous'] = $clientAccountMiscellaneous
-            ? -1 * abs($clientAccountMiscellaneous[0]->Miscellaneous) : 0;
-
-        $a4AccountMiscellaneous = $this->amzDateRangeRepo->getAccountMiscellaneous(
-            $reportDate,
-            $clientCode,
-            $supplierName,
             false
-        );
+        )->Miscellaneous);
 
-        $fees['a4AccountMiscellaneous'] = $a4AccountMiscellaneous ?
-            -1 * abs($a4AccountMiscellaneous[0]->Miscellaneous) : 0;
+        $fees['a4AccountMiscellaneous'] = -1 * abs($this->amzDateRangeRepo->getAccountMiscellaneous(
+            $reportDate,
+            $clientCode,
+            true
+        )->Miscellaneous);
 
         //getAccountAds
-        $clientAccountAds = $orderRepository->getAccountAds(
+        $fees['clientAccountAds'] = app(PlatformAdFeeRepository::class)->getAccountAd(
             $reportDate,
             $clientCode,
-            $supplierName,
-            true
-        );
-
-        $fees['clientAccountAds'] = $clientAccountAds ? $clientAccountAds[0]->ad : 0;
-
-        $a4AccountAds = $orderRepository->getAccountAds(
-            $reportDate,
-            $clientCode,
-            $supplierName,
             false
         );
 
-        $fees['a4AccountAds'] = $a4AccountAds ? $a4AccountAds[0]->ad : 0;
+        $fees['a4AccountAds'] = app(PlatformAdFeeRepository::class)->getAccountAd(
+            $reportDate,
+            $clientCode,
+            true
+        );
 
         //getAccountMarketingAndPromotion
-        $clientAccountMarketingAndPromotion = $this->amzDateRangeRepo->getAccountMarketingAndPromotion(
+        $fees['clientAccountMarketingAndPromotion'] = $this->amzDateRangeRepo->getAccountMarketingAndPromotion(
             $reportDate,
             $clientCode,
-            $supplierName,
-            true
-        );
-
-        $fees['clientAccountMarketingAndPromotion'] = $clientAccountMarketingAndPromotion ?
-            $clientAccountMarketingAndPromotion[0]->Miscellaneous : 0;
-
-        $a4AccountMarketingAndPromotion = $this->amzDateRangeRepo->getAccountMarketingAndPromotion(
-            $reportDate,
-            $clientCode,
-            $supplierName,
             false
         );
 
-        $fees['a4AccountMarketingAndPromotion'] = $a4AccountMarketingAndPromotion ?
-            $a4AccountMarketingAndPromotion[0]->Miscellaneous : 0;
+        $fees['a4AccountMarketingAndPromotion'] = $this->amzDateRangeRepo->getAccountMarketingAndPromotion(
+            $reportDate,
+            $clientCode,
+            true
+        );
 
         //getAccountFbaStorageFee
-        $clientAccountFbaStorageFee = $orderRepository->getAccountFbaStorageFee(
+        $clientAccountFbaStorageFee = (float)optional($this->orderRepo->getAccountFbaStorageFee(
             $reportDate,
             $clientCode,
-            $supplierName,
-            true
-        );
-
-        $fees['clientAccountFbaStorageFee'] = $clientAccountFbaStorageFee ? $clientAccountFbaStorageFee[0]->storage_fee_hkd_sum : 0;
-
-        $a4AccountFbaStorageFee = $orderRepository->getAccountFbaStorageFee(
-            $reportDate,
-            $clientCode,
-            $supplierName,
             false
+        )[0])->storage_fee_hkd_sum;
+
+        $storageFeeHkd = app(ContinStorageFeeRepository::class)->getAccountRefund(
+            $reportDate,
+            $clientCode
         );
 
-        $fees['a4AccountFbaStorageFee'] = $a4AccountFbaStorageFee ? $a4AccountFbaStorageFee[0]->storage_fee_hkd_sum : 0;
+        $fees['clientAccountFbaStorageFee'] = $clientAccountFbaStorageFee + $storageFeeHkd;
+
+        $fees['a4AccountFbaStorageFee'] = (float)optional($this->orderRepo->getAccountFbaStorageFee(
+            $reportDate,
+            $clientCode,
+            true
+        )[0])->storage_fee_hkd_sum;
 
         //4-2 Expenses Breakdown end
 
@@ -223,28 +175,124 @@ class BillingStatementService
         $billingItems['report_date'] = $reportDate;
         $billingItems['client_code'] = $clientCode;
 
-        $totalSalesOrders = $orderRepository->getTotalSalesOrders(
+        $billingItems['total_sales_orders'] = $this->orderRepo->getTotalSalesOrders(
             $reportDate,
             $clientCode
         );
 
-        $billingItems['total_sales_orders'] = $totalSalesOrders ? $totalSalesOrders[0]->total_sales_orders : 0;
+        $billingItems['total_sales_amount'] =  $this->calculation->numberFormatPrecision(
+            $this->orderRepo->getSumOfSalesAmount($reportDate, $clientCode),
+            4
+        );
 
-        $sumOfSalesAmount = $orderRepository->getSumOfSalesAmount(
+        $billingItems['total_unit_sold'] = $this->orderRepo->getTotalUnitSold(
             $reportDate,
             $clientCode
         );
 
-        $billingItems['total_sales_amount'] = $sumOfSalesAmount ? round($sumOfSalesAmount[0]->total_sales_hkd, 2) : 0;
+        $fees['extraordinary_item'] = app(ExtraordinaryRepository::class)->getExtraordinaryItem(
+            $reportDate,
+            $clientCode
+        );
 
-        $fees['extraordinary_item'] = ExtraordinaryItem::where('report_date', $reportDate)
-            ->where('client_code', $clientCode)
-            ->groupBy('client_code', 'report_date')
-            ->get()
-            ->sum('item_amount');
+        $billingItems['extraordinary_item'] = $this->calculation->numberFormatPrecision(
+            -1 * abs($fees['extraordinary_item']),
+            4
+        );
 
-        $billingItems['extraordinary_item'] = $fees['extraordinary_item'] ?
-            round(-1 * abs($fees['extraordinary_item']), 2) : 0;
+        $billingItems['a4_account_sales_orders'] = $this->orderRepo->getSalesOrder(
+            $reportDate,
+            $clientCode,
+            true
+        );
+
+        $billingItems['client_account_sales_orders'] = $this->orderRepo->getSalesOrder(
+            $reportDate,
+            $clientCode,
+            false
+        );
+
+        $billingItems['a4_account_sales_amount'] = $this->calculation->numberFormatPrecision(
+            $this->orderRepo->getSalesAmount(
+                $reportDate,
+                $clientCode,
+                true
+            ),
+            4
+        );
+
+        $billingItems['client_account_sales_amount'] = $this->calculation->numberFormatPrecision(
+            $this->orderRepo->getSalesAmount(
+                $reportDate,
+                $clientCode,
+                false
+            ),
+            4
+        );
+
+        $billingItems['a4_account_logistics_fee'] =  $this->calculation->numberFormatPrecision(
+            $fees['a4ShippingFeeHKD'],
+            4
+        );
+        $billingItems['client_account_logistics_fee'] = $this->calculation->numberFormatPrecision(
+            $fees['clientShippingFeeHKD'],
+            4
+        );
+        $billingItems['a4_account_fba_fee'] = $this->calculation->numberFormatPrecision($fees['a4FBAFeesHKD'], 4);
+        $billingItems['client_account_fba_fee'] = $this->calculation->numberFormatPrecision(
+            $fees['clientFBAFeesHKD'],
+            4
+        );
+        $billingItems['a4_account_fba_storage_fee'] = $this->calculation->numberFormatPrecision(
+            $fees['a4AccountFbaStorageFee'],
+            4
+        );
+        $billingItems['client_account_fba_storage_fee'] = $this->calculation->numberFormatPrecision(
+            $fees['clientAccountFbaStorageFee'],
+            4
+        );
+        $billingItems['a4_account_platform_fee'] = $this->calculation->numberFormatPrecision(
+            $fees['a4PlatformFeeHKD'],
+            4
+        );
+        $billingItems['client_account_platform_fee'] = $this->calculation->numberFormatPrecision(
+            $fees['clientPlatformFeeHKD'],
+            4
+        );
+        $billingItems['a4_account_refund_and_resend'] = $this->calculation->numberFormatPrecision(
+            $fees['a4_account_refund_and_resend'],
+            4
+        );
+        $billingItems['client_account_refund_and_resend'] = $this->calculation->numberFormatPrecision(
+            $fees['client_account_refund_and_resend'],
+            4
+        );
+        $billingItems['a4_account_miscellaneous'] = $this->calculation->numberFormatPrecision(
+            $fees['a4AccountMiscellaneous'],
+            4
+        );
+        $billingItems['client_account_miscellaneous'] = $this->calculation->numberFormatPrecision(
+            $fees['clientAccountMiscellaneous'],
+            4
+        );
+        $billingItems['a4_account_advertisement'] = $this->calculation->numberFormatPrecision($fees['a4AccountAds'], 4);
+        $billingItems['client_account_advertisement'] = $this->calculation->numberFormatPrecision(
+            $fees['clientAccountAds'],
+            4
+        );
+        $billingItems['client_account_marketing_and_promotion'] = $this->calculation->numberFormatPrecision(
+            $fees['clientAccountMarketingAndPromotion'],
+            4
+        );
+        $billingItems['a4_account_marketing_and_promotion'] = $this->calculation->numberFormatPrecision(
+            $fees['a4AccountMarketingAndPromotion'],
+            4
+        );
+
+        $billingItems['sales_credit'] = $this->calculation->numberFormatPrecision(
+            $billingItems['a4_account_sales_amount'] - $billingItems['a4_account_refund_and_resend'],
+            4
+        );
 
         $totalExpensesKeys = [
             "clientShippingFeeHKD",
@@ -263,10 +311,6 @@ class BillingStatementService
 
         $billingItems['total_expenses'] = $this->getSumValue($fees, $totalExpensesKeys);
         $billingItems['sales_gp'] = $billingItems['total_sales_amount'] - $billingItems['total_expenses'];
-        $billingItems['sales_credit'] = round(
-            $billingItems['total_sales_amount'] - $fees['a4_account_refund_and_resend'],
-            2
-        );
 
         //4-1 Commission Rate
 
@@ -278,14 +322,20 @@ class BillingStatementService
             (float)$totalSalesAmount
         );
 
-        $tieredParam = $billingItems['total_sales_amount'] - $fees['a4_account_refund_and_resend']
-            - $fees['client_account_refund_and_resend'];
-        $billingItems['commission_type'] = $commissionRate['type'] ?? null;
-        $billingItems['avolution_commission'] = $this->getAvolutionCommission(
+        $totalRefundAndResend =  $fees['a4_account_refund_and_resend'] + $fees['client_account_refund_and_resend'];
+
+        $billingItems['commission_type'] = $commissionRate['type'];
+        $fees['avolution_commission'] = $this->getAvolutionCommission(
             $clientCode,
             $reportDate,
-            $tieredParam,
+            $billingItems['total_sales_amount'],
+            $totalRefundAndResend,
             $commissionRate
+        );
+
+        $billingItems['avolution_commission'] = $this->calculation->numberFormatPrecision(
+            $fees['avolution_commission'],
+            4
         );
 
         //final_credit
@@ -293,60 +343,40 @@ class BillingStatementService
         $billingItems['created_by'] = Auth::id();
         $billingItems['active'] = 1;
 
-        $firstMileShipmentFeeRepository = new FirstMileShipmentFeeRepository();
-
-        $getFbaStorageFeeInvoices = $firstMileShipmentFeeRepository->getFbaStorageFeeInvoice(
+        $getFbaStorageFeeInvoices = app(FirstMileShipmentFeeRepository::class)->getFbaStorageFeeInvoice(
             $reportDate,
             $clientCode
         );
 
-        $billingItems['fba_storage_fee_invoice'] = round(
+        $billingItems['fba_storage_fee_invoice'] = $this->calculation->numberFormatPrecision(
             collect($getFbaStorageFeeInvoices)->sum('total'),
-            2
+            4
         );
-
-        $billingItems['a4_account_logistics_fee'] = round($fees['a4ShippingFeeHKD'], 2);
-        $billingItems['client_account_logistics_fee'] = round($fees['clientShippingFeeHKD'], 2);
-        $billingItems['a4_account_fba_fee'] = round($fees['a4FBAFeesHKD'], 2);
-        $billingItems['client_account_fba_fee'] = round($fees['clientFBAFeesHKD'], 2);
-        $billingItems['a4_account_fba_storage_fee'] = round($fees['a4AccountFbaStorageFee'], 2);
-        $billingItems['client_account_fba_storage_fee'] = round($fees['clientAccountFbaStorageFee'], 2);
-        $billingItems['a4_account_platform_fee'] = round($fees['a4PlatformFeeHKD'], 2);
-        $billingItems['client_account_platform_fee'] = round($fees['clientPlatformFeeHKD'], 2);
-        $billingItems['a4_account_refund_and_resend'] = round($fees['a4_account_refund_and_resend'], 2);
-        $billingItems['client_account_refund_and_resend'] = round($fees['client_account_refund_and_resend'], 2);
-        $billingItems['a4_account_miscellaneous'] = round($fees['a4AccountMiscellaneous'], 2);
-        $billingItems['client_account_miscellaneous'] = round($fees['clientAccountMiscellaneous'], 2);
-        $billingItems['a4_account_advertisement'] = round($fees['a4AccountAds'], 2);
-        $billingItems['client_account_advertisement'] = round($fees['clientAccountAds'], 2);
-        $billingItems['client_account_marketing_and_promotion'] = round($fees['clientAccountMarketingAndPromotion'], 2);
-        $billingItems['a4_account_marketing_and_promotion'] = round($fees['a4AccountMarketingAndPromotion'], 2);
 
         //count opexInvoice value
         $opexInvoiceKeys = [
-            'a4_account_logistics_fee',
-            'client_account_logistics_fee',
+            'a4ShippingFeeHKD',
+            'a4FBAFeesHKD',
+            'a4AccountFbaStorageFee',
             'a4_account_platform_fee',
-            'a4_account_fba_fee',
-            'a4_account_fba_storage_fee',
-            'a4_account_advertisement',
-            'a4_account_marketing_and_promotion',
-            'sales_tax_handling',
             'a4_account_miscellaneous',
+            'client_account_logistics_fee',
             'avolution_commission',
-            'extraordinary_item'
+            'extraordinary_item',
         ];
 
         if ($billingItems['client_code'] === 'G73A') {
             $opexInvoiceKeys = collect($opexInvoiceKeys)->forget('client_account_logistics_fee')->all();
         }
 
-        $billingItems['opex_invoice'] = $this->getSumValue($billingItems, $opexInvoiceKeys);
+        $billingItems['opex_invoice'] = $this->getSumValue(
+            $billingItems,
+            $opexInvoiceKeys
+        ) - $fees['a4_account_refund_and_resend'];
 
-        $billingItems['final_credit'] = round(
-            $billingItems['sales_credit'] - $billingItems['opex_invoice']
-            - $billingItems['a4_account_fba_storage_fee'] - $billingItems['a4_account_fba_fee'],
-            2
+        $billingItems['final_credit'] = $this->calculation->numberFormatPrecision(
+            $billingItems['sales_credit'] - $billingItems['opex_invoice'] - $billingItems['fba_storage_fee_invoice'],
+            4
         );
 
         $this->billingStatementRepo->create($billingItems);
@@ -360,19 +390,19 @@ class BillingStatementService
             $feesCollection = collect($fees)->only($keys);
         }
 
-        return $feesCollection->map(fn ($val) => round($val, 2))->sum();
+        return $feesCollection->map(fn ($val) => $this->calculation->numberFormatPrecision($val, 4))->sum();
     }
 
-    public function getCommissionRate(string $clientCode, string $reportDate, float $totalSalesAmount)
-    {
-        $commissionSetting = new CommissionSetting();
-        $orderProductRepository = new OrderProductRepository();
-
-        $settings = $commissionSetting->where('client_code', $clientCode)->first();
+    public function getCommissionRate(
+        string $clientCode,
+        string $reportDate,
+        float $totalSalesAmount
+    ): array {
+        $settings = CommissionSetting::where('client_code', $clientCode)->first();
 
         if ($settings->calculation_type === CommissionConstant::CALCULATION_TYPE_SKU) {
             //check unmatched record
-            $haveUnmatchedRecord = $orderProductRepository->checkUnmatchedRecord($clientCode, $reportDate);
+            $haveUnmatchedRecord = $this->orderProductRepo->checkUnmatchedRecord($clientCode, $reportDate);
             if (!empty($haveUnmatchedRecord)) {
                 return [
                     'msg' => 'SKU-level commissions list need to match up with SKUs',
@@ -380,10 +410,10 @@ class BillingStatementService
                 ];
             }
 
-            $orders = $orderProductRepository->getFitOrder($clientCode, $reportDate);
+            $orders = $this->orderProductRepo->getFitOrder($clientCode, $reportDate);
             if ($orders) {
                 foreach ($orders as $item) {
-                    $thisOrder = OrderProduct::find($item->id);
+                    $thisOrder = $this->orderProductRepo->find($item->id);
 
                     $thisOrder->sku_commission_rate = $this->getSkuCommissionRate(
                         $item,
@@ -399,9 +429,9 @@ class BillingStatementService
         }
 
         //check if commission rate type is promotion
-        $maxDiscountRate = $orderProductRepository->getMaxDiscountRate($clientCode, $reportDate);
+        $maxDiscountRate = $this->orderProductRepo->getMaxDiscountRate($clientCode, $reportDate);
 
-        if ((float)$settings->promotion_threshold >= (float)$maxDiscountRate) {
+        if ((float)$settings->promotion_threshold >= $maxDiscountRate) {
             return ['type' => 'promotion', 'value' => $settings->tier_promotion, 'status' => 'success'];
         }
 
@@ -409,31 +439,43 @@ class BillingStatementService
         if ($settings->calculation_type === CommissionConstant::CALCULATION_TYPE_TIER) {
             return $this->getTieredInfo($clientCode, $totalSalesAmount);
         }
-        return ['type' => 'base rate', 'value' => $settings->basic_rate, 'status' => 'success'];
+        return ['type' => 'tier_base_rate', 'value' => $settings->basic_rate, 'status' => 'success'];
     }
 
     public function getAvolutionCommission(
         string $clientCode,
         string $shipDate,
-        float  $tieredParam,
+        float  $totalSalesAmount,
+        float  $totalRefundAndResend,
         array  $commissionRate
     ) {
         switch ($commissionRate['type']) {
             case 'sku':
-                $orderProductRepository = new OrderProductRepository();
-
-                return round($orderProductRepository->getSkuAvolutionCommission($clientCode, $shipDate), 2);
-            case 'promotion':
+                return $this->orderProductRepo->getSkuAvolutionCommission($clientCode, $shipDate);
+//                return $this->calculation->numberFormatPrecision(
+//                    $this->orderProductRepo->getSkuAvolutionCommission($clientCode, $shipDate),
+//                    4
+//                );
+            case 'tier_amount':
                 return $commissionRate['value'];
-
-            // tier rate、 base rate、tier amount
+            // tier_rate, tier_base_rate, promotion
             default:
-                return round($tieredParam * $commissionRate['value'], 2);
+                $param = ($this->isDeductRefund($clientCode)) ? $totalSalesAmount - $totalRefundAndResend :
+                    $totalSalesAmount;
+
+                return $param * $commissionRate['value'];
+//                return $this->calculation->numberFormatPrecision(
+//                    $param * $commissionRate['value'],
+//                    4
+//                );
         }
     }
 
-    public function getSkuCommissionRate(object $item, float $sellingPrice, float $threshold)
-    {
+    public function getSkuCommissionRate(
+        object $item,
+        float $sellingPrice,
+        float $threshold
+    ) {
         if ($sellingPrice > $threshold) {
             return $item->upper_bound_rate;
         }
@@ -441,8 +483,10 @@ class BillingStatementService
         return $item->basic_rate;
     }
 
-    public function getTieredInfo(string $clientCode, float $totalSalesAmount): array
-    {
+    public function getTieredInfo(
+        string $clientCode,
+        float $totalSalesAmount
+    ): array {
         $setting = CommissionSetting::where('client_code', $clientCode)->first();
 
         if (!empty($setting) & $totalSalesAmount >= $setting->tier_1_threshold) {
@@ -457,14 +501,21 @@ class BillingStatementService
             //如有amount則先取amount
             $amountKey = "tier_{$newLevel}_amount";
             if (!empty((float)$setting->$amountKey)) {
-                return ['type' => 'tiered amount', 'value' => $setting->$amountKey, 'status' => 'success'];
+                return ['type' => 'tier_amount', 'value' => $setting->$amountKey, 'status' => 'success'];
             }
 
             $rateKey = "tier_{$newLevel}_rate";
 
-            return ['type' => 'tiered', 'value' => $setting->$rateKey, 'status' => 'success'];
+            return ['type' => 'tier_rate', 'value' => $setting->$rateKey, 'status' => 'success'];
         }
 
-        return ['type' => 'tiered', 'value' => $setting->basic_rate, 'status' => 'success'];
+        return ['type' => 'tier_base_rate', 'value' => $setting->basic_rate, 'status' => 'success'];
+    }
+
+    protected function isDeductRefund(string $clientCode): bool
+    {
+        return (bool)optional(
+            app(CustomerRepository::class)->findByClientCode($clientCode)
+        )->commission_deduct_refund_cxl_order;
     }
 }
