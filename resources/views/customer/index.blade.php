@@ -95,7 +95,7 @@
                                 <td>{{ $customer->active ? 'Active' : 'Inactive' }}</td>
                                 <td>{{ $customer->salesReps->pluck('user_name')->implode(',') }}</td>
                                 <td>{{ $customer->accountServices->pluck('user_name')->implode(',') }}</td>
-                                <td>{{ $customer->accountServices->pluck('operationUsers')->implode(',') }}</td>
+                                <td>{{ $customer->operationUsers->pluck('user_name')->implode(',') }}</td>
                                 <td>{{ $customer->updated_at_tw }}</td>
                                 <td>{{ $customer->updater->user_name }}</td>
                                 <td class="py-1">
