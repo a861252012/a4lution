@@ -22,6 +22,8 @@ class CustomerRelationRepository extends BaseRepository
                 return $q->join('users', 'users.id', '=', 'customer_relations.user_id')
                     ->where('customer_relations.active', 1)
                     ->where('users.id', Auth::id());
-            })->pluck('client_code');
+            })
+            ->orderBy('client_code')
+            ->pluck('client_code');
     }
 }

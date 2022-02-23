@@ -68,7 +68,7 @@ class InvoiceRepository extends BaseRepository
                     Carbon::parse($reportDate)->startOfMonth()->toDateString()
                 )
             )
-            ->orderBy('client_code')
+            ->orderByDesc('id')
             ->paginate(100);
     }
 }

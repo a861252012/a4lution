@@ -76,7 +76,6 @@ class BillingStatementRepository extends BaseRepository
                     Carbon::parse($reportDate)->startOfMonth()->toDateString()
                 )
             )
-            ->orderBy('client_code')
             ->paginate(100);
     }
 }
