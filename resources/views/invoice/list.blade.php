@@ -36,9 +36,9 @@
                                             {{ 'selected' }} @endif>{{'all'}}</option>
                                         @forelse ($client_code_lists as $item)
                                             <option value="{{$item}}" @if(request('client_code') == $item)
-                                                {{ 'selected' }} @endif>{{$item}}</option>
+                                                {{ 'selected' }} @endif>{{ $item }}</option>
                                         @empty
-                                            <option value="">{{'NONE'}}</option>
+                                            <option value="">{{ 'NONE' }}</option>
                                         @endforelse
                                     </select>
                                 </div>
