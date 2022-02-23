@@ -4,35 +4,30 @@ namespace App\Exports;
 
 use App\Models\BillingStatement;
 use App\Models\Invoice;
-use App\Models\User;
 use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Events\BeforeSheet;
-use Maatwebsite\Excel\Excel;
 use Throwable;
 
-class CreditNoteExport implements WithTitle, WithEvents
+class CreditNoteExport implements
+    WithTitle,
+    WithEvents
 {
     use RegistersEventListeners;
 
-    private $reportDate;
-    private $clientCode;
-    private $insertInvoiceID;
-    private $insertBillingID;
+    private string $reportDate;
+    private string $clientCode;
+    private int $insertInvoiceID;
+    private int $insertBillingID;
 
     public function __construct(
         string $reportDate,
         string $clientCode,
         int    $insertInvoiceID,
         int    $insertBillingID
-    )
-    {
+    ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
@@ -50,7 +45,7 @@ class CreditNoteExport implements WithTitle, WithEvents
         $invoice->doc_status = "deleted";
         $invoice->save();
 
-        \Log::channel('daily_queue_export')
+        Log::channel('daily_queue_export')
             ->info('StorageFeeExport')
             ->info($exception);
     }
@@ -59,7 +54,6 @@ class CreditNoteExport implements WithTitle, WithEvents
     {
         return [
             BeforeSheet::class => function (BeforeSheet $event) {
-
                 $invoice = Invoice::findOrFail($this->insertInvoiceID);
 
                 $billing = BillingStatement::findOrFail($this->insertBillingID);
@@ -98,7 +92,7 @@ class CreditNoteExport implements WithTitle, WithEvents
 
                 $desc = sprintf("Sales for the period of %s to %s", $formattedStartDate, $formattedEndDate);
                 $event->sheet->SetCellValue("C17", $desc);
-                $event->sheet->SetCellValue("F17", "HKD  {$billing->total_sales_amount}");
+                $event->sheet->SetCellValue("F17", "HKD  {$billing->a4_account_sales_amount}");
 
                 //item.C
                 $formattedStartDate = date('jS M Y', strtotime($this->reportDate));
@@ -113,7 +107,7 @@ class CreditNoteExport implements WithTitle, WithEvents
                 $event->sheet->SetCellValue("C19", $desc);
                 $event->sheet->SetCellValue("F19", "-HKD  {$billing->a4_account_refund_and_resend}");
 
-                $total = (float) -$billing->a4_account_refund_and_resend + (float) $billing->total_sales_amount;
+                $total = (float)-$billing->a4_account_refund_and_resend + (float)$billing->total_sales_amount;
                 $event->sheet->SetCellValue("B20", 'Total');
                 $event->sheet->SetCellValue("F20", "HKD  {$total}");
             }

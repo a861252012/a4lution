@@ -2,20 +2,23 @@
 
 namespace App\Exports;
 
-use Throwable;
 use App\Models\Invoice;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
-use Maatwebsite\Excel\Concerns\RegistersEventListeners;
+use Throwable;
 
-class InvoiceExport implements WithMultipleSheets, WithEvents
+class InvoiceExport implements
+    WithMultipleSheets,
+    WithEvents
 {
     use RegistersEventListeners;
 
-    private $clientCode;
-    private $reportDate;
-    private $insertInvoiceID;
-    private $insertBillingID;
+    private string $clientCode;
+    private string $reportDate;
+    private int $insertInvoiceID;
+    private int $insertBillingID;
 
     public function __construct(
         string $reportDate,
@@ -35,7 +38,7 @@ class InvoiceExport implements WithMultipleSheets, WithEvents
         $invoice->doc_status = "failed_bye";
         $invoice->save();
 
-        \Log::channel('daily_queue_export')
+        Log::channel('daily_queue_export')
             ->info("[InvoiceExport]" . $exception);
     }
 
