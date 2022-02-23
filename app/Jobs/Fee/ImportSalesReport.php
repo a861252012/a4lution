@@ -488,13 +488,15 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                     $warehouse_name = trim(Str::between($main['warehouse'], '[', ']'));
                     $warehouse_code = trim(Str::before($main['warehouse'], '['));
 
+                    $sm_code = trim(Str::before($main['shipping_method'], '['));
+
                     $orderData[] = [
                         'correlation_id' => $reportDate,
                         'platform' => $main['platform'],
                         'order_code' => $main['package_id'],
                         'reference_no' => $main['site_order_id'],
                         'seller_id' => $main['acc_nick_name'],
-                        'sm_code' => $main['shipping_method'],
+                        'sm_code' => $sm_code,
                         'add_time' => Carbon::parse($main['audit_date'])->toDateTimeString(),
                         'order_paydate' => Carbon::parse($main['paid_date'])->toDateTimeString(),
                         'order_status' => 8,
@@ -559,6 +561,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                             'currency_code_org' => $order['original_currency'],
                             'order_total_amount_org' => $order['order_price_original_currency'],
                             'order_platform_type' => $order['order_type'],
+                            'platform_reference_no' => trim($order['site_order_id']),
                             'product_title' => $order['product_name'],
                             'quantity' => collect($orders)->sum('qty'),
                             'product_barcode' => $order['sku'],
