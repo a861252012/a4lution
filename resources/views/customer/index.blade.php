@@ -23,7 +23,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="client_code">Client Code</label>
                                 <input class="form-control _fz-1" name="client_code" id="client_code"
-                                    type="text" placeholder="Client Code" value="{{ $query['client_code'] ?? '' }}">
+                                    type="text" placeholder="Client Code" value="{{ request('client_code') }}">
                             </div>
                         </div>
 
@@ -33,27 +33,11 @@
                                 <label class="form-control-label _fz-1" for="active">Status</label>
                                 <select class="form-control _fz-1" data-toggle="select" name="active">
                                     <option value="">All</option>
-                                    <option value="1" @if($query['active'] === '1') {{ 'selected' }} @endif>
+                                    <option value="1" @if(request('active') === '1') {{ 'selected' }} @endif>
                                         Active
                                     </option>
-                                    <option value="0" @if($query['active'] === '0') {{ 'selected' }} @endif>
+                                    <option value="0" @if(request('active') === '0') {{ 'selected' }} @endif>
                                         Inactive
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {{-- Sales Region --}}
-                        <div class="col-lg-2 col-md-6 col-sm-6">
-                            <div class="form-group mb-0">
-                                <label class="form-control-label _fz-1" for="sales_region">Sales Region</label>
-                                <select class="form-control _fz-1" data-toggle="select" name="sales_region" id="sales_region">
-                                    <option value="">All</option>
-                                    <option value="HK" @if($query['sales_region'] === 'hk') {{ 'selected' }} @endif>
-                                        HK
-                                    </option>
-                                    <option value="TW" @if($query['sales_region'] === 'tw') {{ 'selected' }} @endif>
-                                        TW
                                     </option>
                                 </select>
                             </div>
@@ -90,11 +74,12 @@
                     <thead class="thead-light">
                     <tr>
                         <th>Client Code</th>
-                        <th>Contract Date</th>
+                        <th>Contract Period Start</th>
+                        <th>Contract Period End</th>
                         <th>Status</th>
-                        <th>Sales Region</th>
                         <th>Sales Rep</th>
-                        <th>Account Service</th>
+                        <th>A/S</th>
+                        <th>OPS</th>
                         <th>Updated At</th>
                         <th>Updated By</th>
                         <th>Action</th>
@@ -105,11 +90,12 @@
                         @forelse ($customers as $customer)
                             <tr>
                                 <td>{{ $customer->client_code }}</td>
-                                <td>{{ optional($customer->contract_date)->format('Y/m/d') }}</td>
+                                <td>{{ optional($customer->contract_period_start)->format('Y/m/d') }}</td>
+                                <td>{{ optional($customer->contract_period_end)->format('Y/m/d') }}</td>
                                 <td>{{ $customer->active ? 'Active' : 'Inactive' }}</td>
-                                <td>{{ $customer->sales_region }}</td>
                                 <td>{{ $customer->salesReps->pluck('user_name')->implode(',') }}</td>
                                 <td>{{ $customer->accountServices->pluck('user_name')->implode(',') }}</td>
+                                <td>{{ $customer->operationUsers->pluck('user_name')->implode(',') }}</td>
                                 <td>{{ $customer->updated_at_tw }}</td>
                                 <td>{{ $customer->updater->user_name }}</td>
                                 <td class="py-1">
