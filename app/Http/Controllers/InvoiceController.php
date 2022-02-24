@@ -2,16 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\CommissionConstant;
+use App\Http\Requests\Invoice\EditRequest;
 use App\Jobs\Invoice\CreateZipToS3;
 use App\Jobs\Invoice\ExportInvoiceExcel;
 use App\Jobs\Invoice\ExportInvoicePDFs;
 use App\Jobs\Invoice\SetSaveDir;
 use App\Models\BillingStatement;
+use App\Models\CommissionSetting;
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\OrderProduct;
 use App\Repositories\BillingStatementRepository;
 use App\Repositories\CustomerRelationRepository;
 use App\Repositories\InvoiceRepository;
+use App\Repositories\OrderProductRepository;
 use App\Services\InvoiceService;
 use App\Support\ERPRequester;
 use Carbon\Carbon;
@@ -19,9 +24,9 @@ use Illuminate\Bus\Batch;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class InvoiceController extends Controller
@@ -182,9 +187,9 @@ class InvoiceController extends Controller
         return view('invoice/list', compact('lists', 'clientCodeList'));
     }
 
-    public function downloadFile(Request $request): RedirectResponse
+    public function downloadFile(Request $request)
     {
-        $token = $request->token;
+        $token = $request->route('token') ?? null;
 
         if (!$token) {
             return back()->with('message', 'failed to download');
@@ -200,9 +205,9 @@ class InvoiceController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
         ];
 
-        return \Response::make(
-            \Storage::disk('s3')->get("invoices/{$token}.zip"),
-            Response::HTTP_OK,
+        return Response::make(
+            Storage::disk('s3')->get("invoices/{$token}.zip"),
+            200,
             $headers
         );
     }

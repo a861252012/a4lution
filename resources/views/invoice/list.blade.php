@@ -34,7 +34,7 @@
                                     <select class="form-control _fz-1" name="client_code" id="client_code">
                                         <option value={{''}} @if(request('client_code') === 'all')
                                             {{ 'selected' }} @endif>{{'all'}}</option>
-                                        @forelse ($client_code_lists as $item)
+                                        @forelse ($clientCodeList as $item)
                                             <option value="{{$item}}" @if(request('client_code') == $item)
                                                 {{ 'selected' }} @endif>{{$item}}</option>
                                         @empty
