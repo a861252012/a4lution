@@ -332,11 +332,11 @@
 <!-- sweetalert JS -->
 <script src="{{ asset('js') }}/sweetalert.min.js"></script>
 
-<!-- jquery.form JS -->
-<script src="{{ asset('argon') }}/js/jquery.form_4.3.0.js"></script>
-
 <!-- jquery.JS -->
 <script src="{{ asset('argon') }}/vendor/jquery/dist/jquery-1.9.1.js"></script>
+
+<!-- jquery.form JS -->
+<script src="{{ asset('argon') }}/js/jquery.form_4.3.0.js"></script>
 
 <!-- jquery colorbox JS -->
 <script src="{{ asset('argon') }}/vendor/colorbox/js/jquery.colorbox.js"></script>
