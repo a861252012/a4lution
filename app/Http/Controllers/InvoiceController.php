@@ -24,9 +24,9 @@ use Illuminate\Bus\Batch;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 class InvoiceController extends Controller
@@ -205,7 +205,7 @@ class InvoiceController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
         ];
 
-        return Response::make(
+        return \Response::make(
             Storage::disk('s3')->get("invoices/{$token}.zip"),
             200,
             $headers
