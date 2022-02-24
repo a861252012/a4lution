@@ -25,7 +25,7 @@
     <title itemprop="name">{{ $metaTitle ?? 'A4lution Admin' }}</title>
 
     <!-- Favicon -->
-{{--    <link href="{{ asset('argon') }}/img/brand/favicon.png" rel="icon" type="image/png">--}}
+    {{--    <link href="{{ asset('argon') }}/img/brand/favicon.png" rel="icon" type="image/png">--}}
     <link href="{{ asset('pictures') }}/A4lution_logo.png" rel="icon" type="image/png">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -40,6 +40,8 @@
 <!-- Argon CSS -->
     <link type="text/css" href="{{ asset('css') }}/argon.css?v=2.0.0" rel="stylesheet">
     <link type="text/css" href="{{ asset('argon') }}/vendor/colorbox/css/colorbox.css" rel="stylesheet">
+    <!-- jquery.steps CSS -->
+    <link type="text/css" href="{{ asset('argon') }}/vendor/jquery-steps/jquery.steps_1.1.2.css" rel="stylesheet">
 
     <!-- A4 custom CSS -->
     <link type="text/css" href="{{ asset('css/a4lution.css') }}" rel="stylesheet">
@@ -105,6 +107,10 @@
 
 <!-- moment JS -->
 <script src="{{ asset('js') }}/momentJS.js"></script>
+
+<!-- jquery.steps moment -->
+<script src="{{ asset('argon') }}/vendor/jquery-steps/jquery.steps_1.1.2.js"></script>
+
 <!-- Moment Timezone JS(如有使用到時區就要額外include) -->
 {{--<script src="{{ asset('js') }}/moment-timezone-with-data.js"></script>--}}
 <script>
@@ -121,6 +127,7 @@
             icon: 'error',
             text: errors.join("\n")
         });
+
     @endif
 
 </script>

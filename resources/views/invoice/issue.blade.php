@@ -32,7 +32,7 @@
                                     <option value={{''}} @if(request('client_code') === 'all'){{ 'selected' }} @endif>
                                         {{'all'}}
                                     </option>
-                                    @forelse ($client_code_lists as $item)
+                                    @forelse ($clientCodeList as $item)
                                         <option value="{{$item}}" @if(request('sel_client_code') == $item)
                                             {{ 'selected' }} @endif>{{$item}}</option>
                                     @empty
