@@ -22,6 +22,9 @@ class ContinStorageController extends Controller
                     $reportDateCarbon->endOfMonth()->toDateString()
                 ])
                 ->active()
+                ->orderBy('report_date')
+                ->orderBy('transaction_no')
+                ->orderBy('supplier')
                 ->paginate();
 
         return view('fee.continStorage.index', compact('continStorageFees', 'reportDate'));
