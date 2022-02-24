@@ -41,6 +41,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/monthlystorage', 'FeeController@monthlyStorageView')->name('fee.monthlyStorage.view');
         Route::get('/longtermstorage', 'FeeController@longTermStorageView')->name('fee.longTermStorage.view');
         Route::get('/firstmileshipment', 'FeeController@firstMileShipmentView')->name('fee.firstMileShipment.view');
+        Route::get('/contin-storage', 'ContinStorageController@index')->name('fee.continStorage.index');
         Route::get('/export/{export_type}', 'FeeController@exportSampleFile');
         Route::post('/preValidation/{date}/{type}', 'FeeController@preValidation');
 
