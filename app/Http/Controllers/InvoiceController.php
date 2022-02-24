@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Invoice\EditRequest;
 use App\Jobs\Invoice\CreateZipToS3;
 use App\Jobs\Invoice\ExportInvoiceExcel;
 use App\Jobs\Invoice\ExportInvoicePDFs;
@@ -52,6 +51,119 @@ class InvoiceController extends Controller
         $this->invoiceService = $invoiceService;
         $this->billingStatementRepository = $billingStatementRepository;
         $this->invoiceRepository = $invoiceRepository;
+    }
+
+    public function getAvolutionCommission(
+        string $clientCode,
+        string $shipDate,
+        float  $tieredParam,
+        array  $commissionRate
+    ) {
+        switch ($commissionRate['type']) {
+            case 'sku':
+                $orderProductRepository = new OrderProductRepository();
+
+                return $orderProductRepository->getSkuAvolutionCommission($clientCode, $shipDate) ?: 0;
+            case 'promotion':
+                return $commissionRate['value'];
+            case 'tiered':
+                return $tieredParam * $commissionRate['value'];
+        }
+    }
+
+    public function getCommissionRate(string $clientCode, string $reportDate, float $totalSalesAmount)
+    {
+        $commissionSetting = new CommissionSetting();
+        $orderProductRepository = new OrderProductRepository();
+
+        $settings = $commissionSetting->where('client_code', $clientCode)->first();
+
+        if ($settings->calculation_type === CommissionConstant::CALCULATION_TYPE_SKU) {
+            //check unmatched record
+            $haveUnmatchedRecord = $orderProductRepository->checkUnmatchedRecord($clientCode, $reportDate);
+            if (!empty($haveUnmatchedRecord)) {
+                return [
+                    'msg' => 'SKU-level commissions list need to match up with SKUs',
+                    'status' => 'error',
+                ];
+            }
+
+            $orders = $orderProductRepository->getFitOrder($clientCode, $reportDate);
+            if ($orders) {
+                foreach ($orders as $item) {
+                    $thisOrder = OrderProduct::find($item->id);
+
+                    $thisOrder->sku_commission_rate = $this->getSkuCommissionRate(
+                        $item,
+                        (float)$item->selling_price,
+                        (float)$item->threshold
+                    );
+                    $thisOrder->sku_commission_amount = (float)$item->selling_price * (float)$thisOrder->sku_commission_rate;
+                    $thisOrder->sku_commission_computed_at = date('Y-m-d h:i:s');
+                    $thisOrder->save();
+                }
+                return ['type' => 'sku', 'value' => '0', 'status' => 'success'];
+            }
+        }
+
+        //check if commission rate type is promotion
+        $maxDiscountRate = $orderProductRepository->getMaxDiscountRate($clientCode, $reportDate);
+
+        if ((float)$settings->promotion_threshold >= (float)$maxDiscountRate) {
+            return ['type' => 'promotion', 'value' => $settings->tier_promotion, 'status' => 'success'];
+        }
+
+        //check if commission rate type is tiered
+        if ($settings->calculation_type === CommissionConstant::CALCULATION_TYPE_TIER) {
+            return $this->getTieredInfo($clientCode, $totalSalesAmount);
+        }
+        return ['type' => 'tiered', 'value' => $settings->basic_rate, 'status' => 'success'];
+    }
+
+    public function getSkuCommissionRate(object $item, float $sellingPrice, float $threshold)
+    {
+        if ($sellingPrice > $threshold) {
+            return $item->upper_bound_rate;
+        }
+
+        return $item->basic_rate;
+    }
+
+    public function getTieredInfo(string $clientCode, float $totalSalesAmount): array
+    {
+        $setting = CommissionSetting::where('client_code', $clientCode)->first();
+
+        if (!empty($setting) & $totalSalesAmount >= $setting->tier_1_threshold) {
+            $newLevel = 1;
+            for ($i = 1; $i <= 4; $i++) {
+                $key = "tier_{$i}_threshold";
+                $val = $setting->$key;
+                if ($totalSalesAmount >= $val) {
+                    $newLevel = $i;
+                }
+            }
+            //如有amount則先取amount
+            $amountKey = "tier_{$newLevel}_amount";
+            if (!empty((float)$setting->$amountKey)) {
+                return ['type' => 'tiered', 'value' => $setting->$amountKey, 'status' => 'success'];
+            }
+
+            $rateKey = "tier_{$newLevel}_rate";
+
+            return ['type' => 'tiered', 'value' => $setting->$rateKey, 'status' => 'success'];
+        }
+
+        return ['type' => 'tiered', 'value' => $setting->basic_rate, 'status' => 'success'];
+    }
+
+    public function getSumValue(array $fees): float
+    {
+        $sum = 0;
+        foreach ($fees as $v) {
+            $sum += (float)$v;
+        }
+
+        return (float)$sum;
     }
 
     public function listView(Request $request)

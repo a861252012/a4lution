@@ -32,7 +32,7 @@
                                     <option value={{''}} @if(request('client_code') === 'all'){{ 'selected' }} @endif>
                                         {{'all'}}
                                     </option>
-                                    @forelse ($clientCodeList as $item)
+                                    @forelse ($client_code_lists as $item)
                                         <option value="{{$item}}" @if(request('sel_client_code') == $item)
                                             {{ 'selected' }} @endif>{{$item}}</option>
                                     @empty
@@ -166,7 +166,7 @@
 
                     <div class="col-2">
                         <select class="form-control" data-toggle="select" name="sel_client_code" id="cbx_client_code">
-                            @forelse ($clientCodeList as $item)
+                            @forelse ($client_code_lists as $item)
                                 <option value="{{$item}}" @if(request('sel_client_code') == $item) {{ 'selected' }}
                                         @endif>
                                     {{$item}}
@@ -589,6 +589,7 @@
                             }
                         });
                     }, error: function (e) {
+                        // 顯示 Validate Error
                         let errors = [];
                         $.each(JSON.parse(e.responseText).errors, function (col, msg) {
                             errors.push(msg.toString());
@@ -699,6 +700,7 @@
                                 });
 
                             }, error: function (e) {
+                                // 顯示 Validate Error
                                 let errors = [];
                                 $.each(JSON.parse(e.responseText).errors, function (col, msg) {
                                     errors.push(msg.toString());
@@ -729,6 +731,30 @@
                 }).then(function (isConfirm) {
                     if (isConfirm) {
                         deleteIssue('byID', id)
+
+                $.ajax({
+                    url: origin + '/invoice/issue/byID/' + id,
+                    type: 'delete',
+                    success: function (res) {
+                        swal({
+                            icon: res.icon,
+                            text: res.msg
+                        }).then(function (isConfirm) {
+                            if (isConfirm) {
+                                $.colorbox.close();
+                            }
+                        });
+                    }, error: function (e) {
+                        // 顯示 Validate Error
+                        let errors = [];
+                        $.each(JSON.parse(e.responseText).errors, function (col, msg) {
+                            errors.push(msg.toString());
+                        });
+
+                        swal({
+                            icon: 'error',
+                            text: errors.join("\n")
+                        });
                     }
                 });
             });
@@ -779,8 +805,8 @@
                                         button: "OK",
                                     });
 
-                                    deleteIssue('byDate', reportDate);
-                                    ajaxRunBillingStatement(reportDate, clientCode);
+                                    deleteIssue(reportDate);
+                                    ajaxRunBillingStatement();
                                 }
                             });
                     } else {
@@ -858,6 +884,7 @@
                         });
                     }
                 }, error: function (e) {
+                    // 顯示 Validate Error
                     let errors = [];
                     $.each(JSON.parse(e.responseText).errors, function (col, msg) {
                         errors.push(msg.toString());
