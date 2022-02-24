@@ -6,13 +6,12 @@ use App\Repositories\BillingStatementRepository;
 use App\Repositories\CommissionSettingRepository;
 use App\Repositories\ExchangeRateRepository;
 use App\Repositories\InvoiceRepository;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class InvoiceService
 {
-    private $billingStatementRepository;
-    private $invoiceRepository;
+    private BillingStatementRepository $billingStatementRepository;
+    private InvoiceRepository $invoiceRepository;
 
     public function __construct(
         BillingStatementRepository $billingStatementRepository,

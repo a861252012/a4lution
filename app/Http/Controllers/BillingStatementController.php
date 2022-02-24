@@ -7,7 +7,7 @@ use App\Http\Requests\BillingStatement\AjaxStoreRequest;
 
 class BillingStatementController extends Controller
 {
-    private $billingStatementService;
+    private BillingStatementService $billingStatementService;
 
     public function __construct(BillingStatementService $billingStatementService)
     {

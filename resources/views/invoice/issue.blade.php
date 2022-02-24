@@ -576,8 +576,6 @@
                     data: {client_code: clientCode}, //提交方式
                     url: origin + "/invoice/createBill",
                     success: function (res) { //提交成功的回撥函式
-                        console.log(res);
-                        console.log('form');
                         let icon = 'success';
                         if (res.status !== 200) {
                             icon = 'error';
@@ -612,18 +610,16 @@
                             $("#cbx_form").ajaxSubmit(ajaxFormOption);
                         } else if (res.status === 202) {
                             swal({
-                                title: "Are you sure ?",
+                                title: "Are you sure?",
                                 text: (res.msg),
                                 icon: 'warning',
-                                buttons: true,
-                                buttons: ["No,Cancel Plx!", "Yes,Delete it!"]
-                            })
-                                .then(function (isConfirm) {
-                                    if (isConfirm) {
-                                        deleteIssue(reportDate);
-                                        $("#cbx_form").ajaxSubmit(ajaxFormOption);
-                                    }
-                                });
+                                buttons: ["No,Cancel", "Yes,Delete it!"]
+                            }).then(function (isConfirm) {
+                                if (isConfirm) {
+                                    deleteIssue('byDate', reportDate);
+                                    $("#cbx_form").ajaxSubmit(ajaxFormOption);
+                                }
+                            });
                         } else {
                             swal({
                                 icon: 'warning',
@@ -647,6 +643,7 @@
                 autoclose: true
             });
 
+            //顯示編輯issue invoice 的 colorbox 視窗
             $('button.issue_btn').click(function () {
                 let data = [];
                 data['report_date'] = $(this).parent().parent().find('[class="report_date"]').text();
@@ -664,7 +661,7 @@
                         _token: data['_token'],
                         report_date: data['report_date'],
                         client_code: data['client_code'],
-                        billing_statement_id: data['billing_statement_id'],
+                        billing_statement_id: data['billing_statement_id']
                     },
                     onComplete: function () {
                         //binding jquery.steps plugin
@@ -722,16 +719,18 @@
                 });
             });
 
+            //觸發刪除invoice的按鈕
             $('button.delete_btn').click(function () {
-                let _token = $('meta[name="csrf-token"]').attr('content');
                 let id = $(this).parent().parent().find('[name="bill_state_id"]').val();
-                console.log(id);
 
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': _token
-                    }
-                });
+                swal({
+                    title: "Are you sure?",
+                    text: ("DELETE"),
+                    icon: 'warning',
+                    buttons: ["No,Cancel", "Yes,Delete it!"]
+                }).then(function (isConfirm) {
+                    if (isConfirm) {
+                        deleteIssue('byID', id)
 
                 $.ajax({
                     url: origin + '/invoice/issue/byID/' + id,
@@ -761,6 +760,7 @@
             });
         });
 
+        //創建指定用戶的invoice報表
         $('button#create_sales_btn').click(function () {
             let reportDate = $('#search_report_date').val();
             let clientCode = $("#sel_client_code option:selected").val();
@@ -789,19 +789,16 @@
                             icon: 'success',
                             text: 'processing'
                         });
-                        ajaxRunBillingStatement();
+                        ajaxRunBillingStatement(reportDate, clientCode);
 
                     } else if (res.status === 202) {
                         swal({
                             title: "Are you sure ?",
                             text: (res.msg),
                             icon: 'warning',
-                            buttons: true,
                             buttons: ["No,Cancel Plx!", "Yes,Delete it!"]
-                        })
-                            .then(function (isConfirm) {
+                        }).then(function (isConfirm) {
                                 if (isConfirm) {
-
                                     swal({
                                         text: "processing!",
                                         icon: "success",
@@ -817,15 +814,14 @@
                             icon: 'warning',
                             text: res.msg
                         });
+
                         return false;
                     }
                 }
             });
         });
 
-        function ajaxRunBillingStatement() {
-            let reportDate = $('#search_report_date').val();
-            let clientCode = $("#sel_client_code option:selected").val();
+        function ajaxRunBillingStatement(reportDate, clientCode) {
             let _token = $('meta[name="csrf-token"]').attr('content');
 
             $.ajaxSetup({
@@ -849,10 +845,7 @@
                     });
 
                     location.reload();
-
                 }, error: function (e) {
-
-                    // 顯示 Validate Error
                     let errors = [];
                     $.each(JSON.parse(e.responseText).errors, function (col, msg) {
                         errors.push(msg.toString());
@@ -866,7 +859,8 @@
             });
         }
 
-        function deleteIssue(reportDate) {
+        //condition could be reportDate or id (depend on type)
+        function deleteIssue(type, condition) {
             let _token = $('meta[name="csrf-token"]').attr('content');
 
             $.ajaxSetup({
@@ -876,10 +870,19 @@
             });
 
             $.ajax({
-                url: origin + '/invoice/issue/byDate/' + reportDate,
+                url: origin + '/invoice/issue/' + type + '/' + condition,
                 type: 'delete',
                 success: function (res) {
-                    console.log(res);
+                    if (type === 'byID') {
+                        swal({
+                            icon: res.icon,
+                            text: res.msg
+                        }).then(function (isConfirm) {
+                            if (isConfirm) {
+                                $.colorbox.close();
+                            }
+                        });
+                    }
                 }, error: function (e) {
                     // 顯示 Validate Error
                     let errors = [];
@@ -896,7 +899,6 @@
         }
 
         $("#generate_sales_btn").colorbox({inline: true, width: "60%", height: "80%", closeButton: true});
-
     </script>
 @endpush
 
