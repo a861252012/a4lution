@@ -463,13 +463,15 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
     private function importErpOrders(LazyCollection $collection)
     {
         $reportDate = $this->reportDate->format('Ymd');
+        $reportDateYm = $this->reportDate->format('Ym');
 
         $batchId = $this->batchIds[BatchJobConstant::IMPORT_TYPE_ERP_ORDERS];
         $batchJob = BatchJob::findOrFail($batchId);
 
-        Order::where('correlation_id', $reportDate)->active()->update(['active' => 0]);
-        OrderProduct::where('correlation_id', $reportDate)->active()->update(['active' => 0]);
-        OrderSkuCostDetail::where('correlation_id', $reportDate)->active()->update(['active' => 0]);
+        // 舊資料 active => 0
+        Order::where('correlation_id', 'like', "{$reportDateYm}%")->active()->update(['active' => 0]);
+        OrderProduct::where('correlation_id', 'like', "{$reportDateYm}%")->active()->update(['active' => 0]);
+        OrderSkuCostDetail::where('correlation_id', 'like', "{$reportDateYm}%")->active()->update(['active' => 0]);
 
         foreach ($collection->groupBy('package_id')->chunk(500) as $packageIdWithOrders) {
 
@@ -494,7 +496,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                         'correlation_id' => $reportDate,
                         'platform' => $main['platform'],
                         'order_code' => $main['package_id'],
-                        'reference_no' => $main['site_order_id'],
+                        'reference_no' => $main['erp_order_id'],
                         'seller_id' => $main['acc_nick_name'],
                         'sm_code' => $sm_code,
                         'add_time' => Carbon::parse($main['audit_date'])->toDateTimeString(),
@@ -504,7 +506,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                         'tracking_number' => $main['tracking'],
                         'so_weight' => $main['product_weight'],
                         'platform_user_name' => $main['acc_name'],
-                        'platform_ref_no' => $main['erp_order_id'],
+                        'platform_ref_no' => $main['site_order_id'],
                         'warehouse_name' => $warehouse_name,
                         'warehouse_code' => $warehouse_code,
                         'created_at' => now(),
@@ -539,7 +541,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                             'cost_of_point' => $order['cost_of_point_original_currency'],
                             'exclusives_referral_fee' => $order['exclusives_referral_fee_original_currency'],
                             'gross_profit' => $order['gross_profit_original_currency'],
-                            'other_transaction' => $order['other_fee_original_currency'],
+                            'other_transaction' => (int)$order['other_fee_original_currency'] + (int)$order['marketplace_tax_original_currency'] + (int)$order['cost_of_point_original_currency'],
                             'created_at' => now(),
                             'created_by' => $this->userId,
                             'updated_at' => now(),
@@ -561,7 +563,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                             'currency_code_org' => $order['original_currency'],
                             'order_total_amount_org' => $order['order_price_original_currency'],
                             'order_platform_type' => $order['order_type'],
-                            'platform_reference_no' => trim($order['site_order_id']),
+                            'platform_reference_no' => trim($order['erp_order_id']),
                             'product_title' => $order['product_name'],
                             'quantity' => collect($orders)->sum('qty'),
                             'product_barcode' => $order['sku'],
@@ -591,9 +593,9 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                 OrderSkuCostDetail::where('correlation_id', $reportDate)->active()->delete();  
 
                 // 還原舊資料
-                Order::where('correlation_id', $reportDate)->inactive()->update(['active' => 1]);
-                OrderProduct::where('correlation_id', $reportDate)->inactive()->update(['active' => 1]);
-                OrderSkuCostDetail::where('correlation_id', $reportDate)->inactive()->update(['active' => 1]);       
+                Order::where('correlation_id', 'like', "{$reportDateYm}%")->inactive()->update(['active' => 1]);
+                OrderProduct::where('correlation_id', 'like', "{$reportDateYm}%")->inactive()->update(['active' => 1]);
+                OrderSkuCostDetail::where('correlation_id', 'like', "{$reportDateYm}%")->inactive()->update(['active' => 1]);       
 
                 $batchJob->update([
                     'status' => BatchJobConstant::STATUS_FAILED,
@@ -607,9 +609,9 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
         }
 
         // 刪除舊資料
-        Order::where('correlation_id', $reportDate)->inactive()->delete();
-        OrderProduct::where('correlation_id', $reportDate)->inactive()->delete();
-        OrderSkuCostDetail::where('correlation_id', $reportDate)->inactive()->delete(); 
+        Order::where('correlation_id', 'like', "{$reportDateYm}%")->inactive()->delete();
+        OrderProduct::where('correlation_id', 'like', "{$reportDateYm}%")->inactive()->delete();
+        OrderSkuCostDetail::where('correlation_id', 'like', "{$reportDateYm}%")->inactive()->delete(); 
 
         $batchJob->update([
             'status' => BatchJobConstant::STATUS_COMPLETED,
