@@ -25,7 +25,8 @@
     <title itemprop="name">{{ $metaTitle ?? 'A4lution Admin' }}</title>
 
     <!-- Favicon -->
-    <link href="{{ asset('argon') }}/img/brand/favicon.png" rel="icon" type="image/png">
+    {{--    <link href="{{ asset('argon') }}/img/brand/favicon.png" rel="icon" type="image/png">--}}
+    <link href="{{ asset('pictures') }}/A4lution_logo.png" rel="icon" type="image/png">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -39,6 +40,9 @@
     <!-- Argon CSS -->
     <link type="text/css" href="{{ asset('css') }}/argon.css?v=2.0.0" rel="stylesheet">
     <link type="text/css" href="{{ asset('argon') }}/vendor/colorbox/css/colorbox.css" rel="stylesheet">
+
+    <!-- jquery.steps CSS -->
+    <link type="text/css" href="{{ asset('argon') }}/vendor/jquery-steps/jquery.steps_1.1.2.css" rel="stylesheet">
 
     <!-- A4 custom CSS -->
     <link type="text/css" href="{{ asset('css/a4lution.css') }}" rel="stylesheet">
@@ -80,6 +84,9 @@
 <!-- jquery colorbox JS -->
 <script src="{{ asset('argon') }}/vendor/colorbox/js/jquery.colorbox.js"></script>
 
+<!-- select2 JS -->
+{{--<script src="{{ asset('argon') }}/vendor/select2/dist/js/select2.min.js"></script>--}}
+
 <!-- Argon JS -->
 <script src="{{ asset('argon') }}/js/argon.js?v=1.0.1"></script>
 <script src="{{ asset('argon') }}/js/demo.min.js"></script>
@@ -102,18 +109,24 @@
 
 <!-- moment JS -->
 <script src="{{ asset('js') }}/momentJS.js"></script>
+
+<!-- jquery.steps moment -->
+<script src="{{ asset('argon') }}/vendor/jquery-steps/jquery.steps_1.1.2.js"></script>
+
+<!-- Moment Timezone JS(如有使用到時區就要額外include) -->
+{{--<script src="{{ asset('js') }}/moment-timezone-with-data.js"></script>--}}
 <script>
     // 顯示 validation errors
     @if ($errors->count())
-        let errors = [];
-        @foreach ($errors->all() as $error)
-            errors.push('{{ $error }}');
-        @endforeach
-        
-        swal({
-            icon: 'error',
-            text: errors.join("\n")
-        });
+    let errors = [];
+    @foreach ($errors->all() as $error)
+    errors.push('{{ $error }}');
+    @endforeach
+
+    swal({
+        icon: 'error',
+        text: errors.join("\n")
+    });
     @endif
 </script>
 @stack('js')

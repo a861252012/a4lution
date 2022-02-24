@@ -12,18 +12,19 @@ use App\Models\Invoice;
 use App\Repositories\BillingStatementRepository;
 use App\Repositories\CustomerRelationRepository;
 use App\Repositories\InvoiceRepository;
+use App\Repositories\CustomerRepository;
 use App\Services\InvoiceService;
 use App\Support\ERPRequester;
 use Carbon\Carbon;
 use Illuminate\Bus\Batch;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 class InvoiceController extends Controller
@@ -35,6 +36,8 @@ class InvoiceController extends Controller
     private Customer $customer;
     private BillingStatementRepository $billingStatementRepo;
     private InvoiceService $invoiceService;
+    private InvoiceRepository $invoiceRepo;
+    private CustomerRepository $customerRepo;
 
     public function __construct(
         Invoice                    $invoice,
@@ -42,7 +45,9 @@ class InvoiceController extends Controller
         Customer                   $customer,
         BillingStatement           $billingStatement,
         InvoiceService             $invoiceService,
-        BillingStatementRepository $billingStatementRepo
+        BillingStatementRepository $billingStatementRepo,
+        InvoiceRepository $invoiceRepo,
+        CustomerRepository $customerRepo
     ) {
         $this->invoice = $invoice;
         $this->customerRelationRepo = $customerRelationRepo;
@@ -50,43 +55,27 @@ class InvoiceController extends Controller
         $this->customer = $customer;
         $this->billingStatementRepo = $billingStatementRepo;
         $this->invoiceService = $invoiceService;
+        $this->invoiceRepo = $invoiceRepo;
+        $this->customerRepo = $customerRepo;
     }
 
     public function listView(Request $request)
     {
-        $data['lists'] = empty(count($request->all()))
+        $lists = empty(count($request->all()))
             ? []
-            : $this->invoice->query()
-                ->select(
-                    DB::raw("date_format(report_date,'%M-%Y') AS report_date"),
-                    'id',
-                    'client_code',
-                    'opex_invoice_no',
-                    'doc_file_name',
-                    'doc_status',
-                    'doc_storage_token',
-                    'created_at'
-                )
-                ->active()
-                ->when($request->client_code, fn ($q) => $q->where('client_code', $request->client_code))
-                ->when($request->status, fn ($q) => $q->where('doc_status', $request->status))
-                ->when(
-                    $request->report_date,
-                    fn ($q) => $q->where(
-                        'report_date',
-                        Carbon::parse($request->report_date)->startOfMonth()->toDateString()
-                    )
-                )
-                ->orderBy('id', 'desc')
-                ->paginate(100);
+            : $this->invoiceRepo->getListViewData(
+                $request->client_code,
+                $request->status,
+                $request->report_date
+            );
 
         //取得登入用戶的對應 client_code列表
-        $data['client_code_lists'] = $this->customerRelationRepo->getClientCodeList();
+        $clientCodeList = $this->customerRelationRepo->getClientCodeList();
 
-        return view('invoice/list', $data);
+        return view('invoice/list', compact('lists', 'clientCodeList'));
     }
 
-    public function downloadFile(Request $request)
+    public function downloadFile(Request $request): RedirectResponse
     {
         $token = $request->route('token') ?? null;
 
@@ -104,42 +93,26 @@ class InvoiceController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
         ];
 
-        return Response::make(
+        return \Response::make(
             Storage::disk('s3')->get("invoices/{$token}.zip"),
-            200,
+            Response::HTTP_OK,
             $headers
         );
     }
 
     public function issueView(Request $request)
     {
-        $data['lists'] = empty(count($request->all()))
+        $lists = empty(count($request->all()))
             ? []
-            : $this->billingStatement->query()
-                ->select(
-                    'id',
-                    'client_code',
-                    'avolution_commission',
-                    'commission_type',
-                    'total_sales_orders',
-                    'total_sales_amount',
-                    'total_expenses',
-                    DB::raw("date_format(report_date,'%b-%Y') as 'report_date'")
-                )->active()
-                ->when($request->sel_client_code, fn ($q) => $q->where('client_code', $request->sel_client_code))
-                ->when(
-                    $request->report_date,
-                    fn ($q) => $q->where(
-                        'report_date',
-                        Carbon::parse($request->report_date)->startOfMonth()->toDateString()
-                    )
-                )
-                ->paginate(100);
+            : $this->billingStatementRepo->getIssueViewData(
+                $request->sel_client_code,
+                $request->report_date
+            );
 
         //取得登入用戶的對應 client_code列表
-        $data['client_code_lists'] = $this->customerRelationRepo->getClientCodeList();
+        $clientCodeList = $this->customerRelationRepo->getClientCodeList();
 
-        return view('invoice/issue', $data);
+        return view('invoice/issue', compact('lists', 'clientCodeList'));
     }
 
     public function createBill(Request $request): JsonResponse
@@ -155,16 +128,10 @@ class InvoiceController extends Controller
         try {
             $this->billingStatementRepo->create($data->all());
         } catch (QueryException $exception) {
-            return response()->json(
-                [
-                    'msg' => $exception->errorInfo,
-                    'status' => 500,
-                ],
-                500
-            );
+            abort(Response::HTTP_INTERNAL_SERVER_ERROR, 'created failed');
         }
 
-        return response()->json(['msg' => 'success', 'status' => 200]);
+        return response()->json(['msg' => 'success', 'status' => Response::HTTP_OK]);
     }
 
     public function reportValidation(): JsonResponse
@@ -198,33 +165,18 @@ class InvoiceController extends Controller
         $data['currentDate'] = date("m/d/Y");
         $data['nextMonthDate'] = date("m/d/Y", strtotime('+30 days', strtotime($data['currentDate'])));
 
-        // TODO: create repo
-        $data['billingStatement'] = $this->billingStatement->find($request->billing_statement_id);
+        $data['billingStatement'] = $this->billingStatementRepo->find($request->billing_statement_id);
 
 //        Client Contact : customers.contact_person
-        $data['customerInfo'] = $this->customer
-            ->select(
-                'contact_person',
-                'company_name',
-                'address1',
-                'address2',
-                'city',
-                'district',
-                'zip',
-                'country'
-            )
-            ->where('client_code', $data['clientCode'])
-            ->first()
-            ->toArray();
+        $data['customerInfo'] = $this->customerRepo->findByClientCode($data['clientCode'])->toArray();
 
         //打api取 SupplierName
-        $getSupplierCode = $this->customer->where('client_code', $data['clientCode'])
-            ->value('supplier_code');
-
         $getSupplierName = app(ERPRequester::class)->send(
             config('services.erp.wmsUrl'),
             self::GET_SUPPLIER_INFO,
-            ["supplierCode" => $getSupplierCode],
+            [
+                "supplierCode" => $data['customerInfo']['supplier_code']
+            ]
         );
 
         $data['supplierName'] = $getSupplierName['data']['supplierName'] ?? '';
@@ -284,9 +236,9 @@ class InvoiceController extends Controller
                 new CreateZipToS3($invoice),
             ],
         ])->then(function (Batch $batch) use ($invoiceID) {
-            (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'active']);
+            $this->invoiceRepo->update($invoiceID, ['doc_status' => 'active']);
         })->catch(function (Batch $batch, Throwable $e) use ($invoiceID) {
-            (new InvoiceRepository)->update($invoiceID, ['doc_status' => 'failed']);
+            $this->invoiceRepo->update($invoiceID, ['doc_status' => 'failed']);
         })->finally(function (Batch $batch) {
             // TODO: 建立排程刪除舊資料(Local)
         })->dispatch();
