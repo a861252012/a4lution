@@ -32,11 +32,11 @@
                                 <div class="form-group mb-0">
                                     <label class="form-control-label _fz-1" for="client_code">Client Code</label>
                                     <select class="form-control _fz-1" name="client_code" id="client_code">
-                                        <option value={{ '' }} @if(request('client_code') === 'all')
+                                        <option value={{''}} @if(request('client_code') === 'all')
                                             {{ 'selected' }} @endif>{{'all'}}</option>
                                         @forelse ($clientCodeList as $item)
-                                            <option value="{{ $item }}" @if(request('client_code') == $item)
-                                                {{ 'selected' }} @endif>{{ $item }}</option>
+                                            <option value="{{$item}}" @if(request('client_code') == $item)
+                                                {{ 'selected' }} @endif>{{$item}}</option>
                                         @empty
                                             <option value="">{{'NONE'}}</option>
                                         @endforelse

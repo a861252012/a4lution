@@ -17,7 +17,8 @@ class Customer extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'contract_date' => 'date',
+        'contract_period_start' => 'date',
+        'contract_period_end' => 'date',
     ];
 
     protected static function booted()
@@ -75,6 +76,15 @@ class Customer extends Model
         return $this->belongsToMany(User::class, 'customer_relations', 'client_code', 'user_id', 'client_code')
             ->where('customer_relations.active', 1)
             ->where('customer_relations.role_id', 4)
+            ->where('users.active', 1);
+    }
+
+    // OP人員
+    public function operationUsers()
+    {
+        return $this->belongsToMany(User::class, 'customer_relations', 'client_code', 'user_id', 'client_code')
+            ->where('customer_relations.active', 1)
+            ->where('customer_relations.role_id', 3)
             ->where('users.active', 1);
     }
 

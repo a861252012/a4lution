@@ -389,7 +389,7 @@ class SyncOrder implements ShouldQueue
             foreach ($orderProductParamsArr as $v) {
                 $item = app(OrderSkuCostDetailRepository::class)->getSkuDetail($v['order_code'], $v['sku']);
 
-                $countCol = app(OrderProductRepository::class)->countReportColumns($v['order_code'], $v['sku']);
+                $countCol = app(AmazonReportListRepository::class)->countReportColumns($v['order_code'], $v['sku']);
 
                 $v['sales_amount'] = 0;
                 $v['fba_fee'] = (float)abs($countCol[0]->fba_fee) ?? 0;
@@ -409,7 +409,7 @@ class SyncOrder implements ShouldQueue
                     $v['other_transaction'] = $item['other_fee_org'];
                 }
 
-                $getPromotion = app(OrderProductRepository::class)->countPromotionAmount(
+                $getPromotion = app(AmazonReportListRepository::class)->countPromotionAmount(
                     $v['order_code'],
                     $v['sku']
                 );

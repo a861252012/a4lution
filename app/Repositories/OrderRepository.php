@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\Schema;
 
 class OrderRepository extends BaseRepository
 {
-    protected $orders;
-
     public function __construct()
     {
         parent::__construct(new Order);
@@ -29,139 +27,114 @@ class OrderRepository extends BaseRepository
     }
 
     //if isCrafter,then get a4 account fees,if not, then get client account fees
-    public function getReportFees(string $reportDate, string $clientCode, string $supplierCode, bool $isCrafter)
-    {
-        $reportDate = date("Ym", strtotime($reportDate));
-
-        $sql = "SELECT
-    SUM((p.last_mile_shipping_fee + ((p.first_mile_tariff + p.first_mile_shipping_fee) / d.currency_rate)) * r.exchange_rate) AS 'shipping_fee_hkd',
-    SUM(p.transaction_fee * r.exchange_rate) AS 'platform_fee_hkd',
-    SUM(p.fba_fee * r.exchange_rate) AS 'FBA_fees_hkd',
-    SUM(p.other_transaction * r.exchange_rate) AS 'other_transaction_fees_hkd'
-FROM
-    orders o
-        LEFT JOIN
-    order_products p ON p.active = 1
-    AND o.order_code = p.order_code
-        LEFT JOIN
-    order_sku_cost_details d ON p.order_code = d.reference_no
-    AND p.sku = d.product_barcode
-        LEFT JOIN
-    exchange_rates r ON d.currency_code_org = r.base_currency
-    AND DATE_FORMAT(o.ship_time, '%Y%m') = DATE_FORMAT(r.quoted_date, '%Y%m')
-    AND r.active = 1
-WHERE
-    DATE_FORMAT(o.ship_time, '%Y%m') = {$reportDate}
-    AND p.supplier = '{$clientCode}'";
-
-        $isCrafter ? $sql .= " AND o.seller_id = '{$supplierCode}'" : $sql .= "AND o.seller_id != '{$supplierCode}'";
-
-        $sql .= " GROUP BY p.supplier";
-
-        return DB::select($sql);
+    public function getReportFees(
+        string $reportDate,
+        string $clientCode,
+        bool $isAvolution
+    ) {
+        return $this->model
+            ->selectRaw(
+                'SUM((order_products.last_mile_shipping_fee + 
+                ((order_products.first_mile_tariff + order_products.first_mile_shipping_fee) 
+                / order_sku_cost_details.currency_rate)) * exchange_rates.exchange_rate) AS "shipping_fee_hkd",
+                SUM(order_products.transaction_fee * exchange_rates.exchange_rate) AS "platform_fee_hkd",
+                SUM(order_products.fba_fee * exchange_rates.exchange_rate) AS "FBA_fees_hkd"'
+            )
+            ->join('order_products', function ($join) {
+                $join->on('order_products.order_code', '=', 'orders.order_code')
+                    ->where('order_products.active', 1);
+            })
+            ->join('order_sku_cost_details', function ($join) {
+                $join->on('order_products.order_code', '=', 'order_sku_cost_details.reference_no')
+                    ->on('order_products.sku', '=', 'order_sku_cost_details.product_barcode');
+            })
+            ->leftJoin('exchange_rates', function ($join) {
+                $join->on('order_sku_cost_details.currency_code_org', '=', 'exchange_rates.base_currency')
+                    ->where('exchange_rates.active', 1)
+                    ->where(
+                        DB::raw("DATE_FORMAT(orders.ship_time, '%Y%m')"),
+                        '=',
+                        DB::raw("DATE_FORMAT(exchange_rates.quoted_date, '%Y%m')")
+                    );
+            })
+            ->whereRaw("DATE_FORMAT(orders.ship_time, '%Y%m') = ?", date("Ym", strtotime($reportDate)))
+            ->where('order_products.supplier', $clientCode)
+            ->when($isAvolution, function ($q) {
+                return $q->whereIn('orders.seller_id', function ($query) {
+                    $query->from('seller_accounts')
+                        ->selectRaw('DISTINCT erp_nick_name')
+                        ->where('is_a4_account', 1)
+                        ->where('active', 1)
+                        ->get();
+                });
+            }, function ($q) {
+                return $q->whereNotIn('orders.seller_id', function ($query) {
+                    $query->from('seller_accounts')
+                        ->selectRaw('DISTINCT erp_nick_name')
+                        ->where('is_a4_account', 1)
+                        ->where('active', 1)
+                        ->get();
+                });
+            })
+            ->groupBy('order_products.supplier')
+            ->first();
     }
 
-    //if isCrafter,then get a4 account refund,if not, then get client account refund
-    public function getAccountRefund(string $reportDate, string $clientCode, string $supplierName, bool $isCrafter)
-    {
-        $reportDate = date("Ym", strtotime($reportDate));
-
-        $sql = "SELECT
-    SUM(abs(a.amount_refund) * r.exchange_rate) AS 'refund_amount_hkd'
-FROM
-    rma_refund_list a
-        LEFT JOIN
-    exchange_rates r ON a.currency = r.base_currency
-        AND DATE_FORMAT(a.create_date, '%Y%M') = DATE_FORMAT(r.quoted_date, '%Y%M')
-        AND r.active = 1
-WHERE
-    a.pc_name = '{$clientCode}'
-        AND DATE_FORMAT(a.create_date, '%Y%m') = {$reportDate}
-        AND a.shipping_method !='AMAZONFBA'";
-
-        $isCrafter ? $sql .= " AND a.user_account_name = '{$supplierName}'" : $sql .= " AND a.user_account_name != '{$supplierName}'";
-
-        return DB::select($sql);
+    //if $isAvolution,then get a4 account resend,if not, then get client account resend
+    public function getAccountResend(
+        string $reportDate,
+        string $clientCode,
+        bool $isAvolution
+    ): float {
+        return (float)$this->model
+            ->selectRaw('(order_sku_cost_details.product_amount_org * exchange_rates.exchange_rate)
+             AS "total_sales_hkd"')
+            ->join('order_products', function ($join) {
+                $join->on('order_products.order_code', '=', 'orders.order_code')
+                    ->where('order_products.active', 1);
+            })
+            ->join('order_sku_cost_details', function ($join) {
+                $join->on('order_products.order_code', '=', 'order_sku_cost_details.reference_no')
+                    ->on('order_products.sku', '=', 'order_sku_cost_details.product_barcode');
+            })
+            ->leftJoin('exchange_rates', function ($join) {
+                $join->on('order_sku_cost_details.currency_code_org', '=', 'exchange_rates.base_currency')
+                    ->where('exchange_rates.active', 1)
+                    ->where(
+                        DB::raw("DATE_FORMAT(orders.ship_time, '%Y%m')"),
+                        '=',
+                        DB::raw("DATE_FORMAT(exchange_rates.quoted_date, '%Y%M')")
+                    );
+            })
+            ->whereRaw("DATE_FORMAT(orders.ship_time, '%Y%m') = ?", date("Ym", strtotime($reportDate)))
+            ->where('order_products.supplier', $clientCode)
+            ->where('orders.seller_id', $clientCode)
+            ->where('order_sku_cost_details.order_platform_type', 'resend')
+            ->when($isAvolution, function ($q) {
+                return $q->whereIn('orders.seller_id', function ($query) {
+                    $query->from('seller_accounts')
+                        ->selectRaw('DISTINCT erp_nick_name')
+                        ->where('is_a4_account', 1)
+                        ->where('active', 1)
+                        ->get();
+                });
+            }, function ($q) {
+                return $q->whereNotIn('orders.seller_id', function ($query) {
+                    $query->from('seller_accounts')
+                        ->selectRaw('DISTINCT erp_nick_name')
+                        ->where('is_a4_account', 1)
+                        ->where('active', 1)
+                        ->get();
+                });
+            })
+            ->value('total_sales_hkd');
     }
 
-    //if isCrafter,then get a4 account resend,if not, then get client account resend
-    public function getAccountResend(string $reportDate, string $clientCode, string $supplierName, bool $isCrafter)
-    {
-        $reportDate = date("Ym", strtotime($reportDate));
-
-        $sql = "SELECT
-    (d.product_amount_org * r.exchange_rate) AS 'total_sales_hkd'
-FROM
-    orders o
-        LEFT JOIN
-    order_products p ON p.active = 1
-        AND o.order_code = p.order_code
-        LEFT JOIN
-    order_sku_cost_details d ON p.order_code = d.reference_no
-        AND p.sku = d.product_barcode
-        LEFT JOIN
-    exchange_rates r ON d.currency_code_org = r.base_currency
-        AND DATE_FORMAT(o.ship_time, '%Y%m') = DATE_FORMAT(r.quoted_date, '%Y%m')
-        AND r.active = 1
-WHERE
-    DATE_FORMAT(o.ship_time, '%Y%m') = {$reportDate}
-        AND p.supplier = '{$clientCode}'
-        AND d.order_platform_type = 'resend'";
-
-        $isCrafter ? $sql .= "AND o.seller_id = '{$supplierName}'" : $sql .= "AND o.seller_id != '{$supplierName}'";
-
-        return DB::select($sql);
-    }
-
-    //if isCrafter,then get a4 account refund,if not, then get client account AmzTotal
-    public function getAccountAmzTotal(string $reportDate, string $clientCode, string $supplierName, bool $isCrafter)
-    {
-        $reportDate = date("Ym", strtotime($reportDate));
-
-        $sql = "SELECT
-    SUM(abs(d.amazon_total) * r.exchange_rate) AS 'amazon_total_hkd'
-FROM
-    amazon_date_range_report d
-        LEFT JOIN
-    exchange_rates r ON d.currency = r.base_currency
-        AND DATE_FORMAT(d.report_date, '%Y%M') = DATE_FORMAT(r.quoted_date, '%Y%M')
-        AND r.active = 1
-WHERE
-    d.`type` = 'Refund'
-        AND d.fulfillment = 'Amazon'
-        AND d.supplier = '{$clientCode}'
-        AND DATE_FORMAT(d.report_date, '%Y%m') = '{$reportDate}'
-        AND d.active = 1";
-
-        $isCrafter ? $sql .= " AND d.account = '{$supplierName}'" : $sql .= " AND d.account != '{$supplierName}'";
-
-        return DB::select($sql);
-    }
-
-    public function getAccountAds(string $reportDate, string $clientCode, string $supplierName, bool $isCrafter)
-    {
-        $sql = "SELECT
-    SUM((p.spendings * r.exchange_rate)) AS 'ad'
-FROM
-    platform_ad_fees p
-        LEFT JOIN
-    exchange_rates r ON p.report_date = r.quoted_date
-        AND p.currency = r.base_currency
-        AND r.active = 1
-WHERE
-    p.active = 1 AND p.client_code = '{$clientCode}'
-        AND p.report_date = '{$reportDate}'
-        AND p.active = 1";
-
-        $isCrafter ? $sql .= " AND p.account = '{$supplierName}'" : $sql .= " AND p.account != '{$supplierName}'";
-
-        $sql .= " GROUP BY p.client_code";
-
-        return DB::select($sql);
-    }
-
-    public function getAccountFbaStorageFee(string $reportDate, string $clientCode, string $supplierName, bool $isCrafter)
-    {
+    public function getAccountFbaStorageFee(
+        string $reportDate,
+        string $clientCode,
+        bool $isAvolution
+    ) {
         $sql = "SELECT
     SUM(x.storage_fee_hkd) as storage_fee_hkd_sum
 FROM
@@ -175,11 +148,16 @@ FROM
     WHERE
         m.supplier = '{$clientCode}'
             AND m.report_date = '{$reportDate}'
-            AND m.active = 1 ";
+            AND m.active = 1 
+            AND m.account ";
 
-        $isCrafter ? $sql .= " AND m.account = '{$supplierName}'" : $sql .= " AND m.account != '{$supplierName}'";
+        $isAvolution ? $sql .= '' : $sql .= 'NOT';
 
-        $sql .= " UNION ALL SELECT
+        $sql .= " IN (SELECT DISTINCT asinking_account_name
+         FROM seller_accounts
+        WHERE is_a4_account = 1 AND active=1)
+
+         UNION ALL SELECT
         (t.12_mo_long_terms_storage_fee * r.exchange_rate) AS 'storage_fee_hkd'
     FROM
         long_term_storage_fees t
@@ -189,56 +167,62 @@ FROM
     WHERE
         t.supplier = '{$clientCode}'
             AND t.report_date = '{$reportDate}'
-            AND t.active = 1 ";
+            AND t.active = 1 
+            AND t.account ";
 
-        $isCrafter ? $sql .= " AND t.account = '{$supplierName}') x" : $sql .= " AND t.account != '{$supplierName}') x";
+        $isAvolution ? $sql .= '' : $sql .= 'NOT';
 
-        return DB::select($sql);
-    }
-
-    public function getTotalSalesOrders(string $reportDate, string $clientCode)
-    {
-        $reportDate = date("Ym", strtotime($reportDate));
-
-        $sql = "SELECT
-    COUNT(DISTINCT o.reference_no) as total_sales_orders
-FROM
-    orders o
-        LEFT JOIN
-    order_products p ON p.active = 1
-    AND o.order_code = p.order_code
-WHERE
-    DATE_FORMAT(o.ship_time, '%Y%m') = {$reportDate}
-    AND p.supplier = '{$clientCode}'
-    AND o.platform_ref_no IS NOT NULL";
+        $sql .= " IN (
+            SELECT DISTINCT asinking_account_name
+             FROM seller_accounts 
+            WHERE is_a4_account = 1 AND active = 1)) x ";
 
         return DB::select($sql);
     }
 
-    public function getSumOfSalesAmount(string $reportDate, string $clientCode)
-    {
-        $reportDate = date("Ym", strtotime($reportDate));
+    public function getTotalSalesOrders(
+        string $reportDate,
+        string $clientCode
+    ): int {
+        return (int)$this->model
+            ->selectRaw("COUNT(DISTINCT orders.reference_no) as total_sales_orders")
+            ->leftJoin('order_products', function ($join) {
+                $join->on('orders.order_code', '=', 'order_products.order_code')
+                    ->where('order_products.active', 1);
+            })
+            ->whereRaw("DATE_FORMAT(orders.ship_time, '%Y%m') = ?", date("Ym", strtotime($reportDate)))
+            ->where('order_products.supplier', $clientCode)
+            ->whereNotNull('orders.platform_ref_no')
+            ->value('total_sales_orders');
+    }
 
-        $sql = "SELECT
-    SUM(d.order_total_amount_org * r.exchange_rate) AS 'total_sales_hkd'
-FROM
-    orders o
-        LEFT JOIN
-    order_products p ON p.active = 1
-        AND o.order_code = p.order_code
-        LEFT JOIN
-    order_sku_cost_details d ON p.order_code = d.reference_no
-        AND p.sku = d.product_barcode
-        LEFT JOIN
-    exchange_rates r ON d.currency_code_org = r.base_currency
-        AND DATE_FORMAT(o.ship_time, '%Y%m') = DATE_FORMAT(r.quoted_date, '%Y%m')
-        AND r.active = 1
-WHERE
-    DATE_FORMAT(o.ship_time, '%Y%m') = '{$reportDate}'
-        AND p.supplier = '{$clientCode}'
-GROUP BY p.supplier";
-
-        return DB::select($sql);
+    public function getSumOfSalesAmount(
+        string $reportDate,
+        string $clientCode
+    ): float {
+        return (float)$this->model
+            ->selectRaw("SUM(order_sku_cost_details.order_total_amount_org * exchange_rates.exchange_rate) 
+            AS 'total_sales_hkd'")
+            ->leftJoin('order_products', function ($join) {
+                $join->on('orders.order_code', '=', 'order_products.order_code')
+                    ->where('order_products.active', 1);
+            })
+            ->leftJoin('order_sku_cost_details', function ($join) {
+                $join->on('order_products.order_code', '=', 'order_sku_cost_details.reference_no')
+                    ->on('order_products.sku', '=', 'order_sku_cost_details.product_barcode');
+            })
+            ->leftJoin('exchange_rates', function ($join) {
+                $join->on('order_sku_cost_details.currency_code_org', '=', 'exchange_rates.base_currency')
+                    ->where(
+                        DB::raw("DATE_FORMAT(orders.ship_time, '%Y%m')"),
+                        DB::raw("DATE_FORMAT(exchange_rates.quoted_date, '%Y%m')")
+                    )
+                    ->where('exchange_rates.active', 1);
+            })
+            ->whereRaw("DATE_FORMAT(orders.ship_time, '%Y%m') = ?", date("Ym", strtotime($reportDate)))
+            ->where('order_products.supplier', $clientCode)
+            ->groupBy('order_products.supplier')
+            ->value('total_sales_hkd');
     }
 
     public function getOrderDetail(array $request)
@@ -275,10 +259,10 @@ GROUP BY p.supplier";
         )
             ->join('order_sku_cost_details', 'order_sku_cost_details.reference_no', '=', 'orders.order_code')
             ->join('order_products', 'order_products.order_code', '=', 'orders.order_code')
-            ->when($request['acc_nick_name'], fn($q) => $q->where('orders.seller_id', $request['acc_nick_name']))
-            ->when($request['erp_order_id'], fn($q) => $q->where('orders.reference_no', $request['erp_order_id']))
-            ->when($request['package_id'], fn($q) => $q->where('orders.order_code', $request['package_id']))
-            ->when($request['sku'], fn($q) => $q->where('order_products.sku', $request['sku']))
+            ->when($request['acc_nick_name'], fn ($q) => $q->where('orders.seller_id', $request['acc_nick_name']))
+            ->when($request['erp_order_id'], fn ($q) => $q->where('orders.reference_no', $request['erp_order_id']))
+            ->when($request['package_id'], fn ($q) => $q->where('orders.order_code', $request['package_id']))
+            ->when($request['sku'], fn ($q) => $q->where('order_products.sku', $request['sku']))
             ->when($request['shipped_date'], function ($q, $reportDate) {
                 return $q->whereBetween(
                     'orders.ship_time',
@@ -291,5 +275,109 @@ GROUP BY p.supplier";
             ->where('order_products.active', 1)
             ->first()
             ->toArray();
+    }
+
+    public function getTotalUnitSold(
+        string $reportDate,
+        string $clientCode
+    ): int {
+        return (int)$this->model
+            ->selectRaw("SUM(order_sku_cost_details.quantity) AS 'qty'")
+            ->join('order_products', function ($join) {
+                $join->on('order_products.order_code', '=', 'orders.order_code')
+                    ->where('order_products.active', 1);
+            })
+            ->join('order_sku_cost_details', function ($join) {
+                $join->on('order_sku_cost_details.reference_no', '=', 'order_products.order_code')
+                    ->on('order_sku_cost_details.product_barcode', '=', 'order_products.sku');
+            })
+            ->join('exchange_rates', function ($join) {
+                $join->on('order_sku_cost_details.currency_code_org', '=', 'exchange_rates.base_currency')
+                    ->where('exchange_rates.active', 1)
+                    ->where(
+                        DB::raw("DATE_FORMAT(orders.ship_time, '%Y%m')"),
+                        '=',
+                        DB::raw("DATE_FORMAT(exchange_rates.quoted_date, '%Y%m')")
+                    );
+            })
+            ->whereRaw("DATE_FORMAT(orders.ship_time, '%Y%m') = ?", date("Ym", strtotime($reportDate)))
+            ->where('order_products.supplier', $clientCode)
+            ->whereNotNull('orders.platform_ref_no')
+            ->value('qty');
+    }
+
+    public function getSalesOrder(
+        string $reportDate,
+        string $clientCode,
+        bool $isAvolution
+    ) {
+        return $this->model->query()
+            ->selectRaw('COUNT(DISTINCT orders.reference_no) as sales_order_count')
+            ->join('order_products', function ($join) {
+                $join->on('order_products.order_code', '=', 'orders.order_code')
+                    ->where('order_products.active', 1);
+            })
+            ->whereRaw("DATE_FORMAT(orders.ship_time,'%Y%m') = ?", date("Ym", strtotime($reportDate)))
+            ->where('order_products.supplier', $clientCode)
+            ->whereNotNull('orders.platform_ref_no')
+            ->when($isAvolution, function ($q) {
+                return $q->whereIn('orders.seller_id', function ($query) {
+                    $query->selectRaw('DISTINCT erp_nick_name')
+                        ->from('seller_accounts')
+                        ->where('is_a4_account', 1)
+                        ->where('active', 1);
+                });
+            }, function ($q) {
+                return $q->whereNotIn('orders.seller_id', function ($query) {
+                    $query->selectRaw('DISTINCT erp_nick_name')
+                        ->from('seller_accounts')
+                        ->where('is_a4_account', 1)
+                        ->where('active', 1);
+                });
+            })->value('sales_order_count');
+    }
+
+    public function getSalesAmount(
+        string $reportDate,
+        string $clientCode,
+        bool $isAvolution
+    ): float {
+        return (float)$this->model
+            ->selectRaw("sum(order_sku_cost_details.order_total_amount_org * exchange_rates.exchange_rate ) AS 
+            'total_sales_hkd'")
+            ->join('order_products', function ($join) {
+                $join->on('order_products.order_code', '=', 'orders.order_code')
+                    ->where('order_products.active', 1);
+            })
+            ->join('order_sku_cost_details', function ($join) {
+                $join->on('order_products.order_code', '=', 'order_sku_cost_details.reference_no')
+                    ->on('order_products.sku', '=', 'order_sku_cost_details.product_barcode');
+            })
+            ->leftJoin('exchange_rates', function ($join) {
+                $join->on('order_sku_cost_details.currency_code_org', '=', 'exchange_rates.base_currency')
+                    ->where('exchange_rates.active', 1)
+                    ->where(
+                        DB::raw("DATE_FORMAT(orders.ship_time,'%Y%m')"),
+                        DB::raw("DATE_FORMAT(exchange_rates.quoted_date,'%Y%m')")
+                    );
+            })
+            ->whereRaw("DATE_FORMAT(orders.ship_time,'%Y%m') = ?", date("Ym", strtotime($reportDate)))
+            ->where('order_products.supplier', $clientCode)
+            ->when($isAvolution, function ($q) {
+                return $q->whereIn('orders.seller_id', function ($query) {
+                    $query->selectRaw('DISTINCT erp_nick_name')
+                        ->from('seller_accounts')
+                        ->where('is_a4_account', 1)
+                        ->where('active', 1);
+                });
+            }, function ($q) {
+                return $q->whereNotIn('orders.seller_id', function ($query) {
+                    $query->selectRaw('DISTINCT erp_nick_name')
+                        ->from('seller_accounts')
+                        ->where('is_a4_account', 1)
+                        ->where('active', 1);
+                });
+            })->groupBy('order_products.supplier')
+            ->value('total_sales_hkd');
     }
 }

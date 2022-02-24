@@ -68,7 +68,7 @@ class SalesReportImportService
 
     public function import()
     {
-        $this->checkSheetsTitle();
+        $this->checkSheetsContent();
 
         $batchIds = $this->createBatchJobsAndGetBatchIds();
 
@@ -85,7 +85,7 @@ class SalesReportImportService
         
     }
 
-    private function checkSheetsTitle(){
+    private function checkSheetsContent(){
         $excel = SimpleExcelReader::create($this->file, 'xlsx');
         $reader = $excel->getReader();
         $reader->open($this->file);
@@ -94,6 +94,8 @@ class SalesReportImportService
             $sheetName = Str::slug($sheet->getName(), '_');
 
             if (in_array($sheetName, self::sheets())) {
+
+                // 檢查表頭
                 $header = $excel->headersToSnakeCase()->getHeadersBySheet($sheet);
 
                 if (!$header) {
@@ -113,6 +115,19 @@ class SalesReportImportService
                 $diff = collect($header)->filter()->diff(self::$sheetsHeader[$sheetName]);
                 if ( $diff->isNotEmpty() ) {
                     abort(Response::HTTP_FORBIDDEN, "Sheet [{$sheetName}]: Title [{$diff->implode(', ')}] unmatched");
+                }
+
+
+                // 檢查分頁 ERP Orders 的 Shipped Date 欄位是否等於 Report Date
+                if ($sheetName == self::SHEET_ERP_ORDERS) {
+                    
+                    // 只比對第一行的 Shipped Date
+                    $firstRow = $excel->headersToSnakeCase()->getRowsBySheet($sheet)->first();
+
+                    if (Carbon::parse($firstRow['shipped_date'])->format('Ym') <> $this->reportDate->format('Ym')) {
+                        abort(Response::HTTP_FORBIDDEN, "Sheet [{$sheetName}]: Report date is different with shipped date.");
+                    }
+
                 }
             }
         }

@@ -234,9 +234,9 @@
                 <tr>
                     <td class="col col-1">I</td>
                     <td class="col col-2">A4lution Commission</td>
-                    <td class="col col-3">HKD {{ number_format($invoice->billingStatement->a4_account_avolution_commission, 2) }}</td>
+                    <td class="col col-3">HKD {{ number_format($invoice->billingStatement->avolution_commission, 2) }}</td>
                     <td class="col col-4">1</td>
-                    <td class="col col-5">HKD {{ number_format($invoice->billingStatement->a4_account_avolution_commission, 2) }}</td>
+                    <td class="col col-5">HKD {{ number_format($invoice->billingStatement->avolution_commission, 2) }}</td>
                 </tr>
             </tbody>
             <tfoot>

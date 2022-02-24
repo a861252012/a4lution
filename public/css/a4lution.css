@@ -26,3 +26,8 @@
     content: " *";
     color: red;
 }
+
+._required-before:before {
+    content: " *";
+    color: red;
+}
