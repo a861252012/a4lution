@@ -28,7 +28,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="input_date">Created At</label>
                                 <input class="form-control _fz-1" name="search_date" id="input_date"
-                                       placeholder="date" type="text" value="{{  request('search_date') }}">
+                                    placeholder="date" type="text" value="{{  request('search_date') }}">
                             </div>
                         </div>
 
@@ -36,29 +36,13 @@
                         <div class="col-lg-2 col-md-6 col-sm-6">
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="select_fee_type">Fee Type</label>
-                                <select class="form-control _fz-1" data-toggle="select" name="fee_type"
-                                        id="select_fee_type">
-                                    <option value="">all</option>
-                                    <option value="platform_ad_fees"
-                                    @if(request('fee_type') == 'platform_ad_fees') {{ 'selected' }} @endif>
-                                        Platform Advertisement Fee
-                                    </option>
-                                    <option value="amazon_date_range"
-                                    @if(request('fee_type') == 'amazon_date_range') {{ 'selected' }} @endif>
-                                        Amazon Date Range Report
-                                    </option>
-                                    <option value="long_term_storage_fees"
-                                    @if(request('fee_type') == 'long_term_storage_fees') {{ 'selected' }} @endif>
-                                        FBA Long Term Storage Fee
-                                    </option>
-                                    <option value="monthly_storage_fees"
-                                    @if(request('fee_type') == 'monthly_storage_fees') {{ 'selected' }} @endif>
-                                        FBA Monthly Storage Fee
-                                    </option>
-                                    <option value="first_mile_shipment_fees"
-                                    @if(request('fee_type') == 'first_mile_shipment_fees') {{ 'selected' }} @endif>
-                                        First Mile Shipment Fee
-                                    </option>
+                                <select class="form-control _fz-1" data-toggle="select" 
+                                    name="fee_type" id="select_fee_type">
+                                    @foreach (['' => 'all'] + $feeTypes as $key => $value)
+                                        <option value="{{ $key }}" {{ request('fee_type') == $key ? 'selected' : '' }}>
+                                            {{ $value }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -67,18 +51,13 @@
                         <div class="col-lg-2 col-md-6 col-sm-6">
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="select_status">Status</label>
-                                <select class="form-control _fz-1" data-toggle="select" name="status_type"
-                                        id="select_status">
-                                    <option value="">all</option>
-                                    <option value="completed" @if(request('status_type') == 'completed')
-                                        {{ 'selected' }} @endif>Completed
-                                    </option>
-                                    <option value="processing" @if(request('status_type') == 'processing')
-                                        {{ 'selected' }} @endif>Processing
-                                    </option>
-                                    <option value="failed" @if(request('status_type') == 'failed')
-                                        {{ 'selected' }} @endif>Error
-                                    </option>
+                                <select class="form-control _fz-1" data-toggle="select" 
+                                    name="status" id="select_status">
+                                    @foreach (['' => 'all'] + $statuses as $key => $value)
+                                        <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>
+                                            {{ $value }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -88,7 +67,7 @@
                             <div class="form-group mb-0">
                                 <label class="form-control-label _fz-1" for="report_date">Report Date</label>
                                 <input class="form-control _fz-1" name="report_date" id="report_date"
-                                       value="{{ request('report_date') }}" placeholder="report date" type="text">
+                                    value="{{ request('report_date') }}" placeholder="report date" type="text">
                             </div>
                         </div>
 
@@ -107,7 +86,7 @@
                             <label class="form-control-label _fz-1" for="upload_btn"></label>
                             <div class="form-group mb-0">
                                 <a id="upload_btn" class="form-control btn btn-primary"
-                                   href="#inline_content" style="margin-top: 6px;">
+                                    href="#inline_content" style="margin-top: 6px;">
                                     <div>
                                         <i class="ni ni-cloud-upload-96"></i>
                                         <span class="_fz-1">Upload</span>
@@ -135,27 +114,27 @@
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach ($lists as $item)
+                    @foreach ($batchJobs as $batchJob)
                         <tr>
-                            <td>{{ \Carbon\Carbon::parse($item->created_at)
+                            <td>{{ \Carbon\Carbon::parse($batchJob->created_at)
                                                     ->setTimezone(config('services.timezone.taipei')) }}</td>
-                            <td>{{ $item->users->user_name }}</td>
-                            <td>{{ \Carbon\Carbon::parse($item->report_date)
+                            <td>{{ $batchJob->users->user_name }}</td>
+                            <td>{{ \Carbon\Carbon::parse($batchJob->report_date)
                                                     ->setTimezone(config('services.timezone.taipei'))->format('F-Y') }}</td>
-                            <td>{{ $item->fee_type }}</td>
-                            <td>{{ $item->file_name }}</td>
-                            <td>{{ $item->total_count }}</td>
-                            <td>{{ $item->status }}</td>
-                            <td>{{ $item->user_error_msg }}</td>
+                            <td>{{ $batchJob->fee_type }}</td>
+                            <td>{{ $batchJob->file_name }}</td>
+                            <td>{{ $batchJob->total_count }}</td>
+                            <td>{{ $batchJob->status }}</td>
+                            <td>{{ $batchJob->user_error_msg }}</td>
                         </tr>
                     @endforeach
                     </tbody>
                 </table>
 
                 {{-- Pagination --}}
-                @if($lists && $lists->lastPage() > 1)
+                @if($batchJobs && $batchJobs->lastPage() > 1)
                     <div class="d-flex justify-content-center" style='margin-top: 20px;'>
-                        {{ $lists->appends($_GET)->links() }}
+                        {{ $batchJobs->appends($_GET)->links() }}
                     </div>
                 @endif
 
@@ -199,13 +178,13 @@
                         <label class="form-control-label" for="inline_select_fee_type">Fee Type</label>
                     </div>
                     <div class="col-5 form-group">
-                        <select class="form-control" data-toggle="select" name="inline_fee_type"
-                                id="inline_select_fee_type">
-                            <option value="platform_ad_fees">Platform Advertisement Fee</option>
-                            <option value="amazon_date_range">Amazon Date Range Report</option>
-                            <option value="long_term_storage_fees">FBA Long Term Storage Fee</option>
-                            <option value="monthly_storage_fees">FBA Monthly Storage Fee</option>
-                            <option value="first_mile_shipment_fees">First Mile Shipment Fee</option>
+                        <select class="form-control" data-toggle="select" 
+                            name="inline_fee_type" id="inline_select_fee_type">
+                            @foreach ($feeTypes as $key => $value)
+                                <option value="{{ $key }}">
+                                    {{ $value }}
+                                </option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
@@ -303,9 +282,6 @@
                 let file = $('#inline_file')[0].files[0];
                 let fileType = file.name.slice((file.name.lastIndexOf(".") - 1 >>> 0) + 2);
 
-                let data = new FormData();
-                data.append('file', file);
-
                 if (fileType !== 'xlsx') {
                     swal({
                         icon: "error",
@@ -314,46 +290,10 @@
                     return false;
                 }
 
-                //暫時禁止用戶再次上傳檔案
+                // 暫時禁止用戶再次上傳檔案
                 $('#inline_submit').prop('disabled', true);
 
-                swal({
-                    icon: "success",
-                    text: "processing"
-                })
-                    .then(function (isConfirm) {
-                        if (isConfirm) {
-                            $.colorbox.close();
-                        }
-                    });
-                //call api to check if monthly report exist and validate title
-                $.ajax({
-                    url: window.location.origin + '/fee/preValidation/' + date + '/' + type,
-                    type: 'post',
-                    processData: false,
-                    contentType: false,
-                    data: data,
-                    success: function (res) {
-                        if (res.status !== 200) {
-                            //如驗證失敗則可再次上傳
-                            $('#inline_submit').prop('disabled', false);
-
-                            swal({
-                                icon: "error",
-                                text: res.msg
-                            })
-                            return false;
-                        }
-
-                        uploadAjax(file, date, type);
-                    }, error: function (e) {
-                        console.log(e);
-                        swal({
-                            icon: 'error',
-                            text: 'upload error'
-                        });
-                    }
-                });
+                uploadAjax(file, date, type);
             });
 
             //check file size
@@ -389,10 +329,18 @@
                 contentType: false,
                 data: data,
                 success: function () {
-                    //如上傳成功則可再次上傳
+
+                    $.colorbox.close();
+
+                    swal({
+                        icon: 'success',
+                        text: 'upload processing',
+                    });
+
                     $('#inline_submit').prop('disabled', false);
+
                 }, error: function (e) {
-                    // 顯示 Validate Error
+
                     let errors = [];
                     $.each(JSON.parse(e.responseText).errors, function (col, msg) {
                         errors.push(msg.toString());
@@ -403,10 +351,11 @@
                         text: errors.join("\n")
                     });
 
-                    //如上傳失敗則可再次上傳
                     $('#inline_submit').prop('disabled', false);
+
                 }
             });
+
         }
     </script>
 @endpush

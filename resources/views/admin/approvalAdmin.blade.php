@@ -32,24 +32,24 @@
                     </div>
 
                     {{-- BATCH APPROVE --}}
-                    <div class="col-lg-2 col-md-6 col-sm-6">
-                        <label class="form-control-label" for="batch_approve_btn"></label>
-                        <div class="form-group mb-0">
-                            <button class="form-control btn _btn btn-primary _fz-1" id="batch_approve_btn"
-                                    type="button" style="margin-top: 0.45rem;">Batch Approve
-                            </button>
-                        </div>
-                    </div>
+{{--                    <div class="col-lg-2 col-md-6 col-sm-6">--}}
+{{--                        <label class="form-control-label" for="batch_approve_btn"></label>--}}
+{{--                        <div class="form-group mb-0">--}}
+{{--                            <button class="form-control btn _btn btn-primary _fz-1" id="batch_approve_btn"--}}
+{{--                                    type="button" style="margin-top: 0.45rem;">Batch Approve--}}
+{{--                            </button>--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
 
                     {{-- REVOKE APPROVAL --}}
-                    <div class="col-lg-2 col-md-6 col-sm-6">
-                        <label class="form-control-label" for="revoke_approval_btn"></label>
-                        <div class="form-group mb-0">
-                            <button class="form-control btn _btn btn-default _fz-1" id="revoke_approval_btn"
-                                    type="button" style="margin-top: 0.45rem;">Revoke Approval
-                            </button>
-                        </div>
-                    </div>
+{{--                    <div class="col-lg-2 col-md-6 col-sm-6">--}}
+{{--                        <label class="form-control-label" for="revoke_approval_btn"></label>--}}
+{{--                        <div class="form-group mb-0">--}}
+{{--                            <button class="form-control btn _btn btn-default _fz-1" id="revoke_approval_btn"--}}
+{{--                                    type="button" style="margin-top: 0.45rem;">Revoke Approval--}}
+{{--                            </button>--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
 
                 </div>
             </div>
@@ -69,91 +69,91 @@
                 autoclose: true
             });
 
-            $('#batch_approve_btn').click(function () {
-                let reportDate = $('#report_date').val();
-                let _token = $('meta[name="csrf-token"]').attr('content');
-
-                if (!reportDate) {
-                    swal({
-                        icon: "error",
-                        text: "Report Date Can't Be Empty"
-                    });
-                    return;
-                }
-
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': _token
-                    }
-                });
-
-                $.ajax({
-                    url: origin + '/admin/approvaladmin/batch/' + reportDate,
-                    type: 'put',
-                    success: function (res) {
-                        if (res.status !== 200) {
-                            swal({
-                                icon: 'error',
-                                text: 'Error'
-                            });
-                        } else {
-                            swal({
-                                icon: 'success',
-                                text: 'Updated'
-                            });
-                        }
-                    },
-                    error: function (e) {
-                        swal({
-                            icon: 'error',
-                            text: e
-                        });
-                    }
-                });
-            });
-
-            $('#revoke_approval_btn').click(function () {
-                let reportDate = $('#report_date').val();
-                let _token = $('meta[name="csrf-token"]').attr('content');
-
-                if (!reportDate) {
-                    swal({
-                        icon: "error",
-                        text: "report date can't be empty"
-                    });
-                    return;
-                }
-
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': _token
-                    }
-                });
-
-                $.ajax({
-                    url: origin + '/admin/approvaladmin/revoke/' + reportDate,
-                    type: 'put',
-                    success: function (res) {
-                        if (res.status !== 200) {
-                            swal({
-                                icon: 'error',
-                                text: res.msg
-                            });
-                        } else {
-                            swal({
-                                icon: 'success',
-                                text: 'Updated'
-                            });
-                        }
-                    },
-                    error: function () {
-                        swal({
-                            icon: 'error',
-                            text: 'Api Error'
-                        });
-                    }
-                });
-            });
+            // $('#batch_approve_btn').click(function () {
+            //     let reportDate = $('#report_date').val();
+            //     let _token = $('meta[name="csrf-token"]').attr('content');
+            //
+            //     if (!reportDate) {
+            //         swal({
+            //             icon: "error",
+            //             text: "Report Date Can't Be Empty"
+            //         });
+            //         return;
+            //     }
+            //
+            //     $.ajaxSetup({
+            //         headers: {
+            //             'X-CSRF-TOKEN': _token
+            //         }
+            //     });
+            //
+            //     $.ajax({
+            //         url: origin + '/admin/approvaladmin/batch/' + reportDate,
+            //         type: 'put',
+            //         success: function (res) {
+            //             if (res.status !== 200) {
+            //                 swal({
+            //                     icon: 'error',
+            //                     text: 'Error'
+            //                 });
+            //             } else {
+            //                 swal({
+            //                     icon: 'success',
+            //                     text: 'Updated'
+            //                 });
+            //             }
+            //         },
+            //         error: function (e) {
+            //             swal({
+            //                 icon: 'error',
+            //                 text: e
+            //             });
+            //         }
+            //     });
+            // });
+            //
+            // $('#revoke_approval_btn').click(function () {
+            //     let reportDate = $('#report_date').val();
+            //     let _token = $('meta[name="csrf-token"]').attr('content');
+            //
+            //     if (!reportDate) {
+            //         swal({
+            //             icon: "error",
+            //             text: "report date can't be empty"
+            //         });
+            //         return;
+            //     }
+            //
+            //     $.ajaxSetup({
+            //         headers: {
+            //             'X-CSRF-TOKEN': _token
+            //         }
+            //     });
+            //
+            //     $.ajax({
+            //         url: origin + '/admin/approvaladmin/revoke/' + reportDate,
+            //         type: 'put',
+            //         success: function (res) {
+            //             if (res.status !== 200) {
+            //                 swal({
+            //                     icon: 'error',
+            //                     text: res.msg
+            //                 });
+            //             } else {
+            //                 swal({
+            //                     icon: 'success',
+            //                     text: 'Updated'
+            //                 });
+            //             }
+            //         },
+            //         error: function () {
+            //             swal({
+            //                 icon: 'error',
+            //                 text: 'Api Error'
+            //             });
+            //         }
+            //     });
+            // });
 
         });
     </script>

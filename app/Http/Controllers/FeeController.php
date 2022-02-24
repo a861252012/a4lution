@@ -2,38 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use App\Constants\ImportTitleConstant;
-use App\Exports\AmazonDateRangeExport;
-use App\Exports\FirstMileShipmentFeeExport;
-use App\Exports\LongTermStorageFeesExport;
-use App\Exports\MonthlyStorageFeesExport;
-use App\Exports\PlatformAdFeesExport;
-use App\Imports\QueueAmazonDateRangeImport;
-use App\Imports\QueueFirstMileShipmentFees;
-use App\Imports\QueueLongTermStorageFees;
-use App\Imports\QueueMonthlyStorageFees;
-use App\Imports\QueuePlatformAdFees;
-use App\Models\AmazonDateRangeReport;
+use Exception;
+use Carbon\Carbon;
 use App\Models\BatchJob;
+use Illuminate\Support\Str;
+use App\Services\FeeService;
+use Illuminate\Http\Request;
+use App\Models\PlatformAdFee;
 use App\Models\BillingStatement;
 use App\Models\ExtraordinaryItem;
-use App\Models\FirstMileShipmentFee;
-use App\Models\LongTermStorageFee;
 use App\Models\MonthlyStorageFee;
-use App\Models\PlatformAdFee;
-use App\Repositories\CustomerRepository;
-use App\Repositories\ExchangeRateRepository;
-use Carbon\Carbon;
-use Exception;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\LongTermStorageFee;
 use Illuminate\Support\Facades\DB;
+use App\Constants\BatchJobConstant;
 use Illuminate\Support\Facades\Log;
+use App\Models\FirstMileShipmentFee;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PlatformAdFeesExport;
+use App\Models\AmazonDateRangeReport;
+use App\Constants\ImportTitleConstant;
+use App\Exports\AmazonDateRangeExport;
 use Maatwebsite\Excel\HeadingRowImport;
+use App\Repositories\CustomerRepository;
+use App\Exports\MonthlyStorageFeesExport;
+use App\Exports\LongTermStorageFeesExport;
+use App\Services\SalesReportImportService;
+use App\Exports\FirstMileShipmentFeeExport;
+use App\Repositories\ExchangeRateRepository;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class FeeController extends Controller
 {
@@ -73,17 +72,20 @@ class FeeController extends Controller
 
     public function uploadView(Request $request)
     {
-        $data['lists'] = $this->batchJob->query()
+        $feeTypes = BatchJobConstant::mapFeeType();
+        $statuses = BatchJobConstant::mapStatus();
+
+        $batchJobs = BatchJob::query()
             ->with('users:id,user_name')
             ->select(
-                'batch_jobs.user_id',
-                'batch_jobs.report_date',
-                'batch_jobs.fee_type',
-                'batch_jobs.file_name',
-                'batch_jobs.total_count',
-                'batch_jobs.status',
-                'batch_jobs.created_at',
-                'batch_jobs.user_error_msg'
+                'user_id',
+                'report_date',
+                'fee_type',
+                'file_name',
+                'total_count',
+                'status',
+                'created_at',
+                'user_error_msg'
             )
             ->when($request->status, fn ($q) => $q->where('batch_jobs.status', $request->status))
             ->when($request->fee_type, fn ($q) => $q->where('batch_jobs.fee_type', $request->fee_type))
@@ -107,72 +109,52 @@ class FeeController extends Controller
                     ]
                 )
             )
-            ->orderby('batch_jobs.id', 'desc')->paginate(50)->appends(request()->query());
+            ->orderby('batch_jobs.id', 'desc')
+            ->paginate(50)
+            ->appends(request()->query());
 
-        return view('fee.upload', $data);
+        return view('fee.upload', compact('batchJobs', 'feeTypes', 'statuses'));
     }
 
     public function uploadFile(Request $request)
     {
-        $fileData = $request->file('file');
-        $feeType = $request->inline_fee_type;
-        $inputReportDate = date('Y-m-d', strtotime($request->inline_report_date));
-        $reportDate = $inputReportDate ? date('Y-m-d', strtotime($inputReportDate)) : date('Y-m-d');
+        $feeService = new FeeService;
 
-        $insertBatchID = BatchJob::insertGetId([
+        $file = $request->file('file');
+        $feeType = $request->inline_fee_type;
+        $reportDate = Carbon::parse($request->inline_report_date);
+
+        $feeService->validate($reportDate);
+
+        // 處理 A4lution Sales Report Import
+        if ($feeType == BatchJobConstant::FEE_TYPE_SALES_REPORT) {
+
+            (new SalesReportImportService($file, $reportDate))->import();
+
+            return;
+        }
+
+        $feeService->checkExcelHeader($file, $feeType);
+
+        $batchJob = BatchJob::create([
             'user_id' => Auth::id(),
             'fee_type' => $feeType,
-            'file_name' => $fileData->getClientOriginalName(),
+            'file_name' => $file->getClientOriginalName(),
             'report_date' => $reportDate,
             'total_count' => 0,
             'status' => self::BATCH_STATUS,
             'created_at' => now()->toDateTimeString(),
         ]);
 
-        //查詢該月是否已結算,如已結算則不得再更改
-        $haveMonthlyReport = $this->billingStatement
-            ->active()
-            ->where('report_date', $inputReportDate)
-            ->count();
-
-        if ($haveMonthlyReport) {
-            BatchJob::where('id', $insertBatchID)->update(
-                [
-                    'status' => 'failed',
-                    'exit_message' => 'The selected report date (year-month) was closed',
-                ]
-            );
-
-            return false;
+        $importClass = sprintf('App\\Imports\\Fee\\%sImport', Str::studly($feeType));
+        if (! class_exists($importClass)) {
+            abort(Response::HTTP_NOT_FOUND, "Class '{$importClass}' not found");
         }
 
-        switch ($feeType) {
-            case "platform_ad_fees":
-                $import = new QueuePlatformAdFees(Auth::id(), $insertBatchID, $inputReportDate);
-
-                break;
-            case "amazon_date_range":
-                $import = new QueueAmazonDateRangeImport(Auth::id(), $insertBatchID, $inputReportDate);
-
-                break;
-            case "long_term_storage_fees":
-                $import = new QueueLongTermStorageFees(Auth::id(), $insertBatchID, $inputReportDate);
-
-                break;
-            case "monthly_storage_fees":
-                $import = new QueueMonthlyStorageFees(Auth::id(), $insertBatchID, $inputReportDate);
-
-                break;
-            case "first_mile_shipment_fees":
-                $import = new QueueFirstMileShipmentFees(Auth::id(), $insertBatchID, $inputReportDate);
-                break;
-            default:
-                $import = null;
-        }
-
-        if ($import) {
-            Excel::queueImport($import, $fileData)->allOnQueue('queue_excel');
-        }
+        Excel::queueImport(
+            new $importClass(Auth::id(), $batchJob->id, $reportDate->toDateString()),
+            $file
+        )->allOnQueue('queue_excel');
     }
 
     public function platformAdsView(Request $request)
@@ -640,94 +622,5 @@ class FeeController extends Controller
                 ]
             );
         }
-    }
-
-    public function preValidation(Request $request): JsonResponse
-    {
-        $dateObject = Carbon::parse($request->route('date'));
-
-        //exchange rate validation
-        $exchangeRate = (new ExchangeRateRepository)->getByQuotedDate($dateObject->startOfMonth()->toDateString());
-
-        if ($exchangeRate->isEmpty()) {
-            return response()->json(
-                [
-                    'status' => Response::HTTP_FORBIDDEN,
-                    'msg' => "Currency Exchange Rate Not Found Error"
-                ]
-            );
-        }
-
-        //check if monthly report exist
-        $hasMonthlyBilling = $this->billingStatement
-            ->active()
-            ->whereRaw(
-                "DATE_FORMAT(report_date,'%Y%m') = ?",
-                [$dateObject->format('Ym')]
-            )
-            ->count();
-
-        if ($hasMonthlyBilling) {
-            $formattedDate = $dateObject->format('Y-m');
-
-            return response()->json(
-                [
-                    'status' => Response::HTTP_FORBIDDEN,
-                    'msg' => "The {$formattedDate} sales summary was generated.
-                            Please delete the sales summary and reupload it."
-                ]
-            );
-        }
-
-        //validate excel title
-        $headings = (new HeadingRowImport)->toCollection($request->file('file')) ?
-            (new HeadingRowImport)->toCollection($request->file('file'))->collapse()->collapse()->filter() : null;
-
-        if (!$headings) {
-            return response()->json(
-                [
-                    'status' => Response::HTTP_FORBIDDEN,
-                    'msg' => "Title unmatched"
-                ]
-            );
-        }
-
-        switch ($request->route('type')) {
-            case 'platform_ad_fees':
-                $diff = $headings->diff(ImportTitleConstant::PLATFORM_AD) ?? null;
-                break;
-            case 'amazon_date_range':
-                $diff = $headings->diff(ImportTitleConstant::AMZ_DATE_RANGE) ?? null;
-                break;
-            case 'long_term_storage_fees':
-                $diff = $headings->diff(ImportTitleConstant::LONG_TERM) ?? null;
-                break;
-            case 'monthly_storage_fees':
-                $diff = $headings->diff(ImportTitleConstant::MONTHLY_STORAGE) ?? null;
-                break;
-            case 'first_mile_shipment_fees':
-                $diff = $headings->diff(ImportTitleConstant::FIRST_MILE_SHIPMENT) ?? null;
-                break;
-
-            default:
-                $diff = null;
-                break;
-        }
-
-        if ($diff->isNotEmpty()) {
-            return response()->json(
-                [
-                    'status' => Response::HTTP_FORBIDDEN,
-                    'msg' => "Title : {$diff->implode(', ')} unmatched"
-                ]
-            );
-        }
-
-        return response()->json(
-            [
-                'status' => Response::HTTP_OK,
-                'msg' => "success"
-            ]
-        );
     }
 }

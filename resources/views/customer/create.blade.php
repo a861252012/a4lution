@@ -88,10 +88,10 @@
                 <h3>Advanced Setting</h3>
                 <hr class="my-2">
                 <div class="form-group mb-2">
-                    <label class="form-control-label _fz-1" for="sales_region">
-                        Sales Region <span class="text-red">*</span>
+                    <label class="form-control-label _fz-1" for="region">
+                        Region
                     </label>
-                    <select class="form-control _fz-1" data-toggle="select" name="sales_region" id="sales_region">
+                    <select class="form-control _fz-1" data-toggle="select" name="region" id="region">
                         <option value="HK">
                             HK
                         </option>
@@ -101,11 +101,31 @@
                     </select>
                 </div>
                 <div class="form-group mb-2">
-                    <label class="form-control-label _fz-1" for="contract_date">
-                        Contract Date <span class="text-red">*</span>
+                    <label class="form-control-label _fz-1" for="contract_period_start">
+                        Contract Period
                     </label>
-                    <input class="form-control _fz-1" name="contract_date" id="contract_date" 
-                        type="text" value="">
+                    <div class="input-group input-daterange mb-0">
+                        <input class="form-control _fz-1" name="contract_period_start" id="contract_period_start"
+                            type="text" placeholder="Start Date" value="">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-secondary">to</span>
+                        </div>
+                        <input class="form-control _fz-1" name="contract_period_end" id="contract_period_end"
+                            type="text" placeholder="End Date" value="">
+                    </div>
+                </div>
+                <div class="form-group mb-2">
+                    <label class="form-control-label _fz-1">Commission Calculation(deduct the refund/cxl order)</label>
+                    <div>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <input type="radio" id="commissionCalculationY" name="commission_deduct_refund_cxl_order" class="custom-control-input" value="1" checked>
+                            <label class="custom-control-label" for="commissionCalculationY">Y</label>
+                        </div>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <input type="radio" id="commissionCalculationN" name="commission_deduct_refund_cxl_order" class="custom-control-input" value="0">
+                            <label class="custom-control-label" for="commissionCalculationN">N</label>
+                        </div>
+                    </div>
                 </div>
                 <div class="form-group mb-2">
                     <label class="form-control-label _fz-1">Status</label>
@@ -287,10 +307,12 @@
 <script type="text/javascript">
     $(document).ready(function() {
 
-        $('#contract_date').datepicker({
-            format: 'yyyy-mm-dd',//日期時間格式
-            ignoreReadonly: false,  //禁止使用者輸入 啟用唯讀
-            autoclose: true
+        $('.input-daterange input').each(function () {
+            $(this).datepicker({
+                format: 'yyyy-mm-dd',//日期時間格式
+                ignoreReadonly: false,  //禁止使用者輸入 啟用唯讀
+                autoclose: true
+            });
         });
 
         // ******************
