@@ -22,6 +22,7 @@
         "league/flysystem-aws-s3-v3": "^1.0",
         "maatwebsite/excel": "3.1.32",
         "predis/predis": "^1.1",
+        "spatie/simple-excel": "^1.13",
         "staudenmeir/eloquent-has-many-deep": "^1.14",
         "techlab/smartwizard": "^5.1"
     },

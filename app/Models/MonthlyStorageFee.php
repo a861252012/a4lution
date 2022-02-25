@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class MonthlyStorageFee extends Model
 {
@@ -11,5 +12,10 @@ class MonthlyStorageFee extends Model
     protected $guarded = ['id'];
 
     public $timestamps = false;
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('active', 1);
+    }
 }
 

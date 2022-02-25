@@ -4,6 +4,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class Order extends Model
 {
@@ -18,4 +19,14 @@ class Order extends Model
     public $timestamps = false;
 
     protected $keyType = 'string';
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('active', 1);
+    }
+
+    public function scopeInActive(Builder $query): Builder
+    {
+        return $query->where('active', 0);
+    }
 }
