@@ -541,7 +541,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                             'cost_of_point' => $order['cost_of_point_original_currency'],
                             'exclusives_referral_fee' => $order['exclusives_referral_fee_original_currency'],
                             'gross_profit' => $order['gross_profit_original_currency'],
-                            'other_transaction' => (int)$order['other_fee_original_currency'] + (int)$order['marketplace_tax_original_currency'] + (int)$order['cost_of_point_original_currency'],
+                            'other_transaction' => (float)$order['other_fee_original_currency'] + (float)$order['marketplace_tax_original_currency'] + (float)$order['cost_of_point_original_currency'],
                             'created_at' => now(),
                             'created_by' => $this->userId,
                             'updated_at' => now(),
