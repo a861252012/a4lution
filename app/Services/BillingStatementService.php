@@ -429,9 +429,7 @@ class BillingStatementService
         }
 
         //check if commission rate type is promotion
-        $maxDiscountRate = $this->orderProductRepo->getMaxDiscountRate($clientCode, $reportDate);
-
-        if ((float)$settings->promotion_threshold >= $maxDiscountRate) {
+        if ($this->isPromotion((float)$settings->promotion_threshold, $clientCode, $reportDate)) {
             return ['type' => 'promotion', 'value' => $settings->tier_promotion, 'status' => 'success'];
         }
 
@@ -452,22 +450,13 @@ class BillingStatementService
         switch ($commissionRate['type']) {
             case 'sku':
                 return $this->orderProductRepo->getSkuAvolutionCommission($clientCode, $shipDate);
-//                return $this->calculation->numberFormatPrecision(
-//                    $this->orderProductRepo->getSkuAvolutionCommission($clientCode, $shipDate),
-//                    4
-//                );
             case 'tier_amount':
                 return $commissionRate['value'];
-            // tier_rate, tier_base_rate, promotion
             default:
                 $param = ($this->isDeductRefund($clientCode)) ? $totalSalesAmount - $totalRefundAndResend :
                     $totalSalesAmount;
 
                 return $param * $commissionRate['value'];
-//                return $this->calculation->numberFormatPrecision(
-//                    $param * $commissionRate['value'],
-//                    4
-//                );
         }
     }
 
@@ -517,5 +506,15 @@ class BillingStatementService
         return (bool)optional(
             app(CustomerRepository::class)->findByClientCode($clientCode)
         )->commission_deduct_refund_cxl_order;
+    }
+
+    protected function isPromotion(
+        float $promotionThreshold,
+        string $clientCode,
+        string $reportDate
+    ): bool {
+        $maxDiscountRate = $this->orderProductRepo->getMaxDiscountRate($clientCode, $reportDate);
+
+        return (($promotionThreshold > 0) && ($promotionThreshold >= $maxDiscountRate));
     }
 }

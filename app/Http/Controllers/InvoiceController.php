@@ -7,7 +7,6 @@ use App\Jobs\Invoice\ExportInvoiceExcel;
 use App\Jobs\Invoice\ExportInvoicePDFs;
 use App\Jobs\Invoice\SetSaveDir;
 use App\Models\BillingStatement;
-use App\Models\Customer;
 use App\Models\Invoice;
 use App\Repositories\BillingStatementRepository;
 use App\Repositories\CustomerRelationRepository;
@@ -19,7 +18,6 @@ use Carbon\Carbon;
 use Illuminate\Bus\Batch;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Bus;
@@ -33,7 +31,6 @@ class InvoiceController extends Controller
     private Invoice $invoice;
     private CustomerRelationRepository $customerRelationRepo;
     private BillingStatement $billingStatement;
-    private Customer $customer;
     private BillingStatementRepository $billingStatementRepo;
     private InvoiceService $invoiceService;
     private InvoiceRepository $invoiceRepo;
@@ -42,7 +39,6 @@ class InvoiceController extends Controller
     public function __construct(
         Invoice                    $invoice,
         CustomerRelationRepository $customerRelationRepo,
-        Customer                   $customer,
         BillingStatement           $billingStatement,
         InvoiceService             $invoiceService,
         BillingStatementRepository $billingStatementRepo,
@@ -52,7 +48,6 @@ class InvoiceController extends Controller
         $this->invoice = $invoice;
         $this->customerRelationRepo = $customerRelationRepo;
         $this->billingStatement = $billingStatement;
-        $this->customer = $customer;
         $this->billingStatementRepo = $billingStatementRepo;
         $this->invoiceService = $invoiceService;
         $this->invoiceRepo = $invoiceRepo;
@@ -75,9 +70,9 @@ class InvoiceController extends Controller
         return view('invoice/list', compact('lists', 'clientCodeList'));
     }
 
-    public function downloadFile(Request $request): RedirectResponse
+    public function downloadFile(Request $request)
     {
-        $token = $request->route('token') ?? null;
+        $token = $request->route('token');
 
         if (!$token) {
             return back()->with('message', 'failed to download');
@@ -167,19 +162,23 @@ class InvoiceController extends Controller
 
         $data['billingStatement'] = $this->billingStatementRepo->find($request->billing_statement_id);
 
-//        Client Contact : customers.contact_person
-        $data['customerInfo'] = $this->customerRepo->findByClientCode($data['clientCode'])->toArray();
+        //Client Contact : customers.contact_person
+        $supplierCode = $this->customerRepo->findByClientCode($data['clientCode']);
 
-        //打api取 SupplierName
-        $getSupplierName = app(ERPRequester::class)->send(
-            config('services.erp.wmsUrl'),
-            self::GET_SUPPLIER_INFO,
-            [
-                "supplierCode" => $data['customerInfo']['supplier_code']
-            ]
-        );
+        if (optional($supplierCode)->supplier_code) {
+            //打api取 SupplierName
+            $getSupplierName = app(ERPRequester::class)->send(
+                config('services.erp.wmsUrl'),
+                self::GET_SUPPLIER_INFO,
+                [
+                    "supplierCode" => $supplierCode->supplier_code
+                ]
+            );
+        }
 
         $data['supplierName'] = $getSupplierName['data']['supplierName'] ?? '';
+
+        $data['customerInfo'] = collect($supplierCode)->toArray();
 
         return view('invoice/edit', $data);
     }

@@ -209,13 +209,13 @@
                             <label class="form-control-label _fz-1" for="step_report_date">Report Date</label>
                             <input class="form-control _fz-1" name="step_report_date" id="step_report_date"
                                    placeholder="step_report_date"
-                                   type="text" value="{{$formattedReportDate}}" readonly>
+                                   type="text" value="{{ $formattedReportDate ?? '' }}" readonly>
                         </div>
 
                         <div class="col-3 form-group">
                             <label class="form-control-label _fz-1" for="issue_date">Issue Date</label>
                             <input class="form-control _fz-1" name="issue_date" id="issue_date" placeholder="issue_date"
-                                   type="text" value="{{$currentDate}}">
+                                   type="text" value="{{ $currentDate ?? '' }}">
                         </div>
 
                         <div class="col-4 form-group">
@@ -231,20 +231,20 @@
                             <label class="form-control-label _fz-1" for="client_code">Client Code</label>
                             <input class="form-control _fz-1" name="client_code" id="client_code"
                                    placeholder="client_code"
-                                   type="text" value="{{$clientCode ?? ''}}" readonly>
+                                   type="text" value="{{ $clientCode ?? '' }}" readonly>
                         </div>
 
                         <div class="col-3 form-group">
                             <label class="form-control-label _fz-1" for="due_date">Due Date</label>
                             <input class="form-control _fz-1" name="due_date" id="due_date" placeholder="due_date"
-                                   type="text" value="{{$nextMonthDate}}">
+                                   type="text" value="{{ $nextMonthDate ?? '' }}">
                         </div>
 
                         <div class="col-4 form-group">
                             <label class="form-control-label _fz-1" for="client_company">Company Contact</label>
                             <input class="form-control _fz-1" name="client_company" id="client_company"
                                    placeholder="client_company" type="text"
-                                   value="{{$customerInfo['company_name']}}">
+                                   value="{{ $customerInfo['company_name'] ?? '' }}">
                         </div>
                     </div>
 
@@ -253,7 +253,7 @@
                             <label class="form-control-label _fz-1" for="supplier_name">Supplier Name</label>
                             <input class="form-control _fz-1" name="supplier_name" id="supplier_name"
                                    placeholder="supplier_name"
-                                   type="text" value="{{$supplierName ?? ''}}" readonly>
+                                   type="text" value="{{ $supplierName ?? '' }}" readonly>
                         </div>
 
                         <div class="col-3 form-group">
@@ -268,14 +268,14 @@
                             <label class="form-control-label _fz-1" for="client_address1">Street 1</label>
                             <input class="form-control _fz-1" name="client_address1" id="client_address1"
                                    placeholder="client_address1" type="text"
-                                   value="{{$customerInfo['address1']}}">
+                                   value="{{ $customerInfo['address1'] ?? '' }}">
                         </div>
 
                         <div class="col-3 form-group">
                             <label class="form-control-label _fz-1" for="client_address2">Street 2</label>
                             <input class="form-control _fz-1" name="client_address2" id="client_address2"
                                    placeholder="client_address2" type="text"
-                                   value="{{$customerInfo['address2']}}">
+                                   value="{{ $customerInfo['address2'] ?? '' }}">
                         </div>
                     </div>
 
@@ -285,20 +285,21 @@
                             <label class="form-control-label _fz-1" for="client_city">City</label>
                             <input class="form-control _fz-1" name="client_city" id="client_city"
                                    placeholder="client_city"
-                                   type="text" value="{{$customerInfo['city']}}">
+                                   type="text" value="{{ $customerInfo['city'] ?? '' }}">
                         </div>
 
                         <div class="col-2 form-group">
                             <label class="form-control-label _fz-1"
                                    for="client_district">District</label>
                             <input class="form-control _fz-1" name="client_district" id="client_district"
-                                   placeholder="client_district" type="text" value="{{$customerInfo['district']}}">
+                                   placeholder="client_district"
+                                   type="text" value="{{ $customerInfo['district'] ?? '' }}">
                         </div>
 
                         <div class="col-1 form-group">
                             <label class="form-control-label _fz-1" for="client_zip">Zip</label>
                             <input class="form-control _fz-1" name="client_zip" id="client_zip" placeholder="client_zip"
-                                   type="text" value="{{$customerInfo['zip']}}">
+                                   type="text" value="{{ $customerInfo['zip'] ?? '' }}">
                         </div>
                     </div>
 
@@ -306,8 +307,8 @@
                         <div class="col-3 offset-6 form-group">
                             <label class="form-control-label _fz-1"
                                    for="client_country">Country</label>
-                            <input class="form-control _fz-1" name="client_country" id="client_country"
-                                   placeholder="client_country" type="text" value="{{$customerInfo['country']}}">
+                            <input class="form-control _fz-1" name="client_country" id="client_country" type="text"
+                                   placeholder="client_country" value="{{ $customerInfo['country'] ?? '' }}">
                         </div>
                     </div>
 
