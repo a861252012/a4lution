@@ -39,7 +39,6 @@ class InvoiceController extends Controller
     public function __construct(
         Invoice                    $invoice,
         CustomerRelationRepository $customerRelationRepo,
-        Customer                   $customer,
         BillingStatement           $billingStatement,
         InvoiceService             $invoiceService,
         BillingStatementRepository $billingStatementRepo,
@@ -49,7 +48,6 @@ class InvoiceController extends Controller
         $this->invoice = $invoice;
         $this->customerRelationRepo = $customerRelationRepo;
         $this->billingStatement = $billingStatement;
-        $this->customer = $customer;
         $this->billingStatementRepo = $billingStatementRepo;
         $this->invoiceService = $invoiceService;
         $this->invoiceRepo = $invoiceRepo;
@@ -74,7 +72,7 @@ class InvoiceController extends Controller
 
     public function downloadFile(Request $request)
     {
-        $token = $request->route('token') ?? null;
+        $token = $request->route('token');
 
         if (!$token) {
             return back()->with('message', 'failed to download');
@@ -164,19 +162,23 @@ class InvoiceController extends Controller
 
         $data['billingStatement'] = $this->billingStatementRepo->find($request->billing_statement_id);
 
-//        Client Contact : customers.contact_person
-        $data['customerInfo'] = $this->customerRepo->findByClientCode($data['clientCode'])->toArray();
+        //Client Contact : customers.contact_person
+        $supplierCode = $this->customerRepo->findByClientCode($data['clientCode']);
 
-        //打api取 SupplierName
-        $getSupplierName = app(ERPRequester::class)->send(
-            config('services.erp.wmsUrl'),
-            self::GET_SUPPLIER_INFO,
-            [
-                "supplierCode" => $data['customerInfo']['supplier_code']
-            ]
-        );
+        if (optional($supplierCode)->supplier_code) {
+            //打api取 SupplierName
+            $getSupplierName = app(ERPRequester::class)->send(
+                config('services.erp.wmsUrl'),
+                self::GET_SUPPLIER_INFO,
+                [
+                    "supplierCode" => $supplierCode->supplier_code
+                ]
+            );
+        }
 
         $data['supplierName'] = $getSupplierName['data']['supplierName'] ?? '';
+
+        $data['customerInfo'] = collect($supplierCode)->toArray();
 
         return view('invoice/edit', $data);
     }

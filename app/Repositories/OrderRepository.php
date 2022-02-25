@@ -37,7 +37,8 @@ class OrderRepository extends BaseRepository
                 'SUM((order_products.last_mile_shipping_fee + 
                 ((order_products.first_mile_tariff + order_products.first_mile_shipping_fee) 
                 / order_sku_cost_details.currency_rate)) * exchange_rates.exchange_rate) AS "shipping_fee_hkd",
-                SUM(order_products.transaction_fee * exchange_rates.exchange_rate) AS "platform_fee_hkd",
+                sum((order_products.transaction_fee + order_products.other_transaction) * exchange_rates.exchange_rate)
+                AS "platform_fee_hkd",
                 SUM(order_products.fba_fee * exchange_rates.exchange_rate) AS "FBA_fees_hkd"'
             )
             ->join('order_products', function ($join) {
