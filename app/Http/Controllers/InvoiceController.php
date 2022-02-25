@@ -7,7 +7,6 @@ use App\Jobs\Invoice\ExportInvoiceExcel;
 use App\Jobs\Invoice\ExportInvoicePDFs;
 use App\Jobs\Invoice\SetSaveDir;
 use App\Models\BillingStatement;
-use App\Models\Customer;
 use App\Models\Invoice;
 use App\Repositories\BillingStatementRepository;
 use App\Repositories\CustomerRelationRepository;
@@ -19,7 +18,6 @@ use Carbon\Carbon;
 use Illuminate\Bus\Batch;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Bus;
@@ -33,7 +31,6 @@ class InvoiceController extends Controller
     private Invoice $invoice;
     private CustomerRelationRepository $customerRelationRepo;
     private BillingStatement $billingStatement;
-    private Customer $customer;
     private BillingStatementRepository $billingStatementRepo;
     private InvoiceService $invoiceService;
     private InvoiceRepository $invoiceRepo;
@@ -75,7 +72,7 @@ class InvoiceController extends Controller
         return view('invoice/list', compact('lists', 'clientCodeList'));
     }
 
-    public function downloadFile(Request $request): RedirectResponse
+    public function downloadFile(Request $request)
     {
         $token = $request->route('token') ?? null;
 
