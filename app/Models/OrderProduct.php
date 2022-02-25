@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrderProduct extends Model
 {
@@ -11,28 +12,6 @@ class OrderProduct extends Model
 
     protected $guarded = [];
 
-    /**
-     * The "booted" method of the model.
-     *
-     * @return void
-     */
-    protected static function booted()
-    {
-        static::creating(function ($exchangeRate) {
-            $exchangeRate->updated_by = Auth::id();
-            $exchangeRate->created_by = Auth::id();
-            $exchangeRate->active = 1;
-        });
-        static::updating(function ($exchangeRate) {
-            $exchangeRate->updated_by = Auth::id();
-        });
-    }
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
     protected $casts = [
         'sales_amount' => 'float',
         "paypal_fee" => 'float',
@@ -49,4 +28,26 @@ class OrderProduct extends Model
         "exclusives_referral_fee" => 'float',
         "other_transaction" => 'float'
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($orderProduct) {
+            $orderProduct->updated_by = Auth::id();
+            $orderProduct->created_by = Auth::id();
+            $orderProduct->active = 1;
+        });
+        static::updating(function ($orderProduct) {
+            $orderProduct->updated_by = Auth::id();
+        });
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('active', 1);
+    }
+
+    public function scopeInActive(Builder $query): Builder
+    {
+        return $query->where('active', 0);
+    }
 }

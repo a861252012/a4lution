@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Imports;
+namespace App\Imports\Fee;
 
 use App\Models\BatchJob;
 use App\Models\PlatformAdFee;
@@ -21,7 +21,7 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
 
-class QueuePlatformAdFees implements
+class PlatformAdFeesImport implements
     ToModel,
     WithChunkReading,
     ShouldQueue,
