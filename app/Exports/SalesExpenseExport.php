@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Repositories\ContinStorageFeeRepository;
 use Throwable;
 use App\Models\Invoice;
 use App\Models\BillingStatement;
@@ -11,25 +12,27 @@ use Maatwebsite\Excel\Events\BeforeSheet;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 
-class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithColumnWidths
+class SalesExpenseExport implements
+    WithTitle,
+    WithHeadings,
+    WithEvents,
+    WithColumnWidths
 {
     use RegistersEventListeners;
 
-    private $reportDate;
-    private $clientCode;
-    private $insertInvoiceID;
-    private $insertBillingID;
+    private string $reportDate;
+    private string $clientCode;
+    private int $insertInvoiceID;
+    private int $insertBillingID;
 
     public function __construct(
         string $reportDate,
         string $clientCode,
         int    $insertInvoiceID,
         int    $insertBillingID
-    )
-    {
+    ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
@@ -84,88 +87,114 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                 $formattedStartDate = date('jS M Y', strtotime($this->reportDate));
                 $formattedEndDate = date('jS M Y', strtotime(date("Y-m-t", strtotime($this->reportDate))));
 
+                $continStorageFee = app(ContinStorageFeeRepository::class)->getAccountRefund(
+                    $this->reportDate,
+                    $this->clientCode
+                );
+
                 $msg = "Monthly Sales & OPEX Summary in HKD ";
                 $msg .= " (for the period of {$formattedStartDate} to {$formattedEndDate})";
 
                 $billing = BillingStatement::findOrFail($this->insertBillingID);
 
                 //A4lution Account Sales Overview
+                $event->sheet->SetCellValue("A10", 'A4lution Account');
                 $event->sheet->SetCellValue("B1", $msg);
                 $event->sheet->SetCellValue("B2", $this->clientCode);
                 $event->sheet->SetCellValue("B3", "Sales Overview");
                 $event->sheet->SetCellValue("B4", "Total Sales Orders");
                 $event->sheet->SetCellValue("C4", $billing->total_sales_orders);
-                $event->sheet->SetCellValue("B5", "Total Sales Amount");
-                $event->sheet->SetCellValue("C5", (int)$billing->total_sales_amount);
-                $event->sheet->SetCellValue("B6", "Total Expenses");
-                $event->sheet->SetCellValue("C6", (int)$billing->total_expenses);
-                $event->sheet->SetCellValue("B7", "Sales GP");
-                $event->sheet->SetCellValue("C7", (int)$billing->sales_gp);
+
+                $event->sheet->SetCellValue("B5", "Total Unit Sold");
+                $event->sheet->SetCellValue("C5", round($billing->total_unit_sold));
+                $event->sheet->SetCellValue("B6", "Total Sales Amount");
+                $event->sheet->SetCellValue("C6", round($billing->total_sales_amount));
+                $event->sheet->SetCellValue("B7", "Total Expenses");
+                $event->sheet->SetCellValue("C7", round($billing->total_expenses));
+                $event->sheet->SetCellValue("B8", "Sales GP");
+                $event->sheet->SetCellValue("C8", round($billing->sales_gp));
+
+                //A4lution Sales
+                $event->sheet->SetCellValue("B10", "Sales");
+                $event->sheet->SetCellValue("B11", "Sales Orders");
+                $event->sheet->SetCellValue("C11", round($billing->a4_account_sales_orders));
+                $event->sheet->SetCellValue("B12", "Sales Amount");
+                $event->sheet->SetCellValue("C12", round($billing->a4_account_sales_amount));
 
                 //A4lution Account Expenses Breakdown
-                $event->sheet->SetCellValue("B9", "Expenses Breakdown");
-                $event->sheet->SetCellValue("A10", "A4lution Account");
-                $event->sheet->SetCellValue("B10", "  - Logistics Fee");
-                $event->sheet->SetCellValue("C10", (int)$billing->a4_account_logistics_fee);
-                $event->sheet->SetCellValue("B11", "  - FBA Fee");
-                $event->sheet->SetCellValue("C11", (int)$billing->a4_account_fba_fee);
-                $event->sheet->SetCellValue("B12", "  - FBA storage Fee");
-                $event->sheet->SetCellValue("C12", (int)$billing->a4_account_fba_storage_fee);
-                $event->sheet->SetCellValue("B13", "  - Platform Fee");
-                $event->sheet->SetCellValue("C13", (int)$billing->a4_account_platform_fee);
-                $event->sheet->SetCellValue("B14", "  - Refund and Resend");
-                $event->sheet->SetCellValue("C14", (int)$billing->a4_account_refund_and_resend);
-                $event->sheet->SetCellValue("B15", "  - Miscellaneous");
-                $event->sheet->SetCellValue("C15", (int)$billing->a4_account_miscellaneous);
+                $event->sheet->SetCellValue("B13", "Expenses Breakdown");
+                $event->sheet->SetCellValue("A11", "A4lution Account");
+                $event->sheet->SetCellValue("B14", "  - Logistics Fee");
+                $event->sheet->SetCellValue("C14", round($billing->a4_account_logistics_fee));
+                $event->sheet->SetCellValue("B15", "  - FBA Fee");
+                $event->sheet->SetCellValue("C15", round($billing->a4_account_fba_fee));
+                $event->sheet->SetCellValue("B16", "  - FBA storage Fee");
+                $event->sheet->SetCellValue("C16", round($billing->a4_account_fba_storage_fee));
+                $event->sheet->SetCellValue("B17", "  - Platform Fee");
+                $event->sheet->SetCellValue("C17", round($billing->a4_account_platform_fee));
+                $event->sheet->SetCellValue("B18", "  - Refund and Resend");
+                $event->sheet->SetCellValue("C18", round($billing->a4_account_refund_and_resend));
 
-                $event->sheet->SetCellValue("B17", "Marketing Fee");
-                $event->sheet->SetCellValue("B18", "  - Advertisement");
-                $event->sheet->SetCellValue("C18", (int)$billing->a4_account_advertisement);
-                $event->sheet->SetCellValue("B19", "  - Marketing and Promotion");
-                $event->sheet->SetCellValue("C19", (int)$billing->a4_account_marketing_and_promotion);
+                $event->sheet->SetCellValue("B19", "  - Miscellaneous");
+                $event->sheet->SetCellValue("C19", round($billing->a4_account_miscellaneous));
+
+                $event->sheet->SetCellValue("B21", "Marketing Fee");
+                $event->sheet->SetCellValue("B22", "  - Advertisement");
+                $event->sheet->SetCellValue("C22", round($billing->a4_account_advertisement));
+                $event->sheet->SetCellValue("B23", "  - Marketing and Promotion");
+                $event->sheet->SetCellValue("C23", round($billing->a4_account_marketing_and_promotion));
+
+                //Client Sales
+                $event->sheet->SetCellValue("A25", "Client Account");
+                $event->sheet->SetCellValue("B25", "Sales");
+                $event->sheet->SetCellValue("B26", "Sales Orders");
+                $event->sheet->SetCellValue("C26", round($billing->client_account_sales_orders));
+                $event->sheet->SetCellValue("B27", "Sales Amount");
+                $event->sheet->SetCellValue("C27", round($billing->client_account_sales_amount));
 
                 //Client Account Expenses Breakdown
-                $event->sheet->SetCellValue("B21", "Expenses Breakdown");
-                $event->sheet->SetCellValue("A22", "Client Account");
-                $event->sheet->SetCellValue("B22", "  - Logistics Fee");
-                $event->sheet->SetCellValue("C22",(int)$billing->client_account_logistics_fee);
-                $event->sheet->SetCellValue("B23", "  - FBA Fee");
-                $event->sheet->SetCellValue("C23", (int)$billing->client_account_fba_fee);
-                $event->sheet->SetCellValue("B24", "  - FBA storage Fee");
-                $event->sheet->SetCellValue("C24", (int)$billing->client_account_fba_storage_fee);
-                $event->sheet->SetCellValue("B25", "  - Platform Fee");
-                $event->sheet->SetCellValue("C25", (int)$billing->client_account_platform_fee);
-                $event->sheet->SetCellValue("B26", "  - Refund and Return");
-                $event->sheet->SetCellValue("C26", (int)$billing->client_account_refund_and_resend);
-                $event->sheet->SetCellValue("B27", "  - Miscellaneous");
-                $event->sheet->SetCellValue("C27", (int)$billing->client_account_miscellaneous);
-                $event->sheet->SetCellValue("B29", "Marketing Fee");
-                $event->sheet->SetCellValue("B30", "  - Advertisement");
-                $event->sheet->SetCellValue("C30", (int)$billing->client_account_advertisement);
-                $event->sheet->SetCellValue("B31", "  - Marketing and Promotion");
-                $event->sheet->SetCellValue("C31", (int)$billing->client_account_marketing_and_promotion);
+                $event->sheet->SetCellValue("B28", "Expenses Breakdown");
+                $event->sheet->SetCellValue("A29", "Client Account");
+                $event->sheet->SetCellValue("B29", "  - Logistics Fee");
+                $event->sheet->SetCellValue("C29", round($billing->client_account_logistics_fee));
+
+                $event->sheet->SetCellValue("B30", "  - FBA Fee");
+                $event->sheet->SetCellValue("C30", round($billing->client_account_fba_fee));
+                $event->sheet->SetCellValue("B31", "  - FBA storage Fee");
+                $event->sheet->SetCellValue("C31", round($billing->client_account_fba_storage_fee));
+                $event->sheet->SetCellValue("B32", "  - Platform Fee");
+                $event->sheet->SetCellValue("C32", round($billing->client_account_platform_fee));
+                $event->sheet->SetCellValue("B33", "  - Refund and Resend");
+                $event->sheet->SetCellValue("C33", round($billing->client_account_refund_and_resend));
+                $event->sheet->SetCellValue("B34", "  - Miscellaneous");
+                $event->sheet->SetCellValue("C34", round($billing->client_account_miscellaneous));
+
+                $event->sheet->SetCellValue("B36", "Marketing Fee");
+                $event->sheet->SetCellValue("B37", "  - Advertisement");
+                $event->sheet->SetCellValue("C37", round($billing->client_account_advertisement));
+                $event->sheet->SetCellValue("B38", "  - Marketing and Promotion");
+                $event->sheet->SetCellValue("C38", round($billing->client_account_marketing_and_promotion));
 
                 //Avolution Commission and Sales Tax Handling
-                $event->sheet->SetCellValue("B33", "Avolution Commission");
-                $event->sheet->SetCellValue("C33", (int)$billing->avolution_commission);
-                $event->sheet->SetCellValue("B34", "Sales Tax Handling");
-                $event->sheet->SetCellValue("C34", 0);
-                $event->sheet->SetCellValue("B35", "Extraordinary item");
-                $event->sheet->SetCellValue("C35", (int)$billing->extraordinary_item);
+                $event->sheet->SetCellValue("B40", "Avolution Commission");
+                $event->sheet->SetCellValue("C40", round($billing->avolution_commission));
+                $event->sheet->SetCellValue("B41", "Sales Tax Handling");
+                $event->sheet->SetCellValue("C41", 0);
+                $event->sheet->SetCellValue("B42", "Extraordinary item");
+                $event->sheet->SetCellValue("C42", round($billing->extraordinary_item));
 
                 //Summary
-                $event->sheet->SetCellValue("B37", "Summary");
-                $event->sheet->SetCellValue("B38", "Sales Credit");
-                $event->sheet->SetCellValue("C38", (int)$billing->sales_credit);
-                $event->sheet->SetCellValue("B39", "OPEX Invoice");
-                $event->sheet->SetCellValue("C39", (int)$billing->opex_invoice);
-                $event->sheet->SetCellValue("B40", "FBA & Storage Fee Invoice");
-                $event->sheet->SetCellValue("C40", (int)$billing->fba_storage_fee_invoice);
-                $event->sheet->SetCellValue("B41", "Final Credit");
-                $event->sheet->SetCellValue("C41", (int)$billing->final_credit);
+                $event->sheet->SetCellValue("B44", "Summary");
+                $event->sheet->SetCellValue("B45", "Sales Credit");
+                $event->sheet->SetCellValue("C45", round($billing->sales_credit));
+                $event->sheet->SetCellValue("B46", "OPEX Invoice");
+                $event->sheet->SetCellValue("C46", round($billing->opex_invoice));
+                $event->sheet->SetCellValue("B47", "FBA & Storage Fee Invoice");
+                $event->sheet->SetCellValue("C47", round($billing->fba_storage_fee_invoice));
+                $event->sheet->SetCellValue("B48", "Final Credit");
+                $event->sheet->SetCellValue("C48", round($billing->final_credit));
             },
-            AfterSheet::class => function(AfterSheet $event) {
-
+            AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet;
 
                 // 自動換行
@@ -229,8 +258,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // B4:C7
-                $sheet->getDelegate()->getStyle('B4:C7')->applyFromArray([
+                // B4:C8
+                $sheet->getDelegate()->getStyle('B4:C8')->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'size' => 11,
@@ -242,8 +271,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ],
                 ]);
 
-                // C5:C7
-                $sheet->getDelegate()->getStyle('C5:C7')->applyFromArray([
+                // C6:C8
+                $sheet->getDelegate()->getStyle('C6:C8')->applyFromArray([
                     'numberFormat' => [
                         'formatCode' => '_($* #,##0_);_($* (#,##0);_($* "-"??_);_(@_)'
                     ]
@@ -253,8 +282,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                 ### A4lution Account ####
                 #########################
 
-                // B9:C15
-                $sheet->getDelegate()->getStyle('B9:C19')->applyFromArray([
+                // B10:C23
+                $sheet->getDelegate()->getStyle('B10:C23')->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
@@ -262,8 +291,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // B9
-                $sheet->getDelegate()->getStyle('B9')->applyFromArray([
+                // B10:C10
+                $sheet->getDelegate()->getStyle('B10:C10')->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'underline' => true,
@@ -277,18 +306,9 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // C9
-                $sheet->getDelegate()->getStyle('C9')->applyFromArray([
-                    'fill' => [
-                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                        'startColor' => [
-                            'argb' => 'FFC000'
-                        ]
-                    ]
-                ]);
-
                 // A10
-                $sheet->mergeCells('A10:A19');
+                $event->sheet->SetCellValue("A10", "A4lution Account");
+                $sheet->mergeCells('A10:A23');
                 $sheet->getDelegate()->getStyle('A10')->applyFromArray([
                     'font' => [
                         'bold' => true,
@@ -311,8 +331,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // B10:B16
-                $sheet->getDelegate()->getStyle('B10:C16')->applyFromArray([
+                // B11:B23
+                $sheet->getDelegate()->getStyle('B11:B23')->applyFromArray([
                     'font' => [
                         'size' => 9,
                     ],
@@ -324,8 +344,22 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // C10:C16
-                $sheet->getDelegate()->getStyle('C10:C16')->applyFromArray([
+                // C11
+                $sheet->getDelegate()->getStyle('C11')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 11,
+                    ],
+                    'fill' => [
+                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'startColor' => [
+                            'argb' => 'FFF2CC'
+                        ]
+                    ]
+                ]);
+
+                // C12:C20
+                $sheet->getDelegate()->getStyle('C12:C20')->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'size' => 11,
@@ -341,8 +375,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // B17
-                $sheet->getDelegate()->getStyle('B17')->applyFromArray([
+                // B13:C13
+                $sheet->getDelegate()->getStyle('B13:C13')->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'underline' => true,
@@ -351,23 +385,28 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     'fill' => [
                         'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
                         'startColor' => [
-                            'argb' => 'FFD966'
+                            'argb' => 'FFC000'
                         ]
                     ]
                 ]);
 
-                // C17
-                $sheet->getDelegate()->getStyle('C17')->applyFromArray([
+                // B21:C21
+                $sheet->getDelegate()->getStyle('B21:C21')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'underline' => true,
+                        'size' => 11,
+                    ],
                     'fill' => [
                         'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
                         'startColor' => [
-                            'argb' => 'FFD966'
+                            'argb' => 'FFC000'
                         ]
                     ]
                 ]);
 
-                // B18:B19
-                $sheet->getDelegate()->getStyle('B18:B19')->applyFromArray([
+                // B22:B23
+                $sheet->getDelegate()->getStyle('B22:B23')->applyFromArray([
                     'font' => [
                         'size' => 9,
                     ],
@@ -379,8 +418,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // C18:C19
-                $sheet->getDelegate()->getStyle('C18:C19')->applyFromArray([
+                // C22:C23
+                $sheet->getDelegate()->getStyle('C22:C23')->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'size' => 11,
@@ -400,8 +439,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                 ### Client Account ####
                 #######################
 
-                // B21:B31
-                $sheet->getDelegate()->getStyle('B21:C31')->applyFromArray([
+                // B25:C38
+                $sheet->getDelegate()->getStyle('B25:C38')->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
@@ -409,8 +448,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // B21
-                $sheet->getDelegate()->getStyle('B21')->applyFromArray([
+                // B25:C25
+                $sheet->getDelegate()->getStyle('B25:C25')->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'underline' => true,
@@ -427,19 +466,9 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // C21
-                $sheet->getDelegate()->getStyle('C21')->applyFromArray([
-                    'fill' => [
-                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                        'startColor' => [
-                            'argb' => '4472C4'
-                        ]
-                    ]
-                ]);
-
                 // A22
-                $sheet->mergeCells('A22:A31');
-                $sheet->getDelegate()->getStyle('A22')->applyFromArray([
+                $sheet->mergeCells('A25:A38');
+                $sheet->getDelegate()->getStyle('A25')->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'size' => 12,
@@ -464,8 +493,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // B22:B28
-                $sheet->getDelegate()->getStyle('B22:B28')->applyFromArray([
+                // B26:B35
+                $sheet->getDelegate()->getStyle('B26:B35')->applyFromArray([
                     'font' => [
                         'size' => 9,
                     ],
@@ -477,8 +506,41 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // C22:C28
-                $sheet->getDelegate()->getStyle('C22:C28')->applyFromArray([
+                // B28
+                $sheet->getDelegate()->getStyle('B28')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'underline' => true,
+                        'size' => 11,
+                        'color' => [
+                            'argb' => \PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE,
+                        ]
+                    ],
+                    'fill' => [
+                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'startColor' => [
+                            'argb' => '4472C4'
+                        ]
+                    ]
+                ]);
+
+                // C26
+                $sheet->getDelegate()->getStyle('C26')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 11,
+                    ],
+                    'fill' => [
+                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'startColor' => [
+                            'argb' => 'DDEBF7'
+                        ]
+                    ],
+                ]);
+
+
+                // C27:C35
+                $sheet->getDelegate()->getStyle('C27:C35')->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'size' => 11,
@@ -494,8 +556,18 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // B29
-                $sheet->getDelegate()->getStyle('B29')->applyFromArray([
+                // C28
+                $sheet->getDelegate()->getStyle('C28')->applyFromArray([
+                    'fill' => [
+                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'startColor' => [
+                            'argb' => '4472C4'
+                        ]
+                    ]
+                ]);
+
+                // B36
+                $sheet->getDelegate()->getStyle('B36')->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'underline' => true,
@@ -509,8 +581,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // C29
-                $sheet->getDelegate()->getStyle('C29')->applyFromArray([
+                // C36
+                $sheet->getDelegate()->getStyle('C36')->applyFromArray([
                     'fill' => [
                         'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
                         'startColor' => [
@@ -519,8 +591,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // B30:B31
-                $sheet->getDelegate()->getStyle('B30:B31')->applyFromArray([
+                // B37:B38
+                $sheet->getDelegate()->getStyle('B37:B38')->applyFromArray([
                     'font' => [
                         'size' => 9,
                     ],
@@ -532,8 +604,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // C30:C31
-                $sheet->getDelegate()->getStyle('C30:C31')->applyFromArray([
+                // C37:C38
+                $sheet->getDelegate()->getStyle('C37:C38')->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'size' => 11,
@@ -553,8 +625,24 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                 ### Avolution Commission ####
                 #############################
 
-                // B33:C35
-                $sheet->getDelegate()->getStyle('B33:C35')->applyFromArray([
+                // B40:C42
+                $sheet->getDelegate()->getStyle('B40:C42')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 11,
+                    ],
+                    'numberFormat' => [
+                        'formatCode' => '_($* #,##0_);_($* (#,##0);_($* "-"??_);_(@_)'
+                    ],
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        ],
+                    ]
+                ]);
+
+                // B44:C48
+                $sheet->getDelegate()->getStyle('B44:C48')->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'size' => 11,
@@ -573,8 +661,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                 ### Summary ####
                 ################
 
-                // B37
-                $sheet->getDelegate()->getStyle('B37')->applyFromArray([
+                // B44
+                $sheet->getDelegate()->getStyle('B44')->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'underline' => true,
@@ -591,8 +679,8 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                     ]
                 ]);
 
-                // C37
-                $sheet->getDelegate()->getStyle('C37')->applyFromArray([
+                // C44
+                $sheet->getDelegate()->getStyle('C44')->applyFromArray([
                     'fill' => [
                         'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
                         'startColor' => [
@@ -600,35 +688,6 @@ class SalesExpenseExport implements WithTitle, WithHeadings, WithEvents, WithCol
                         ]
                     ]
                 ]);
-
-                // B38:B41
-                $sheet->getDelegate()->getStyle('B38:B41')->applyFromArray([
-                    'font' => [
-                        'size' => 12,
-                    ],
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        ],
-                    ]
-                ]);
-
-                // C38:C41
-                $sheet->getDelegate()->getStyle('C38:C41')->applyFromArray([
-                    'font' => [
-                        'bold' => true,
-                        'size' => 12,
-                    ],
-                    'numberFormat' => [
-                        'formatCode' => '_($* #,##0_);_($* (#,##0);_($* "-"??_);_(@_)'
-                    ],
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        ],
-                    ]
-                ]);
-
             },
         ];
     }

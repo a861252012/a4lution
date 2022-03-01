@@ -66,20 +66,8 @@
                             <label class="form-control-label" for="create_sales_btn"></label>
                             <div class="form-group mb-0">
                                 <button class="form-control _fz-1 btn _btn btn-primary" id="create_sales_btn"
-                                        type="button" style="margin-top: 6px;">Create Sales Summary
+                                        type="button" style="margin-top: 6px;">Generate Sales Summary
                                 </button>
-                            </div>
-                        </div>
-
-                        {{-- CREATE SUMMARY --}}
-                        <div class="col-lg-2 col-md-6 col-sm-6">
-                            <label class="form-control-label" for="generate_sales_btn"></label>
-                            <div class="form-group mb-0">
-                                <a id="generate_sales_btn" href="#inline_content">
-                                    <button class="form-control _fz-1 btn _btn btn-success"
-                                            type="button" style="margin-top: 6px;">Generate Sales Summary
-                                    </button>
-                                </a>
                             </div>
                         </div>
 
@@ -140,412 +128,6 @@
         </div>
         <!-- ./Card -->
     </div>
-
-    <!-- colorbox html part start -->
-    <div style='display:none'>
-        <div class="container" id="inline_content">
-
-            {{--  DATE --}}
-            <div class="row">
-                <div class="col">
-                    <strong>
-                        Create Sales Summary
-                    </strong>
-                </div>
-            </div>
-
-            <br>
-
-            <form id="cbx_form" enctype="multipart/form-data">
-                @csrf
-                <div class="row">
-                    {{-- CLIENT CODE --}}
-                    <div class="col-lg-2 col-sm-2 text-right">
-                        <label class="form-control-label required" for="cbx_client_code">Client Code</label>
-                    </div>
-
-                    <div class="col-2">
-                        <select class="form-control" data-toggle="select" name="sel_client_code" id="cbx_client_code">
-                            @forelse ($clientCodeList as $item)
-                                <option value="{{$item}}" @if(request('sel_client_code') == $item) {{ 'selected' }}
-                                        @endif>
-                                    {{$item}}
-                                </option>
-                            @empty
-                                <option value="">{{'NONE'}}</option>
-                            @endforelse
-                        </select>
-                    </div>
-
-                    {{-- REPORT DATE --}}
-                    <div class="col-lg-2  col-sm-2 text-right">
-                        <label class="form-control-label required" for="inline_report_date">Report Date</label>
-                    </div>
-
-                    <div class="col-2">
-                        <input class="form-control" name="report_date" id="inline_report_date"
-                               type="text" placeholder="REPORT DATE" value="{{ request('report_date') }}" required>
-                    </div>
-                </div>
-
-                <br>
-
-                {{-- Sales OverView--}}
-                <div class="row">
-                    <div class="col">
-                        <h2>
-                            <u>Sales OverView</u>
-                        </h2>
-                    </div>
-                </div>
-
-                {{-- Total Sales Orders --}}
-                <div class="row">
-                    <div class="col-4">
-                        - Total Sales Orders
-                    </div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="total_sales_orders" type="number" min="0" max="9999999999">
-                        </label>
-                    </div>
-                </div>
-
-                {{-- Total Sales Amount --}}
-                <div class="row">
-                    <div class="col-4">
-                        - Total Sales Amount
-                    </div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="total_sales_amount" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                {{-- Total Expenses --}}
-                <div class="row">
-                    <div class="col-4">
-                        - Total Expenses
-                    </div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="total_expenses" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                {{-- Sales GP --}}
-                <div class="row">
-                    <div class="col-4">
-                        - Sales GP
-                    </div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="sales_gp" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                <br>
-
-                {{-- Expenses Breakdown headers --}}
-                <div class="row">
-                    <div class="col-4">
-                        <h3>
-                            <u>Expenses Breakdown</u>
-                        </h3>
-                    </div>
-                    <div class="col-4">
-                        <h3>
-                            <u>A4lution Account</u>
-                        </h3>
-                    </div>
-                    <div class="col-4">
-                        <h3>
-                            <u>Client Account</u>
-                        </h3>
-                    </div>
-                </div>
-
-                {{-- Logistics Fee --}}
-                <div class="row">
-                    <div class="col-4">- Logistics Fee</div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="a4_account_logistics_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="client_account_logistics_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                {{--FBA Fee --}}
-                <div class="row">
-                    <div class="col-4">- FBA Fee</div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="a4_account_fba_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="client_account_fba_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                {{-- FBA storage Fee --}}
-                <div class="row">
-                    <div class="col-4">- FBA storage Fee</div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="a4_account_fba_storage_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="client_account_fba_storage_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                {{-- Platform Fee --}}
-                <div class="row">
-                    <div class="col-4">- Platform Fee</div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="a4_account_platform_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="client_account_platform_fee" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                {{-- Refund and Resend --}}
-                <div class="row">
-                    <div class="col-4">- Refund and Resend</div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="a4_account_refund_and_resend" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="client_account_refund_and_resend" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                {{-- Miscellaneous --}}
-                <div class="row">
-                    <div class="col-4">- Miscellaneous</div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="a4_account_miscellaneous" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="client_account_miscellaneous" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                {{-- Marketing Fee--}}
-                <div class="row">
-                    <div class="col">
-                        <h2>
-                            <u>Marketing Fee</u>
-                        </h2>
-                    </div>
-                </div>
-
-                {{-- Advertisement --}}
-                <div class="row">
-                    <div class="col-4">- Advertisement</div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="a4_account_advertisement" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="client_account_advertisement" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                {{-- Marketing and Promotion --}}
-                <div class="row">
-                    <div class="col-4">- Marketing and Promotion</div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="a4_account_marketing_and_promotion" type="number"
-                                   step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="client_account_marketing_and_promotion" type="number"
-                                   step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                <br>
-
-                {{-- Avolution Commission --}}
-                <div class="row">
-                    <div class="col-4 ">
-                        <h3 class="required">Avolution Commission</h3>
-                    </div>
-
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="avolution_commission" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99" required>
-                        </label>
-                    </div>
-                </div>
-
-                {{-- Sales Tax Handling --}}
-                <div class="row">
-                    <div class="col-4">
-                        <h3>Sales Tax Handling</h3>
-                    </div>
-
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="sales_tax_handling" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                {{--  Extraordinary item-comm. Fee rebate --}}
-                <div class="row">
-                    <div class="col-4">
-                        <h3>Extraordinary item-comm. Fee rebate</h3>
-                    </div>
-
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="extraordinary_item" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                <br>
-
-                {{--  Sales Overview --}}
-                <div class="row">
-                    <div class="col">
-                        <h2>
-                            <u>Sales OverView</u>
-                        </h2>
-                    </div>
-                </div>
-
-                {{--  Sales Credit --}}
-                <div class="row">
-                    <div class="col-4">
-                        <h3>{!! "&emsp;" !!}Sales Credit</h3>
-                    </div>
-
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="sales_credit" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                {{--  OPEX Invoice --}}
-                <div class="row">
-                    <div class="col-4">
-                        <h3>{!! "&emsp;" !!}OPEX Invoice</h3>
-                    </div>
-
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="opex_invoice" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                {{-- Batch Shipment & Storage Fee --}}
-                <div class="row">
-                    <div class="col-4">
-                        <h3>{!! "&emsp;" !!}Batch Shipment & Storage Fee Return Invoice</h3>
-                    </div>
-
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="fba_storage_fee_invoice" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                {{-- Final Credit  --}}
-                <div class="row">
-                    <div class="col-4">
-                        <h3>{!! "&emsp;" !!}Final Credit</h3>
-                    </div>
-
-                    <div class="col-4">
-                        <label>
-                            <input class="decoration" name="final_credit" type="number" step="0.01"
-                                   min="-99999999.99" max="99999999.99">
-                        </label>
-                    </div>
-                </div>
-
-                <br>
-
-                {{-- Button --}}
-                <div class="row justify-content-center align-items-center">
-                    <div class="col-3">
-                        <button class="btn btn-primary" type="submit" id="cbx_submit">Submit</button>
-                    </div>
-                    <div class="col-3">
-                        <button class="btn btn-primary" type="button" id="cbx_cancel_btn">Cancel</button>
-                    </div>
-                </div>
-
-            </form>
-
-        </div>
-    </div>
-    <!-- colorbox html part end -->
 @endsection
 
 @push('js')
@@ -678,66 +260,66 @@
                     }
                 });
             });
+        });
 
-            $('button#create_sales_btn').click(function () {
-                let reportDate = $('#search_report_date').val();
-                let clientCode = $("#sel_client_code option:selected").val();
-                let _token = $('meta[name="csrf-token"]').attr('content');
+        $('button#create_sales_btn').click(function () {
+            let reportDate = $('#search_report_date').val();
+            let clientCode = $("#sel_client_code option:selected").val();
+            let _token = $('meta[name="csrf-token"]').attr('content');
 
-                if (!reportDate || !clientCode) {
-                    swal({
-                        icon: "error",
-                        text: "report date and client code can't be empty"
-                    });
-                    return;
+            if (!reportDate || !clientCode) {
+                swal({
+                    icon: "error",
+                    text: "report date and client code can't be empty"
+                });
+                return;
+            }
+
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': _token
                 }
+            });
 
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': _token
-                    }
-                });
+            $.ajax({
+                url: origin + '/invoice/validation/' + reportDate + '/' + clientCode,
+                type: 'get',
+                success: function (res) {
+                    if (res.status === 200) {
+                        swal({
+                            icon: 'success',
+                            text: 'processing'
+                        });
+                        ajaxRunBillingStatement();
 
-                $.ajax({
-                    url: origin + '/invoice/validation/' + reportDate + '/' + clientCode,
-                    type: 'get',
-                    success: function (res) {
-                        if (res.status === 200) {
-                            swal({
-                                icon: 'success',
-                                text: 'processing'
+                    } else if (res.status === 202) {
+                        swal({
+                            title: "Are you sure ?",
+                            text: (res.msg),
+                            icon: 'warning',
+                            buttons: ["No,Cancel Plx!", "Yes,Delete it!"]
+                        })
+                            .then(function (isConfirm) {
+                                if (isConfirm) {
+
+                                    swal({
+                                        text: "processing!",
+                                        icon: "success",
+                                        button: "OK",
+                                    });
+
+                                    deleteIssue(reportDate);
+                                    ajaxRunBillingStatement();
+                                }
                             });
-                            ajaxRunBillingStatement();
-
-                        } else if (res.status === 202) {
-                            swal({
-                                title: "Are you sure ?",
-                                text: (res.msg),
-                                icon: 'warning',
-                                buttons: ["No,Cancel Plx!", "Yes,Delete it!"]
-                            })
-                                .then(function (isConfirm) {
-                                    if (isConfirm) {
-
-                                        swal({
-                                            text: "processing!",
-                                            icon: "success",
-                                            button: "OK",
-                                        });
-
-                                        deleteIssue(reportDate);
-                                        ajaxRunBillingStatement();
-                                    }
-                                });
-                        } else {
-                            swal({
-                                icon: 'warning',
-                                text: res.msg
-                            });
-                            return false;
-                        }
+                    } else {
+                        swal({
+                            icon: 'warning',
+                            text: res.msg
+                        });
+                        return false;
                     }
-                });
+                }
             });
         });
 

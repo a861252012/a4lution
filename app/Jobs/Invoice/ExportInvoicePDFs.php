@@ -49,9 +49,9 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
             $invoice->client_code,
             $invoice->opex_invoice_no,
         );
+
         $pdf = \PDF::loadView('invoice.pdf.opexInvoice', compact('invoice'))
             ->save($saveDir . $fileName);
-
 
         // create fba-first-mile-shipment-fee.pdf
         $fileName = sprintf("%s %s&ReturnHelperInvoice.pdf",

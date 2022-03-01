@@ -20,9 +20,9 @@ class MisCellaneousExport implements
     withMapping,
     WithStrictNullComparison
 {
-    private $reportDate;
-    private $clientCode;
-    private $insertInvoiceID;
+    private string $reportDate;
+    private string $clientCode;
+    private int $insertInvoiceID;
 
     public function __construct(
         string $reportDate,
@@ -36,7 +36,7 @@ class MisCellaneousExport implements
 
     public function title(): string
     {
-        return 'MisCellaneous';
+        return 'Miscellaneous';
     }
 
     public function failed(Throwable $exception): void

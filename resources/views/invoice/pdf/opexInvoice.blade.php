@@ -170,7 +170,7 @@
                 <tr>
                     @php
                         $logisticFee = ($invoice->billingStatement->client_code === 'G73A')
-                            ? $invoice->billingStatement->a4_account_logistics_fee 
+                            ? $invoice->billingStatement->a4_account_logistics_fee
                             : $invoice->billingStatement->a4_account_logistics_fee + $invoice->billingStatement->client_account_logistics_fee;
                     @endphp
                     <td class="col col-1">A</td>
@@ -234,28 +234,27 @@
                 <tr>
                     <td class="col col-1">I</td>
                     <td class="col col-2">A4lution Commission</td>
-                    <td class="col col-3">HKD {{ number_format($invoice->billingStatement->a4_account_avolution_commission, 2) }}</td>
+                    <td class="col col-3">HKD {{ number_format($invoice->billingStatement->avolution_commission, 2) }}</td>
                     <td class="col col-4">1</td>
-                    <td class="col col-5">HKD {{ number_format($invoice->billingStatement->a4_account_avolution_commission, 2) }}</td>
+                    <td class="col col-5">HKD {{ number_format($invoice->billingStatement->avolution_commission, 2) }}</td>
                 </tr>
             </tbody>
             <tfoot>
-                @php
-                    $total = collect($invoice->billingStatement)
-                        ->only([
-                            'a4_account_logistics_fee',
-                            'a4_account_platform_fee',
-                            'a4_account_fba_fee',
-                            'a4_account_fba_storage_fee',
-                            'a4_account_advertisement',
-                            'a4_account_marketing_and_promotion',
-                            'a4_account_sales_tax_handling',
-                            'a4_account_miscellaneous',
-                            'a4_account_avolution_commission',
-                            'extraordinary_item'
-                        ])
-                        ->sum();
-                @endphp
+            @php
+                $total = collect($invoice->billingStatement)
+                    ->only([
+                        'a4_account_platform_fee',
+                        'a4_account_fba_fee',
+                        'a4_account_fba_storage_fee',
+                        'a4_account_advertisement',
+                        'a4_account_marketing_and_promotion',
+                        'a4_account_sales_tax_handling',
+                        'a4_account_miscellaneous',
+                        'avolution_commission',
+                        'extraordinary_item'
+                    ])
+                    ->sum() + $logisticFee;
+            @endphp
                 <tr>
                     <td class="col col-1 total">Total</td>
                     <td class="col col-2"></td>

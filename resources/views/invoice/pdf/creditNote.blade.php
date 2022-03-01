@@ -149,7 +149,7 @@
                             $invoice->report_date->format('jS M Y'), 
                             $invoice->report_date->endOfMonth()->format('jS M Y')); }}
                     </td>
-                    <td class="col col-3">HKD  {{ number_format($invoice->billingStatement->total_sales_amount, 2) }}</td>
+                    <td class="col col-3">HKD  {{ number_format($invoice->billingStatement->a4_account_sales_amount, 2) }}</td>
                 </tr>
                 <tr>
                     <td class="col col-1">C</td>
@@ -166,7 +166,7 @@
                 <tr>
                     <td class="col col-1 total">Total</td>
                     <td class="col col-2"></td>
-                    <td class="col col-3">HKD {{ number_format((float) -$invoice->billingStatement->a4_account_refund_and_resend + (float) $invoice->billingStatement->total_sales_amount, 2) }}
+                    <td class="col col-3">HKD {{ number_format((float) -$invoice->billingStatement->a4_account_refund_and_resend + (float) $invoice->billingStatement->a4_account_sales_amount, 2) }}
                     </td>
                 </tr>
             </tfoot>
