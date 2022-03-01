@@ -162,15 +162,12 @@ class SalesExpenseExport implements
                 $event->sheet->SetCellValue("C30", round($billing->client_account_fba_fee));
                 $event->sheet->SetCellValue("B31", "  - FBA storage Fee");
                 $event->sheet->SetCellValue("C31", round($billing->client_account_fba_storage_fee));
-                $event->sheet->SetCellValue("B32", "  - Contin storage Fee");
-                $event->sheet->SetCellValue("C32", round($continStorageFee));
-
-                $event->sheet->SetCellValue("B33", "  - Platform Fee");
-                $event->sheet->SetCellValue("C33", round($billing->client_account_platform_fee));
-                $event->sheet->SetCellValue("B34", "  - Refund and Resend");
-                $event->sheet->SetCellValue("C34", round($billing->client_account_refund_and_resend));
-                $event->sheet->SetCellValue("B35", "  - Miscellaneous");
-                $event->sheet->SetCellValue("C35", round($billing->client_account_miscellaneous));
+                $event->sheet->SetCellValue("B32", "  - Platform Fee");
+                $event->sheet->SetCellValue("C32", round($billing->client_account_platform_fee));
+                $event->sheet->SetCellValue("B33", "  - Refund and Resend");
+                $event->sheet->SetCellValue("C33", round($billing->client_account_refund_and_resend));
+                $event->sheet->SetCellValue("B34", "  - Miscellaneous");
+                $event->sheet->SetCellValue("C34", round($billing->client_account_miscellaneous));
 
                 $event->sheet->SetCellValue("B36", "Marketing Fee");
                 $event->sheet->SetCellValue("B37", "  - Advertisement");
