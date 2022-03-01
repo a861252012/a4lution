@@ -437,7 +437,7 @@ class BillingStatementService
         if ($settings->calculation_type === CommissionConstant::CALCULATION_TYPE_TIER) {
             return $this->getTieredInfo($clientCode, $totalSalesAmount);
         }
-        return ['type' => 'tier_base_rate', 'value' => $settings->basic_rate, 'status' => 'success'];
+        return ['type' => 'base_rate', 'value' => $settings->basic_rate, 'status' => 'success'];
     }
 
     public function getAvolutionCommission(
@@ -498,7 +498,7 @@ class BillingStatementService
             return ['type' => 'tier_rate', 'value' => $setting->$rateKey, 'status' => 'success'];
         }
 
-        return ['type' => 'tier_base_rate', 'value' => $setting->basic_rate, 'status' => 'success'];
+        return ['type' => 'base_rate', 'value' => $setting->basic_rate, 'status' => 'success'];
     }
 
     protected function isDeductRefund(string $clientCode): bool
