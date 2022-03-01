@@ -240,28 +240,12 @@
                 </tr>
             </tbody>
             <tfoot>
-                @php
-                    $total = collect($invoice->billingStatement)
-                        ->only([
-                            'a4_account_logistics_fee',
-                            'a4_account_platform_fee',
-                            'a4_account_fba_fee',
-                            'a4_account_fba_storage_fee',
-                            'a4_account_advertisement',
-                            'a4_account_marketing_and_promotion',
-                            'a4_account_sales_tax_handling',
-                            'a4_account_miscellaneous',
-                            'a4_account_avolution_commission',
-                            'extraordinary_item'
-                        ])
-                        ->sum();
-                @endphp
                 <tr>
                     <td class="col col-1 total">Total</td>
                     <td class="col col-2"></td>
                     <td class="col col-3"></td>
                     <td class="col col-4"></td>
-                    <td class="col col-5">HKD {{ number_format($total, 2) }}</td>
+                    <td class="col col-5">HKD {{ number_format($totalBillingStatement, 2) }}</td>
                 </tr>
             </tfoot>
         </table>

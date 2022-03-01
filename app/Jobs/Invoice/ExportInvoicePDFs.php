@@ -49,7 +49,23 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
             $invoice->client_code,
             $invoice->opex_invoice_no,
         );
-        $pdf = \PDF::loadView('invoice.pdf.opexInvoice', compact('invoice'))
+
+        $totalBillingStatement = collect($invoice->billingStatement)
+            ->only([
+                'a4_account_logistics_fee',
+                'a4_account_platform_fee',
+                'a4_account_fba_fee',
+                'a4_account_fba_storage_fee',
+                'a4_account_advertisement',
+                'a4_account_marketing_and_promotion',
+                'a4_account_sales_tax_handling',
+                'a4_account_miscellaneous',
+                'a4_account_avolution_commission',
+                'extraordinary_item'
+            ])
+            ->sum();
+
+        $pdf = \PDF::loadView('invoice.pdf.opexInvoice', compact('invoice', 'totalBillingStatement'))
             ->save($saveDir . $fileName);
 
 
