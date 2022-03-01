@@ -24,7 +24,8 @@ class ContinStorageFeeRepository extends BaseRepository
             })
             ->where('contin_storage_fees.supplier', $clientCode)
             ->where('contin_storage_fees.report_date', $reportDate)
-            ->where('contin_storage_fees.active', 1);
+            ->where('contin_storage_fees.active', 1)
+            ->where('exchange_rates.active', 1);
 
         return (float)$this->model->selectRaw('SUM(x.storage_fee_hkd) as storage_fee_hkd')
             ->from(DB::raw(' ( ' . $subQuery->toSql() . ' ) AS x'))
