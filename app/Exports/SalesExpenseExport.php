@@ -117,7 +117,7 @@ class SalesExpenseExport implements
                 //A4lution Sales
                 $event->sheet->SetCellValue("B10", "Sales");
                 $event->sheet->SetCellValue("B11", "Sales Orders");
-                $event->sheet->SetCellValue("C11", round($billing->total_sales_orders));
+                $event->sheet->SetCellValue("C11", round($billing->a4_account_sales_orders));
                 $event->sheet->SetCellValue("B12", "Sales Amount");
                 $event->sheet->SetCellValue("C12", round($billing->a4_account_sales_amount));
 
