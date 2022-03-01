@@ -31,13 +31,13 @@ class OrderProduct extends Model
 
     protected static function booted()
     {
-        static::creating(function ($exchangeRate) {
-            $exchangeRate->updated_by = Auth::id();
-            $exchangeRate->created_by = Auth::id();
-            $exchangeRate->active = 1;
+        static::creating(function ($orderProduct) {
+            $orderProduct->updated_by = Auth::id();
+            $orderProduct->created_by = Auth::id();
+            $orderProduct->active = 1;
         });
-        static::updating(function ($exchangeRate) {
-            $exchangeRate->updated_by = Auth::id();
+        static::updating(function ($orderProduct) {
+            $orderProduct->updated_by = Auth::id();
         });
     }
 

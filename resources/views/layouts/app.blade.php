@@ -14,7 +14,7 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 --}}
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
@@ -25,7 +25,7 @@
     <title itemprop="name">{{ $metaTitle ?? 'A4lution Admin' }}</title>
 
     <!-- Favicon -->
-    {{--    <link href="{{ asset('argon') }}/img/brand/favicon.png" rel="icon" type="image/png">--}}
+{{--    <link href="{{ asset('argon') }}/img/brand/favicon.png" rel="icon" type="image/png">--}}
     <link href="{{ asset('pictures') }}/A4lution_logo.png" rel="icon" type="image/png">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -35,13 +35,11 @@
     <link href="{{ asset('argon') }}/vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
 
     <!-- dataTables css -->
-    <link rel="stylesheet" href="{{ asset('argon') }}/vendor/datatables.net-bs4/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.1/css/jquery.dataTables.css">
 
-<!-- Argon CSS -->
+    <!-- Argon CSS -->
     <link type="text/css" href="{{ asset('css') }}/argon.css?v=2.0.0" rel="stylesheet">
     <link type="text/css" href="{{ asset('argon') }}/vendor/colorbox/css/colorbox.css" rel="stylesheet">
-    <!-- jquery.steps CSS -->
-    <link type="text/css" href="{{ asset('argon') }}/vendor/jquery-steps/jquery.steps_1.1.2.css" rel="stylesheet">
 
     <!-- A4 custom CSS -->
     <link type="text/css" href="{{ asset('css/a4lution.css') }}" rel="stylesheet">
@@ -97,10 +95,11 @@
 <script src="{{ asset('argon') }}/js/jquery.form_4.3.0.js"></script>
 
 <script src="{{ asset('argon') }}/vendor/select2/dist/js/select2.min.js"></script>
+<script src="{{ asset('argon') }}/vendor/datatables.net/js/jquery.dataTables.min.js"></script>
 <script src="{{ asset('argon') }}/vendor/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
 
 <!-- dataTables JS -->
-<script src="{{ asset('argon') }}/vendor/datatables.net/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.1/js/jquery.dataTables.js"></script>
 
 <!-- jquery-validation JS -->
 <script src="{{ asset('js') }}/jquery-validation_1.19.3.js"></script>
@@ -108,17 +107,12 @@
 <!-- moment JS -->
 <script src="{{ asset('js') }}/momentJS.js"></script>
 
-<!-- jquery.steps moment -->
-<script src="{{ asset('argon') }}/vendor/jquery-steps/jquery.steps_1.1.2.js"></script>
-
 <!-- Moment Timezone JS(如有使用到時區就要額外include) -->
 {{--<script src="{{ asset('js') }}/moment-timezone-with-data.js"></script>--}}
 <script>
-
     // 顯示 validation errors
     @if ($errors->count())
         let errors = [];
-
         @foreach ($errors->all() as $error)
             errors.push('{{ $error }}');
         @endforeach
@@ -127,28 +121,16 @@
             icon: 'error',
             text: errors.join("\n")
         });
-
     @endif
-
 </script>
 @stack('js')
 </body>
 </html>
 
 <style>
-    td.details-control {
-        background: url("{{ asset('pictures') }}/details_open.png") no-repeat center center;
-        cursor: pointer;
-    }
-
-    tr.details td.details-control {
-        background: url("{{ asset('pictures') }}/details_close.png") no-repeat center center;
-    }
-
-    .href_style {
-        cursor:pointer;
-        color:blue;
-        text-decoration:underline;
+    .required:after {
+        content: " *";
+        color: red;
     }
 </style>
 @stack('css-styles')

@@ -152,6 +152,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
                             'sales_amount_hkd' => $adFee['sales_amount_hkd'],
                             'acos' => $adFee['acos'],
                             'exchange_rate' => $adFee['exchange_rate'],
+                            'country' => $adFee['country'],
                             'upload_id' => $batchId,
                             'report_date' => $this->reportDate->toDateString(),
                             'active' => 1,
