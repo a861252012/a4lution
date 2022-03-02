@@ -11,7 +11,7 @@
             @endslot
 
             <li class="breadcrumb-item"><a href="{{ route('erpOrder.view') }}">{{ __('ERP ORDERS') }}</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{ __('BULK UPLOAD') }}</li>
+            <li class="breadcrumb-item active" aria-current="page">{{ __('BULK UPDATE') }}</li>
         @endcomponent
     @endcomponent
 
@@ -82,7 +82,7 @@
                                    href="#inline_content" style="margin-top: 6px;">
                                     <div>
                                         <i class="ni ni-cloud-upload-96"></i>
-                                        <span class="_fz-1">Bulk Upload</span>
+                                        <span class="_fz-1">Bulk Update</span>
                                     </div>
                                 </a>
                             </div>
