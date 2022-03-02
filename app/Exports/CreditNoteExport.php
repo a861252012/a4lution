@@ -107,7 +107,7 @@ class CreditNoteExport implements
                 $event->sheet->SetCellValue("C19", $desc);
                 $event->sheet->SetCellValue("F19", "-HKD  {$billing->a4_account_refund_and_resend}");
 
-                $total = (float)-$billing->a4_account_refund_and_resend + (float)$billing->total_sales_amount;
+                $total = (float)-$billing->a4_account_refund_and_resend + (float)$billing->a4_account_sales_amount;
                 $event->sheet->SetCellValue("B20", 'Total');
                 $event->sheet->SetCellValue("F20", "HKD  {$total}");
             }
