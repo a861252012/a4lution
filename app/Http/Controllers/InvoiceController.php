@@ -210,7 +210,7 @@ class InvoiceController extends Controller
         $data['active'] = 1;
         $data['doc_status'] = "processing";
         $data['doc_file_name'] = sprintf(
-            '%s_invoice_%s%d',
+            '%s_invoice_%s_%d',
             $data['client_code'],
             date("Fy", strtotime($data['report_date'])),
             date('YmdHis')
