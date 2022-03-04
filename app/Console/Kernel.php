@@ -28,9 +28,9 @@ class Kernel extends ConsoleKernel
             ->timezone(config('services.timezone.taipei'))
             ->dailyAt('05:00');
 
-        $schedule->command('order_data_sync')
-            ->timezone(config('services.timezone.taipei'))
-            ->monthlyOn(15, '09:00');
+//        $schedule->command('order_data_sync')
+//            ->timezone(config('services.timezone.taipei'))
+//            ->monthlyOn(15, '09:00');
     }
 
     /**
