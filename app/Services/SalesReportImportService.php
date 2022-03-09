@@ -111,7 +111,7 @@ class SalesReportImportService
                     abort(Response::HTTP_FORBIDDEN, "Sheet [{$sheetName}]: no Title!");
                 }
 
-                $diff = collect($header)->filter()->diff(self::$sheetsHeader[$sheetName]);
+                $diff = collect(self::$sheetsHeader[$sheetName])->diff($header);
                 if ( $diff->isNotEmpty() ) {
                     abort(Response::HTTP_FORBIDDEN, "Sheet [{$sheetName}]: Title [{$diff->implode(', ')}] unmatched");
                 }
