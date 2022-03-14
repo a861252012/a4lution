@@ -15,6 +15,7 @@ class AmazonDateRangeReportRepository extends BaseRepository
     public function getAccountMarketingAndPromotion(
         string $reportDate,
         string $clientCode,
+        array $sellerAccount,
         bool   $isAvolution
     ): float {
         return(float)$this->model
@@ -27,22 +28,10 @@ class AmazonDateRangeReportRepository extends BaseRepository
             ->where('amazon_date_range_report.report_date', $reportDate)
             ->where('amazon_date_range_report.supplier', $clientCode)
             ->where('amazon_date_range_report.active', 1)
-            ->when($isAvolution, function ($q) {
-                return $q->whereIn('amazon_date_range_report.account', function ($q) {
-                    $q->from('seller_accounts')
-                        ->selectRaw('DISTINCT asinking_account_name')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1)
-                        ->get();
-                });
-            }, function ($q) {
-                return $q->whereNotIn('amazon_date_range_report.account', function ($q) {
-                    $q->from('seller_accounts')
-                        ->selectRaw('DISTINCT asinking_account_name')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1)
-                        ->get();
-                });
+            ->when($isAvolution, function ($q) use ($sellerAccount) {
+                return $q->whereIn('amazon_date_range_report.account', $sellerAccount);
+            }, function ($q) use ($sellerAccount) {
+                return $q->whereNotIn('amazon_date_range_report.account', $sellerAccount);
             })
             ->whereIn(
                 'amazon_date_range_report.type',
@@ -58,6 +47,7 @@ class AmazonDateRangeReportRepository extends BaseRepository
     public function getAccountMiscellaneous(
         string $reportDate,
         string $clientCode,
+        array $sellerAccount,
         bool   $isAvolution
     ) {
         return $this->model
@@ -69,22 +59,10 @@ class AmazonDateRangeReportRepository extends BaseRepository
             })
             ->where('amazon_date_range_report.report_date', $reportDate)
             ->where('amazon_date_range_report.supplier', $clientCode)
-            ->when($isAvolution, function ($q) {
-                return $q->whereIn('amazon_date_range_report.account', function ($q) {
-                    $q->from('seller_accounts')
-                        ->selectRaw('DISTINCT asinking_account_name')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1)
-                        ->get();
-                });
-            }, function ($q) {
-                return $q->whereNotIn('amazon_date_range_report.account', function ($q) {
-                    $q->from('seller_accounts')
-                        ->selectRaw('DISTINCT asinking_account_name')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1)
-                        ->get();
-                });
+            ->when($isAvolution, function ($q) use ($sellerAccount) {
+                return $q->whereIn('amazon_date_range_report.account', $sellerAccount);
+            }, function ($q) use ($sellerAccount) {
+                return $q->whereNotIn('amazon_date_range_report.account', $sellerAccount);
             })
             ->where('amazon_date_range_report.active', 1)
             ->whereNotIn(
@@ -105,6 +83,7 @@ class AmazonDateRangeReportRepository extends BaseRepository
     public function getTotalAmount(
         string $reportDate,
         string $clientCode,
+        array  $sellerAccount,
         bool   $isAvolution
     ): float {
         return (float)$this->model
@@ -128,22 +107,10 @@ class AmazonDateRangeReportRepository extends BaseRepository
                 "DATE_FORMAT(amazon_date_range_report.report_date, '%Y%m') = ?",
                 date("Ym", strtotime($reportDate))
             )
-            ->when($isAvolution, function ($q) {
-                return $q->whereIn('amazon_date_range_report.account', function ($query) {
-                    $query->from('seller_accounts')
-                        ->selectRaw('DISTINCT asinking_account_name')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1)
-                        ->get();
-                });
-            }, function ($q) {
-                return $q->whereNotIn('amazon_date_range_report.account', function ($query) {
-                    $query->from('seller_accounts')
-                        ->selectRaw('DISTINCT asinking_account_name')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1)
-                        ->get();
-                });
+            ->when($isAvolution, function ($q) use ($sellerAccount) {
+                return $q->whereIn('amazon_date_range_report.account', $sellerAccount);
+            }, function ($q) use ($sellerAccount) {
+                return $q->whereNotIn('amazon_date_range_report.account', $sellerAccount);
             })
             ->value('amazon_total_hkd');
     }

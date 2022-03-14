@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Repositories\ContinStorageFeeRepository;
 use Throwable;
 use App\Models\Invoice;
 use App\Models\BillingStatement;
@@ -86,11 +85,6 @@ class SalesExpenseExport implements
             BeforeSheet::class => function (BeforeSheet $event) {
                 $formattedStartDate = date('jS M Y', strtotime($this->reportDate));
                 $formattedEndDate = date('jS M Y', strtotime(date("Y-m-t", strtotime($this->reportDate))));
-
-                $continStorageFee = app(ContinStorageFeeRepository::class)->getAccountRefund(
-                    $this->reportDate,
-                    $this->clientCode
-                );
 
                 $msg = "Monthly Sales & OPEX Summary in HKD ";
                 $msg .= " (for the period of {$formattedStartDate} to {$formattedEndDate})";
