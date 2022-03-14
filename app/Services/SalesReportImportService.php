@@ -24,6 +24,7 @@ class SalesReportImportService
     const SHEET_DATE_RANGE = 'date_range';
     const SHEET_MONTHLY_STORAGE_FEES = 'monthly_storage_fees';
     const SHEET_LONG_TERM_STORAGE_FEE_CHARGE = 'long_term_storage_fee_charge';
+    const SHEET_FIRST_MILE_SHIPMENT_FEE = 'fba';
     const SHEET_CONTIN_STORAGE_FEE = 'contin_storage_fee';
 
     // 每個分頁對應的表頭欄位
@@ -37,6 +38,7 @@ class SalesReportImportService
         self::SHEET_DATE_RANGE => ImportTitleConstant::AMZ_DATE_RANGE,
         self::SHEET_MONTHLY_STORAGE_FEES => ImportTitleConstant::MONTHLY_STORAGE,
         self::SHEET_LONG_TERM_STORAGE_FEE_CHARGE => ImportTitleConstant::LONG_TERM,
+        self::SHEET_FIRST_MILE_SHIPMENT_FEE => ImportTitleConstant::FIRST_MILE_SHIPMENT,
         self::SHEET_CONTIN_STORAGE_FEE => 0,
         
     ];
@@ -52,6 +54,7 @@ class SalesReportImportService
         self::SHEET_DATE_RANGE => BatchJobConstant::FEE_TYPE_AMAZON_DATE_RANGE,
         self::SHEET_MONTHLY_STORAGE_FEES => BatchJobConstant::FEE_TYPE_MONTHLY_STORAGE_FEES,
         self::SHEET_LONG_TERM_STORAGE_FEE_CHARGE => BatchJobConstant::FEE_TYPE_LONG_TERM_STORAGE_FEES,
+        self::SHEET_FIRST_MILE_SHIPMENT_FEE => BatchJobConstant::FEE_TYPE_FIRST_MILE_SHIPMENT_FEES,
         self::SHEET_CONTIN_STORAGE_FEE => BatchJobConstant::IMPORT_TYPE_CONTIN_STORAGE_FEE,
     ];
 
