@@ -4,7 +4,6 @@ namespace App\Repositories;
 
 use App\Models\RmaRefundList;
 use Illuminate\Support\Facades\DB;
-use App\Repositories\SellerAccountRepository;
 
 class RmaRefundListRepository extends BaseRepository
 {
@@ -16,11 +15,9 @@ class RmaRefundListRepository extends BaseRepository
     public function getAccountRefund(
         string $reportDate,
         string $clientCode,
+        array $sellerAccount,
         bool   $isAvolution
     ): float {
-
-        $sellerAccount = app(SellerAccountRepository::class)->getSellerAccount();
-
         return (float)$this->model
             ->selectRaw("SUM(ABS(rma_refund_list.amount_refund) * exchange_rates.exchange_rate) AS 'refund_amount_hkd'")
             ->leftJoin('exchange_rates', function ($join) {
