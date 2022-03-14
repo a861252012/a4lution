@@ -4,33 +4,29 @@ namespace App\Exports;
 
 use App\Models\BillingStatement;
 use App\Models\Invoice;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Events\BeforeSheet;
-use Maatwebsite\Excel\Excel;
 use Throwable;
 
-class OpexInvoiceExport implements WithTitle, WithEvents
+class OpexInvoiceExport implements
+    WithTitle,
+    WithEvents
 {
     use RegistersEventListeners;
 
-    private $reportDate;
-    private $clientCode;
-    private $insertInvoiceID;
-    private $insertBillingID;
+    private string $reportDate;
+    private string $clientCode;
+    private int $insertInvoiceID;
+    private int $insertBillingID;
 
     public function __construct(
         string $reportDate,
         string $clientCode,
         int    $insertInvoiceID,
         int    $insertBillingID
-    )
-    {
+    ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
@@ -219,4 +215,3 @@ class OpexInvoiceExport implements WithTitle, WithEvents
         return $sum;
     }
 }
-

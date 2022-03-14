@@ -15,6 +15,7 @@ use App\Repositories\OrderRepository;
 use App\Repositories\PlatformAdFeeRepository;
 use App\Repositories\RmaRefundListRepository;
 use App\Repositories\CustomerRepository;
+use App\Repositories\SellerAccountRepository;
 use App\Support\Calculation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -45,11 +46,13 @@ class BillingStatementService
     {
         $reportDate = Carbon::parse($request->report_date)->format('Y-m-d');
         $clientCode = $request->client_code;
+        $sellerAccount = app(SellerAccountRepository::class)->getSellerAccount();
 
         //getReportFees
         $clientReportFees = $this->orderRepo->getReportFees(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             false
         );
 
@@ -60,6 +63,7 @@ class BillingStatementService
         $a4ReportFees = $this->orderRepo->getReportFees(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             true
         );
 
@@ -71,12 +75,14 @@ class BillingStatementService
         $clientRefundFees = abs(app(RmaRefundListRepository::class)->getAccountRefund(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             false
         ));
 
         $a4RefundFees = abs(app(RmaRefundListRepository::class)->getAccountRefund(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             true
         ));
 
@@ -84,24 +90,28 @@ class BillingStatementService
         $clientAccountResend = abs($this->orderRepo->getAccountResend(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             false
         ));
 
         $a4AccountResend = abs($this->orderRepo->getAccountResend(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             true
         ));
 
         $clientAmazonTotal = abs($this->amzDateRangeRepo->getTotalAmount(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             false
         ));
 
         $a4AccountAmazonTotal = abs($this->amzDateRangeRepo->getTotalAmount(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             true
         ));
 
@@ -113,12 +123,14 @@ class BillingStatementService
         $fees['clientAccountMiscellaneous'] = -1 * abs($this->amzDateRangeRepo->getAccountMiscellaneous(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             false
         )->Miscellaneous);
 
         $fees['a4AccountMiscellaneous'] = -1 * abs($this->amzDateRangeRepo->getAccountMiscellaneous(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             true
         )->Miscellaneous);
 
@@ -126,12 +138,14 @@ class BillingStatementService
         $fees['clientAccountAds'] = app(PlatformAdFeeRepository::class)->getAccountAd(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             false
         );
 
         $fees['a4AccountAds'] = app(PlatformAdFeeRepository::class)->getAccountAd(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             true
         );
 
@@ -139,12 +153,14 @@ class BillingStatementService
         $fees['clientAccountMarketingAndPromotion'] = $this->amzDateRangeRepo->getAccountMarketingAndPromotion(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             false
         );
 
         $fees['a4AccountMarketingAndPromotion'] = $this->amzDateRangeRepo->getAccountMarketingAndPromotion(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             true
         );
 
@@ -152,6 +168,7 @@ class BillingStatementService
         $clientAccountFbaStorageFee = (float)optional($this->orderRepo->getAccountFbaStorageFee(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             false
         )[0])->storage_fee_hkd_sum;
 
@@ -165,6 +182,7 @@ class BillingStatementService
         $fees['a4AccountFbaStorageFee'] = (float)optional($this->orderRepo->getAccountFbaStorageFee(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             true
         )[0])->storage_fee_hkd_sum;
 
@@ -203,12 +221,14 @@ class BillingStatementService
         $billingItems['a4_account_sales_orders'] = $this->orderRepo->getSalesOrder(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             true
         );
 
         $billingItems['client_account_sales_orders'] = $this->orderRepo->getSalesOrder(
             $reportDate,
             $clientCode,
+            $sellerAccount,
             false
         );
 
@@ -216,6 +236,7 @@ class BillingStatementService
             $this->orderRepo->getSalesAmount(
                 $reportDate,
                 $clientCode,
+                $sellerAccount,
                 true
             ),
             4
@@ -225,6 +246,7 @@ class BillingStatementService
             $this->orderRepo->getSalesAmount(
                 $reportDate,
                 $clientCode,
+                $sellerAccount,
                 false
             ),
             4
@@ -355,24 +377,24 @@ class BillingStatementService
 
         //count opexInvoice value
         $opexInvoiceKeys = [
-            'a4ShippingFeeHKD',
-            'a4FBAFeesHKD',
-            'a4AccountFbaStorageFee',
-            'a4_account_platform_fee',
-            'a4_account_miscellaneous',
+            'a4_account_logistics_fee',
             'client_account_logistics_fee',
+            'a4_account_platform_fee',
+            'a4_account_fba_fee',
+            'a4_account_fba_storage_fee',
+            'a4_account_advertisement',
+            'a4_account_marketing_and_promotion',
+            'sales_tax_handling',
+            'a4_account_miscellaneous',
             'avolution_commission',
-            'extraordinary_item',
+            'extraordinary_item'
         ];
 
         if ($billingItems['client_code'] === 'G73A') {
             $opexInvoiceKeys = collect($opexInvoiceKeys)->forget('client_account_logistics_fee')->all();
         }
 
-        $billingItems['opex_invoice'] = $this->getSumValue(
-            $billingItems,
-            $opexInvoiceKeys
-        ) - $fees['a4_account_refund_and_resend'];
+        $billingItems['opex_invoice'] = $this->getSumValue($billingItems, $opexInvoiceKeys);
 
         $billingItems['final_credit'] = $this->calculation->numberFormatPrecision(
             $billingItems['sales_credit'] - $billingItems['opex_invoice'] - $billingItems['fba_storage_fee_invoice'],
