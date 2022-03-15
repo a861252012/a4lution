@@ -34,6 +34,7 @@ use App\Services\SalesReportImport\LongTermStorageFeeImport;
 use App\Services\SalesReportImport\PlatformAdFeeImportService;
 use App\Services\SalesReportImport\AmazonDateRangeImportService;
 use App\Services\SalesReportImport\ContinStorageFeeImportService;
+use App\Services\SalesReportImport\FirstMileShipmentFeeImportService;
 
 class ImportSalesReport implements ShouldQueue, ShouldBeUnique
 {
@@ -185,6 +186,16 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
         (new ContinStorageFeeImportService)->import(
             $collection,
             $this->batchIds[BatchJobConstant::IMPORT_TYPE_CONTIN_STORAGE_FEE],
+            $this->reportDate,
+            $this->userId
+        );
+    }
+
+    private function importFBA(LazyCollection $collection)
+    {
+        (new FirstMileShipmentFeeImportService)->import(
+            $collection,
+            $this->batchIds[BatchJobConstant::FEE_TYPE_FIRST_MILE_SHIPMENT_FEES],
             $this->reportDate,
             $this->userId
         );

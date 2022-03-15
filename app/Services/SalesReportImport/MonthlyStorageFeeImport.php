@@ -11,7 +11,7 @@ use App\Constants\BatchJobConstant;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\LazyCollection;
 
-class MonthlyStorageFeeImport
+class MonthlyStorageFeeImport implements ImportInterface
 {
     public function import(LazyCollection $collection, int $batchId, Carbon $reportDate, int $userId)
     {
