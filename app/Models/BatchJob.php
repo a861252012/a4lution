@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\PlatformAdFee;
 use App\Models\MonthlyStorageFee;
 use App\Models\LongTermStorageFee;
+use App\Models\FirstMileShipmentFee;
 use App\Models\AmazonDateRangeReport;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -46,6 +47,11 @@ class BatchJob extends Model
     public function monthlyStorageFees()
     {
         return $this->hasMany(MonthlyStorageFee::class, 'upload_id');
+    }
+
+    public function firstMileShipmentFees()
+    {
+        return $this->hasMany(FirstMileShipmentFee::class, 'upload_id');
     }
 
     public function continStorageFees()

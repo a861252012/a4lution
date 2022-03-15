@@ -10,8 +10,9 @@ use Illuminate\Support\Facades\DB;
 use App\Constants\BatchJobConstant;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\LazyCollection;
+use App\Services\SalesReportImport\ImportInterface;
 
-class ContinStorageFeeImportService
+class ContinStorageFeeImportService implements ImportInterface
 {
     public function import(LazyCollection $collection, int $batchId, Carbon $reportDate, int $userId)
     {

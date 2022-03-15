@@ -13,8 +13,9 @@ use Illuminate\Support\Facades\DB;
 use App\Constants\BatchJobConstant;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\LazyCollection;
+use App\Services\SalesReportImport\ImportInterface;
 
-class OrderImportService
+class OrderImportService implements ImportInterface
 {
     public function import(LazyCollection $collection, int $batchId, Carbon $reportDateCarbon, int $userId)
     {
