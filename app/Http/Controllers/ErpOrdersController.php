@@ -85,7 +85,7 @@ class ErpOrdersController extends Controller
                         $request->warehouse_order_id
                     )
                 )
-                ->when($request->supplier, fn ($q) => $q->where('pc_name', $request->supplier))
+                ->when($request->product_sku, fn ($q) => $q->where('product_sku', 'like', "{$request->product_sku}-%"))
                 ->paginate(100)
                 ->appends($request->query());
         }
