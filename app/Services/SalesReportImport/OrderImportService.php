@@ -53,7 +53,7 @@ class OrderImportService implements ImportInterface
                         'platform' => $main['platform'],
                         'order_code' => $main['package_id'],
                         'reference_no' => $main['erp_order_id'],
-                        'seller_id' => $main['acc_nick_name'],
+                        'seller_id' => trim($main['acc_nick_name']),
                         'sm_code' => $sm_code,
                         'add_time' => Carbon::parse($main['audit_date'])->toDateTimeString(),
                         'order_paydate' => Carbon::parse($main['paid_date'])->toDateTimeString(),
