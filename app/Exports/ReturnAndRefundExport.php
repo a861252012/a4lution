@@ -92,7 +92,7 @@ class ReturnAndRefundExport implements
                 $join->on(
                     DB::raw("DATE_FORMAT(d.report_date, '%Y%M')"),
                     '=',
-                    DB::raw("DATE_FORMAT(r.quoted_date, '%Y%m')")
+                    DB::raw("DATE_FORMAT(r.quoted_date, '%Y%M')")
                 );
                 $join->where('r.active', 1);
             })
@@ -142,7 +142,7 @@ class ReturnAndRefundExport implements
                 $join->on(
                     DB::raw("DATE_FORMAT(a.create_date, '%Y%M')"),
                     '=',
-                    DB::raw("DATE_FORMAT(r.quoted_date, '%Y%m')")
+                    DB::raw("DATE_FORMAT(r.quoted_date, '%Y%M')")
                 );
                 $join->where('r.active', 1);
             })
