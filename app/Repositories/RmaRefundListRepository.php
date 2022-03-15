@@ -31,6 +31,7 @@ class RmaRefundListRepository extends BaseRepository
             })
             ->where('rma_refund_list.product_sku', 'like', "{$clientCode}-%")
             ->whereRaw("DATE_FORMAT(rma_refund_list.create_date, '%Y%m') = ?", date("Ym", strtotime($reportDate)))
+            ->whereRaw("length(rma_refund_list.warehouse_ship_date) > ?", 0)
             ->where('rma_refund_list.shipping_method', '!=', 'AMAZONFBA')
             ->when($isAvolution, function ($q) use ($sellerAccount) {
                 return $q->whereIn('rma_refund_list.user_account_name', $sellerAccount);
