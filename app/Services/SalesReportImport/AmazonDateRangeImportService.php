@@ -10,8 +10,9 @@ use App\Constants\BatchJobConstant;
 use Illuminate\Support\Facades\Log;
 use App\Models\AmazonDateRangeReport;
 use Illuminate\Support\LazyCollection;
+use App\Services\SalesReportImport\ImportInterface;
 
-class AmazonDateRangeImportService
+class AmazonDateRangeImportService implements ImportInterface
 {
     public function import(LazyCollection $collection, int $batchId, Carbon $reportDate, int $userId)
     {

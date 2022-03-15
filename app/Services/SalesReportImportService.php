@@ -76,7 +76,6 @@ class SalesReportImportService
 
         $fileName = $this->uploadFile();
 
-        // ImportSalesReport::dispatchSync(auth()->id(), storage_path('sales_report'), $fileName, $this->reportDate, $batchIds);
         ImportSalesReport::dispatch(
             auth()->id(), 
             storage_path('sales_report'), 
