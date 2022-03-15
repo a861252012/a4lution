@@ -30,6 +30,7 @@ class OrderRepository extends BaseRepository
     public function getReportFees(
         string $reportDate,
         string $clientCode,
+        array $sellerAccount,
         bool $isAvolution
     ) {
         return $this->model
@@ -60,22 +61,10 @@ class OrderRepository extends BaseRepository
             })
             ->whereRaw("DATE_FORMAT(orders.ship_time, '%Y%m') = ?", date("Ym", strtotime($reportDate)))
             ->where('order_products.supplier', $clientCode)
-            ->when($isAvolution, function ($q) {
-                return $q->whereIn('orders.seller_id', function ($query) {
-                    $query->from('seller_accounts')
-                        ->selectRaw('DISTINCT erp_nick_name')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1)
-                        ->get();
-                });
-            }, function ($q) {
-                return $q->whereNotIn('orders.seller_id', function ($query) {
-                    $query->from('seller_accounts')
-                        ->selectRaw('DISTINCT erp_nick_name')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1)
-                        ->get();
-                });
+            ->when($isAvolution, function ($q) use ($sellerAccount) {
+                return $q->whereIn('orders.seller_id', $sellerAccount);
+            }, function ($q) use ($sellerAccount) {
+                return $q->whereNotIn('orders.seller_id', $sellerAccount);
             })
             ->groupBy('order_products.supplier')
             ->first();
@@ -85,6 +74,7 @@ class OrderRepository extends BaseRepository
     public function getAccountResend(
         string $reportDate,
         string $clientCode,
+        array $sellerAccount,
         bool $isAvolution
     ): float {
         return (float)$this->model
@@ -111,22 +101,10 @@ class OrderRepository extends BaseRepository
             ->where('order_products.supplier', $clientCode)
             ->where('orders.seller_id', $clientCode)
             ->where('order_sku_cost_details.order_platform_type', 'resend')
-            ->when($isAvolution, function ($q) {
-                return $q->whereIn('orders.seller_id', function ($query) {
-                    $query->from('seller_accounts')
-                        ->selectRaw('DISTINCT erp_nick_name')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1)
-                        ->get();
-                });
-            }, function ($q) {
-                return $q->whereNotIn('orders.seller_id', function ($query) {
-                    $query->from('seller_accounts')
-                        ->selectRaw('DISTINCT erp_nick_name')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1)
-                        ->get();
-                });
+            ->when($isAvolution, function ($q) use ($sellerAccount) {
+                return $q->whereIn('orders.seller_id', $sellerAccount);
+            }, function ($q) use ($sellerAccount) {
+                return $q->whereNotIn('orders.seller_id', $sellerAccount);
             })
             ->value('total_sales_hkd');
     }
@@ -134,8 +112,11 @@ class OrderRepository extends BaseRepository
     public function getAccountFbaStorageFee(
         string $reportDate,
         string $clientCode,
+        array $sellerAccount,
         bool $isAvolution
     ) {
+        $sellerAccountString = '"' . implode('","', $sellerAccount) . '"';
+
         $sql = "SELECT
     SUM(x.storage_fee_hkd) as storage_fee_hkd_sum
 FROM
@@ -154,9 +135,7 @@ FROM
 
         $isAvolution ? $sql .= '' : $sql .= 'NOT';
 
-        $sql .= " IN (SELECT DISTINCT asinking_account_name
-         FROM seller_accounts
-        WHERE is_a4_account = 1 AND active=1)
+        $sql .= " IN ($sellerAccountString)
 
          UNION ALL SELECT
         (t.12_mo_long_terms_storage_fee * r.exchange_rate) AS 'storage_fee_hkd'
@@ -173,10 +152,7 @@ FROM
 
         $isAvolution ? $sql .= '' : $sql .= 'NOT';
 
-        $sql .= " IN (
-            SELECT DISTINCT asinking_account_name
-             FROM seller_accounts 
-            WHERE is_a4_account = 1 AND active = 1)) x ";
+        $sql .= " IN ($sellerAccountString)) x ";
 
         return DB::select($sql);
     }
@@ -310,6 +286,7 @@ FROM
     public function getSalesOrder(
         string $reportDate,
         string $clientCode,
+        array $sellerAccount,
         bool $isAvolution
     ) {
         return $this->model->query()
@@ -321,26 +298,17 @@ FROM
             ->whereRaw("DATE_FORMAT(orders.ship_time,'%Y%m') = ?", date("Ym", strtotime($reportDate)))
             ->where('order_products.supplier', $clientCode)
             ->whereNotNull('orders.platform_ref_no')
-            ->when($isAvolution, function ($q) {
-                return $q->whereIn('orders.seller_id', function ($query) {
-                    $query->selectRaw('DISTINCT erp_nick_name')
-                        ->from('seller_accounts')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1);
-                });
-            }, function ($q) {
-                return $q->whereNotIn('orders.seller_id', function ($query) {
-                    $query->selectRaw('DISTINCT erp_nick_name')
-                        ->from('seller_accounts')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1);
-                });
+            ->when($isAvolution, function ($q) use ($sellerAccount) {
+                return $q->whereIn('orders.seller_id', $sellerAccount);
+            }, function ($q) use ($sellerAccount) {
+                return $q->whereNotIn('orders.seller_id', $sellerAccount);
             })->value('sales_order_count');
     }
 
     public function getSalesAmount(
         string $reportDate,
         string $clientCode,
+        array $sellerAccount,
         bool $isAvolution
     ): float {
         return (float)$this->model
@@ -364,20 +332,10 @@ FROM
             })
             ->whereRaw("DATE_FORMAT(orders.ship_time,'%Y%m') = ?", date("Ym", strtotime($reportDate)))
             ->where('order_products.supplier', $clientCode)
-            ->when($isAvolution, function ($q) {
-                return $q->whereIn('orders.seller_id', function ($query) {
-                    $query->selectRaw('DISTINCT erp_nick_name')
-                        ->from('seller_accounts')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1);
-                });
-            }, function ($q) {
-                return $q->whereNotIn('orders.seller_id', function ($query) {
-                    $query->selectRaw('DISTINCT erp_nick_name')
-                        ->from('seller_accounts')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1);
-                });
+            ->when($isAvolution, function ($q) use ($sellerAccount) {
+                return $q->whereIn('orders.seller_id', $sellerAccount);
+            }, function ($q) use ($sellerAccount) {
+                return $q->whereNotIn('orders.seller_id', $sellerAccount);
             })->groupBy('order_products.supplier')
             ->value('total_sales_hkd');
     }

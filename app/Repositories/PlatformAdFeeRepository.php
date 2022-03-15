@@ -14,6 +14,7 @@ class PlatformAdFeeRepository extends BaseRepository
     public function getAccountAd(
         string $reportDate,
         string $clientCode,
+        array $sellerAccount,
         bool   $isAvolution
     ): float {
         return (float)$this->model
@@ -26,22 +27,10 @@ class PlatformAdFeeRepository extends BaseRepository
             ->where('platform_ad_fees.active', 1)
             ->where('platform_ad_fees.client_code', $clientCode)
             ->where('platform_ad_fees.report_date', $reportDate)
-            ->when($isAvolution, function ($q) {
-                return $q->whereIn('platform_ad_fees.account', function ($query) {
-                    $query->from('seller_accounts')
-                        ->selectRaw('DISTINCT asinking_account_name')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1)
-                        ->get();
-                });
-            }, function ($q) {
-                return $q->whereNotIn('platform_ad_fees.account', function ($query) {
-                    $query->from('seller_accounts')
-                        ->selectRaw('DISTINCT asinking_account_name')
-                        ->where('is_a4_account', 1)
-                        ->where('active', 1)
-                        ->get();
-                });
+            ->when($isAvolution, function ($q) use ($sellerAccount) {
+                return $q->whereIn('platform_ad_fees.account', $sellerAccount);
+            }, function ($q) use ($sellerAccount) {
+                return $q->whereNotIn('platform_ad_fees.account', $sellerAccount);
             })
             ->groupBy('platform_ad_fees.client_code')
             ->value('ad');

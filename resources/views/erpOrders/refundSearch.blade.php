@@ -74,8 +74,8 @@
                             <div class="col-lg-1 col-md-6 col-sm-6">
                                 <div class="form-group mb-0">
                                     <label class="form-control-label _fz-1" for="supplier">Supplier</label>
-                                    <input class="form-control _fz-1" name="supplier" id="supplier" type="text"
-                                           placeholder="SUPPLIER" value="{{ request()->input('supplier') }}">
+                                    <input class="form-control _fz-1" name="product_sku" id="supplier" type="text"
+                                           placeholder="SUPPLIER" value="{{ request()->input('product_sku') }}">
                                 </div>
                             </div>
 

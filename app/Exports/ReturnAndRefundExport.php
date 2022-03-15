@@ -13,11 +13,16 @@ use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Throwable;
 
-class ReturnAndRefundExport implements WithTitle, FromCollection, WithHeadings, withMapping, WithStrictNullComparison
+class ReturnAndRefundExport implements
+    WithTitle,
+    FromCollection,
+    WithHeadings,
+    withMapping,
+    WithStrictNullComparison
 {
-    private $reportDate;
-    private $clientCode;
-    private $insertInvoiceID;
+    private string $reportDate;
+    private string $clientCode;
+    private int $insertInvoiceID;
 
     public function __construct(
         string $reportDate,
@@ -87,7 +92,7 @@ class ReturnAndRefundExport implements WithTitle, FromCollection, WithHeadings, 
                 $join->on(
                     DB::raw("DATE_FORMAT(d.report_date, '%Y%M')"),
                     '=',
-                    DB::raw("DATE_FORMAT(r.quoted_date, '%Y%m')")
+                    DB::raw("DATE_FORMAT(r.quoted_date, '%Y%M')")
                 );
                 $join->where('r.active', 1);
             })
@@ -103,7 +108,7 @@ class ReturnAndRefundExport implements WithTitle, FromCollection, WithHeadings, 
                 DB::raw("a.ref_no AS reference_number"),
                 DB::raw("a.warehouse_ref_no AS warehouse_order_number"),
                 DB::raw("a.reason AS refund_reason"),
-                DB::raw("'???' AS platform_refund_reason"),
+                DB::raw("'' AS platform_refund_reason"),
                 DB::raw("a.pay_ref_id AS paypal_refund_number"),
                 DB::raw("a.note AS refund_remark"),
                 DB::raw("a.user_account AS account_name"),
@@ -137,13 +142,14 @@ class ReturnAndRefundExport implements WithTitle, FromCollection, WithHeadings, 
                 $join->on(
                     DB::raw("DATE_FORMAT(a.create_date, '%Y%M')"),
                     '=',
-                    DB::raw("DATE_FORMAT(r.quoted_date, '%Y%m')")
+                    DB::raw("DATE_FORMAT(r.quoted_date, '%Y%M')")
                 );
                 $join->where('r.active', 1);
             })
             ->where(DB::raw("DATE_FORMAT(a.create_date,'%Y%m')"), $this->reportDate)
-            ->where('a.pc_name', $this->clientCode)
+            ->where('a.product_sku', 'like', "{$this->clientCode}-%")
             ->where('a.shipping_method', '!=', 'AMAZONFBA')
+            ->whereRaw("length(a.warehouse_ship_date) > ?", 0)
             ->unionAll($amzQuery)
             ->get();
     }
