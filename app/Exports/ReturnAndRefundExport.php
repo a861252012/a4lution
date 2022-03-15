@@ -142,7 +142,7 @@ class ReturnAndRefundExport implements WithTitle, FromCollection, WithHeadings, 
                 $join->where('r.active', 1);
             })
             ->where(DB::raw("DATE_FORMAT(a.create_date,'%Y%m')"), $this->reportDate)
-            ->where('a.pc_name', $this->clientCode)
+            ->where('a.product_sku', 'like', "{$this->clientCode}-%")
             ->where('a.shipping_method', '!=', 'AMAZONFBA')
             ->unionAll($amzQuery)
             ->get();
