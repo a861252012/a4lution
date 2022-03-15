@@ -29,7 +29,7 @@ class RmaRefundListRepository extends BaseRepository
                         DB::raw("DATE_FORMAT(exchange_rates.quoted_date, '%Y%M')")
                     );
             })
-            ->where('rma_refund_list.pc_name', 'like', "{$clientCode}-%")
+            ->where('rma_refund_list.product_sku', 'like', "{$clientCode}-%")
             ->whereRaw("DATE_FORMAT(rma_refund_list.create_date, '%Y%m') = ?", date("Ym", strtotime($reportDate)))
             ->where('rma_refund_list.shipping_method', '!=', 'AMAZONFBA')
             ->when($isAvolution, function ($q) use ($sellerAccount) {
