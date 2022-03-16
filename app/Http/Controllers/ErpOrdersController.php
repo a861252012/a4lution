@@ -312,7 +312,7 @@ class ErpOrdersController extends Controller
         try {
             //get original order_products value
             $oldValues = $this->orderProduct->selectRaw($modifiedColumn)->find($productID)->toArray();
-            $UpdatedData = array_diff($inputs, $oldValues);
+            $UpdatedData = array_diff_assoc($inputs, $oldValues);
 
             //update order_product
             $this->orderProduct->where('id', $productID)->update($UpdatedData);
