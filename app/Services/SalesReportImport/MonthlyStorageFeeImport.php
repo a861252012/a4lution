@@ -52,7 +52,7 @@ class MonthlyStorageFeeImport implements ImportInterface
                             'hkd' => $fee['hkd'],
                             'monthly_storage_fee_est' => $fee['monthly_storage_fee_est'],
                             'hkd_rate' => $fee['hkd_rate'],
-                            'dangerous_goods_storage_type' => $fee['dangerous_goods_storage_type'],
+                            // 'dangerous_goods_storage_type' => $fee['dangerous_goods_storage_type'],
                             'category' => $fee['category'],
                             'eligible_for_discount' => $fee['eligible_for_discount'],
                             'qualified_for_discount' => $fee['qualified_for_discount'],
