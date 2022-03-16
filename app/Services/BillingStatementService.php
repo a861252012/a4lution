@@ -56,7 +56,7 @@ class BillingStatementService
             false
         );
 
-        $fees['clientShippingFeeHKD'] = (float)optional($clientReportFees)->shipping_fee_hkd;
+        $fees['clientLogisticFeeHKD'] = (float)optional($clientReportFees)->logistics_fee_hkd;
         $fees['clientPlatformFeeHKD'] =  (float)optional($clientReportFees)->platform_fee_hkd;
         $fees['clientFBAFeesHKD'] = (float)optional($clientReportFees)->FBA_fees_hkd;
 
@@ -67,7 +67,7 @@ class BillingStatementService
             true
         );
 
-        $fees['a4ShippingFeeHKD'] = (float)optional($a4ReportFees)->shipping_fee_hkd;
+        $fees['a4LogisticFeeHKD'] = (float)optional($a4ReportFees)->logistics_fee_hkd;
         $fees['a4PlatformFeeHKD'] = (float)optional($a4ReportFees)->platform_fee_hkd;
         $fees['a4FBAFeesHKD'] = (float)optional($a4ReportFees)->FBA_fees_hkd;
 
@@ -253,11 +253,11 @@ class BillingStatementService
         );
 
         $billingItems['a4_account_logistics_fee'] =  $this->calculation->numberFormatPrecision(
-            $fees['a4ShippingFeeHKD'],
+            $fees['a4LogisticFeeHKD'],
             4
         );
         $billingItems['client_account_logistics_fee'] = $this->calculation->numberFormatPrecision(
-            $fees['clientShippingFeeHKD'],
+            $fees['clientLogisticFeeHKD'],
             4
         );
         $billingItems['a4_account_fba_fee'] = $this->calculation->numberFormatPrecision($fees['a4FBAFeesHKD'], 4);
@@ -317,8 +317,8 @@ class BillingStatementService
         );
 
         $totalExpensesKeys = [
-            "clientShippingFeeHKD",
-            "a4ShippingFeeHKD",
+            "clientLogisticFeeHKD",
+            "a4LogisticFeeHKD",
             "clientFBAFeesHKD",
             "a4FBAFeesHKD",
             "clientAccountFbaStorageFee",
