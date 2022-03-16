@@ -6,17 +6,22 @@ use App\Models\Invoice;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
-use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Throwable;
 
-class AllOrdersExport implements WithTitle, FromQuery, WithHeadings, withMapping, WithStrictNullComparison
+class AllOrdersExport implements
+    WithTitle,
+    FromQuery,
+    WithHeadings,
+    withMapping,
+    WithStrictNullComparison
 {
-    private $reportDate;
-    private $clientCode;
-    private $insertInvoiceID;
+    private string $reportDate;
+    private string $clientCode;
+    private int $insertInvoiceID;
 
     public function __construct(
         string $reportDate,
@@ -56,7 +61,7 @@ class AllOrdersExport implements WithTitle, FromQuery, WithHeadings, withMapping
                 DB::raw("d.currency_code_org AS currency"),
                 DB::raw("r.exchange_rate AS exchange_rate"),
                 DB::raw("ROUND(d.order_total_amount_org * r.exchange_rate, 4) AS total_sales_HKD"),
-                DB::raw("ROUND((p.last_mile_shipping_fee + ((p.first_mile_tariff + p.first_mile_shipping_fee) / d.currency_rate)) * r.exchange_rate, 4) AS shipping_fee_HKD"),
+                DB::raw("ROUND((p.last_mile_shipping_fee * r.exchange_rate ), 4) AS shipping_fee_HKD"),
                 DB::raw("ROUND(p.transaction_fee * r.exchange_rate, 4) AS platform_fee_HKD"),
                 DB::raw("ROUND(p.fba_fee * r.exchange_rate, 4) AS FBA_fees_HKD"),
                 DB::raw("ROUND((p.other_transaction) * r.exchange_rate, 4) AS other_trans_fee_HKD"),
