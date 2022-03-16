@@ -2,33 +2,29 @@
 
 namespace App\Exports;
 
-use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Excel;
 use App\Models\FirstMileShipmentFee;
 use Throwable;
 
-class FBADateExport implements WithTitle, FromQuery, WithMapping, WithStrictNullComparison
+class FBADateExport implements
+    WithTitle,
+    FromQuery,
+    WithMapping,
+    WithStrictNullComparison
 {
-    private $reportDate;
-    private $clientCode;
-    private $insertInvoiceID;
+    private string $reportDate;
+    private string $clientCode;
 
     public function __construct(
         string $reportDate,
-        string $clientCode,
-        int    $insertInvoiceID
-    )
-    {
+        string $clientCode
+    ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
-        $this->insertInvoiceID = $insertInvoiceID;
     }
 
     public function query()
@@ -47,10 +43,6 @@ class FBADateExport implements WithTitle, FromQuery, WithMapping, WithStrictNull
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoice::findOrFail($this->insertInvoiceID);
-        $invoice->doc_status = "deleted";
-        $invoice->save();
-
         \Log::channel('daily_queue_export')
             ->info('FBADateExport')
             ->info($exception);

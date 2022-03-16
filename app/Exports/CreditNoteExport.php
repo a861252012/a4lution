@@ -4,7 +4,6 @@ namespace App\Exports;
 
 use App\Models\BillingStatement;
 use App\Models\Invoice;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -41,11 +40,7 @@ class CreditNoteExport implements
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoice::findOrFail($this->insertInvoiceID);
-        $invoice->doc_status = "deleted";
-        $invoice->save();
-
-        Log::channel('daily_queue_export')
+        \Log::channel('daily_queue_export')
             ->info('StorageFeeExport')
             ->info($exception);
     }
@@ -54,9 +49,9 @@ class CreditNoteExport implements
     {
         return [
             BeforeSheet::class => function (BeforeSheet $event) {
-                $invoice = Invoice::findOrFail($this->insertInvoiceID);
+                $invoice = Invoice::find($this->insertInvoiceID);
 
-                $billing = BillingStatement::findOrFail($this->insertBillingID);
+                $billing = BillingStatement::find($this->insertBillingID);
 
                 $event->sheet->SetCellValue("E5", "Credit Note");
                 $event->sheet->SetCellValue("D8", "Details");
@@ -107,7 +102,7 @@ class CreditNoteExport implements
                 $event->sheet->SetCellValue("C19", $desc);
                 $event->sheet->SetCellValue("F19", "-HKD  {$billing->a4_account_refund_and_resend}");
 
-                $total = (float)-$billing->a4_account_refund_and_resend + (float)$billing->a4_account_sales_amount;
+                $total = -$billing->a4_account_refund_and_resend + $billing->a4_account_sales_amount;
                 $event->sheet->SetCellValue("B20", 'Total');
                 $event->sheet->SetCellValue("F20", "HKD  {$total}");
             }

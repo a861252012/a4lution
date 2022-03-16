@@ -15,14 +15,17 @@ use Illuminate\Foundation\Bus\Dispatchable;
 
 class CreateZipToS3 extends BaseInvoiceJob implements ShouldQueue
 {
-    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable,
+        Dispatchable,
+        InteractsWithQueue,
+        Queueable,
+        SerializesModels;
 
-    private $invoice;
+    private Invoice $invoice;
 
     public function __construct(
         Invoice $invoice
-    )
-    {
+    ) {
         $this->invoice = $invoice;
     }
 
@@ -33,7 +36,7 @@ class CreateZipToS3 extends BaseInvoiceJob implements ShouldQueue
 
         // 壓縮檔案
         $zip = new ZipArchive;
-        if ($zip->open($saveDir . $fileName, ZipArchive::CREATE) === TRUE) {
+        if ($zip->open($saveDir . $fileName, ZipArchive::CREATE) === true) {
             foreach (\File::files($saveDir) as $name) {
                 $zip->addFile(
                     $name,

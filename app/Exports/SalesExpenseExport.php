@@ -3,7 +3,6 @@
 namespace App\Exports;
 
 use Throwable;
-use App\Models\Invoice;
 use App\Models\BillingStatement;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -23,18 +22,15 @@ class SalesExpenseExport implements
 
     private string $reportDate;
     private string $clientCode;
-    private int $insertInvoiceID;
     private int $insertBillingID;
 
     public function __construct(
         string $reportDate,
         string $clientCode,
-        int    $insertInvoiceID,
         int    $insertBillingID
     ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
-        $this->insertInvoiceID = $insertInvoiceID;
         $this->insertBillingID = $insertBillingID;
     }
 
@@ -45,10 +41,6 @@ class SalesExpenseExport implements
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoice::findOrFail($this->insertInvoiceID);
-        $invoice->doc_status = "deleted";
-        $invoice->save();
-
         \Log::channel('daily_queue_export')
             ->info("[SalesExpenseExport]" . $exception);
     }
@@ -89,7 +81,7 @@ class SalesExpenseExport implements
                 $msg = "Monthly Sales & OPEX Summary in HKD ";
                 $msg .= " (for the period of {$formattedStartDate} to {$formattedEndDate})";
 
-                $billing = BillingStatement::findOrFail($this->insertBillingID);
+                $billing = BillingStatement::find($this->insertBillingID);
 
                 //A4lution Account Sales Overview
                 $event->sheet->SetCellValue("A10", 'A4lution Account');

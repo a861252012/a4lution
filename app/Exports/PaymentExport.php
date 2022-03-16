@@ -6,36 +6,29 @@ use App\Models\BillingStatement;
 use App\Models\User;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Events\BeforeSheet;
-use Maatwebsite\Excel\Excel;
-use Maatwebsite\Excel\Concerns\WithDrawings;
-use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use Throwable;
 
-class PaymentExport implements WithTitle, WithEvents
+class PaymentExport implements
+    WithTitle,
+    WithEvents
 {
     use RegistersEventListeners;
 
-    private $reportDate;
-    private $clientCode;
-    private $insertInvoiceID;
-    private $insertBillingID;
+    private string $reportDate;
+    private string $clientCode;
+    private int $insertInvoiceID;
+    private int $insertBillingID;
 
     public function __construct(
         string $reportDate,
         string $clientCode,
         int    $insertInvoiceID,
         int    $insertBillingID
-    )
-    {
+    ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
@@ -49,40 +42,24 @@ class PaymentExport implements WithTitle, WithEvents
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoice::findOrFail($this->insertInvoiceID);
-        $invoice->doc_status = "deleted";
-        $invoice->save();
-
         \Log::channel('daily_queue_export')
             ->info('PaymentExport')
             ->info($exception);
     }
-
-//    public function drawings()
-//    {
-//        $drawing = new Drawing();
-//        $drawing->setName('Logo');
-//        $drawing->setDescription('This is my logo');
-//        $drawing->setPath("{{ asset('pictures') }}/A4lution_logo.png");
-//        $drawing->setHeight(90);
-//        $drawing->setCoordinates('A1');
-//
-//        return $drawing;
-//    }
 
     public function registerEvents(): array
     {
         return [
             BeforeSheet::class => function (BeforeSheet $event) {
                 $formattedDate = date('d-M-y', strtotime($this->reportDate));
-                $invoice = Invoice::findOrFail($this->insertInvoiceID);
-                $billing = BillingStatement::findOrFail($this->insertBillingID);
+                $invoice = Invoice::find($this->insertInvoiceID);
+                $billing = BillingStatement::find($this->insertBillingID);
 
                 if (!$invoice) {
                     Log::error("can't find invoice by using id: {$this->insertInvoiceID}");
                 }
 
-                $user = User::findOrFail($invoice->created_by);
+                $user = User::find($invoice->created_by);
 
                 if (!$user) {
                     Log::error("can't find user by using id: {$invoice->created_by}");
@@ -101,9 +78,9 @@ class PaymentExport implements WithTitle, WithEvents
                 $event->sheet->SetCellValue("A15", "Name of Beneficiary (收款單位)");
                 $event->sheet->SetCellValue("C15", $invoice->supplier_name);
 
-                $sumOfAmount = (float)$billing->opex_invoice + (float)$billing->fba_storage_fee_invoice + (float)$billing->sales_credit;
+                $sumOfAmount = $billing->opex_invoice + $billing->fba_storage_fee_invoice + $billing->sales_credit;
 
-                $event->sheet->SetCellValue("A17", "Amount (金額)");//TODO
+                $event->sheet->SetCellValue("A17", "Amount (金額)");
                 $event->sheet->SetCellValue("C17", "$  {$sumOfAmount}");
 
                 $event->sheet->SetCellValue("A19", "Due Date (到期日期)");
