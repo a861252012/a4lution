@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
@@ -11,25 +10,27 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Events\AfterSheet;
 use Throwable;
 
-class StorageFeeExport implements WithTitle, FromQuery, WithHeadings, withMapping, WithStrictNullComparison, WithEvents
+class StorageFeeExport implements
+    WithTitle,
+    FromQuery,
+    WithHeadings,
+    withMapping,
+    WithStrictNullComparison,
+    WithEvents
 {
     use RegistersEventListeners;
 
-    private $reportDate;
-    private $clientCode;
-    private $insertInvoiceID;
+    private string $reportDate;
+    private string $clientCode;
 
     public function __construct(
         string $reportDate,
-        string $clientCode,
-        int    $insertInvoiceID
+        string $clientCode
     ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
-        $this->insertInvoiceID = $insertInvoiceID;
     }
 
     public function title(): string
@@ -39,10 +40,6 @@ class StorageFeeExport implements WithTitle, FromQuery, WithHeadings, withMappin
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoice::findOrFail($this->insertInvoiceID);
-        $invoice->doc_status = "deleted";
-        $invoice->save();
-
         \Log::channel('daily_queue_export')
             ->info('StorageFeeExport')
             ->info($exception);
@@ -134,7 +131,8 @@ class StorageFeeExport implements WithTitle, FromQuery, WithHeadings, withMappin
 
         $subQuery = $firstQuery->unionAll($secQuery);
 
-        return DB::table(DB::raw("({$subQuery->toSql()}) as x"))->orderByRaw('x.order_seq ,x.account, x.asin')
+        return DB::table(DB::raw("({$subQuery->toSql()}) as x"))
+            ->orderByRaw('x.order_seq ,x.account, x.asin')
             ->mergeBindings($subQuery);
     }
 
@@ -211,17 +209,6 @@ class StorageFeeExport implements WithTitle, FromQuery, WithHeadings, withMappin
                 $row->storage_fee,
                 $row->storage_fee_HKD,
             ]
-        ];
-    }
-
-    public function registerEvents(): array
-    {
-        return [
-            AfterSheet::class => function (AfterSheet $event) {
-                $invoice = Invoice::findOrFail($this->insertInvoiceID);
-                $invoice->doc_status = "active";
-                $invoice->save();
-            },
         ];
     }
 }

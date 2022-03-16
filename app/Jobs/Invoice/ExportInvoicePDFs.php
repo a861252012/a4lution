@@ -14,14 +14,17 @@ use Illuminate\Foundation\Bus\Dispatchable;
 
 class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
 {
-    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable,
+        Dispatchable,
+        InteractsWithQueue,
+        Queueable,
+        SerializesModels;
 
-    private $invoice;
+    private Invoice $invoice;
 
     public function __construct(
         Invoice $invoice
-    )
-    {
+    ) {
         $this->invoice = $invoice;
     }
 
@@ -31,30 +34,34 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
         $invoice = $this->invoice->load('billingStatement');
 
         // create credit-note
-        $fileName = sprintf("%s %s Credit Note.pdf",
+        $fileName = sprintf(
+            "%s %s Credit Note.pdf",
             $invoice->client_code,
             $invoice->credit_note_no,
         );
-        $pdf = \PDF::loadView('invoice.pdf.creditNote', compact('invoice'))
+        \PDF::loadView('invoice.pdf.creditNote', compact('invoice'))
             ->save($saveDir . $fileName);
 
 
         // create opex-invoice
-        $fileName = sprintf("%s INV-%s%s_1 OPEX Invoice.pdf",
+        $fileName = sprintf(
+            "%s INV-%s%s_1 OPEX Invoice.pdf",
             $invoice->client_code,
             $invoice->issue_date->format('ymd'),
             str_replace(' ', '_', $invoice->supplier_name)
         );
-        $fileName = sprintf("%s %s OPEX Invoice.pdf",
+        $fileName = sprintf(
+            "%s %s OPEX Invoice.pdf",
             $invoice->client_code,
             $invoice->opex_invoice_no,
         );
 
-        $pdf = \PDF::loadView('invoice.pdf.opexInvoice', compact('invoice'))
+        \PDF::loadView('invoice.pdf.opexInvoice', compact('invoice'))
             ->save($saveDir . $fileName);
 
         // create fba-first-mile-shipment-fee.pdf
-        $fileName = sprintf("%s %s&ReturnHelperInvoice.pdf",
+        $fileName = sprintf(
+            "%s %s&ReturnHelperInvoice.pdf",
             $invoice->client_code,
             $invoice->fba_shipment_invoice_no,
         );
@@ -72,7 +79,7 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
             ->groupBy(['fulfillment_center', 'fba_shipment'])
             ->get();
 
-        $pdf = \PDF::loadView('invoice.pdf.fbaFirstMileShipmentFee', compact('invoice', 'firstMileShipmentFees'))
+        \PDF::loadView('invoice.pdf.fbaFirstMileShipmentFee', compact('invoice', 'firstMileShipmentFees'))
             ->save($saveDir . $fileName);
     }
 }
