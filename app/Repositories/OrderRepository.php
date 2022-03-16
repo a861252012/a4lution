@@ -233,6 +233,10 @@ FROM
             'order_products.promotion_amount',
             'order_products.promotion_discount_rate',
             'order_products.other_transaction',
+            'order_products.other_fee',
+            'order_products.marketplace_tax',
+            'order_products.cost_of_point',
+            'order_products.exclusives_referral_fee',
         )
             ->join('order_sku_cost_details', 'order_sku_cost_details.reference_no', '=', 'orders.order_code')
             ->join('order_products', 'order_products.order_code', '=', 'orders.order_code')
