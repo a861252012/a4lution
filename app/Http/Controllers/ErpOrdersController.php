@@ -205,6 +205,7 @@ class ErpOrdersController extends Controller
             $data['exchange_rate'][$data['lists']['currency_code_org']],
             $data['lists']['last_mile_shipping_fee']
         ) : 0;
+
         $data['lists']['paypal_fee_hkd'] = $data['lists']['paypal_fee'] ? $this->getHkdRate(
             $data['exchange_rate'][$data['lists']['currency_code_org']],
             $data['lists']['paypal_fee']
@@ -213,6 +214,24 @@ class ErpOrdersController extends Controller
             $data['exchange_rate'][$data['lists']['currency_code_org']],
             $data['lists']['transaction_fee']
         ) : 0;
+
+        $data['lists']['other_fee_hkd'] = $data['lists']['other_fee'] ? $this->getHkdRate(
+            $data['exchange_rate'][$data['lists']['currency_code_org']],
+            $data['lists']['other_fee']
+        ) : 0;
+        $data['lists']['marketplace_tax_hkd'] = $data['lists']['marketplace_tax'] ? $this->getHkdRate(
+            $data['exchange_rate'][$data['lists']['currency_code_org']],
+            $data['lists']['marketplace_tax']
+        ) : 0;
+        $data['lists']['cost_of_point_hkd'] = $data['lists']['cost_of_point'] ? $this->getHkdRate(
+            $data['exchange_rate'][$data['lists']['currency_code_org']],
+            $data['lists']['cost_of_point']
+        ) : 0;
+        $data['lists']['exclusives_referral_fee_hkd'] = $data['lists']['exclusives_referral_fee'] ? $this->getHkdRate(
+            $data['exchange_rate'][$data['lists']['currency_code_org']],
+            $data['lists']['exclusives_referral_fee']
+        ) : 0;
+
         $data['lists']['fba_fee_hkd'] = $data['lists']['fba_fee'] ? $this->getHkdRate(
             $data['exchange_rate'][$data['lists']['currency_code_org']],
             $data['lists']['fba_fee']
@@ -283,13 +302,17 @@ class ErpOrdersController extends Controller
     {
         $productID = request()->route('id');
         $inputs = request()->except(['product_id']);
+        $inputs['other_transaction'] = (float)request('other_fee') 
+            + (float)request('marketplace_tax') 
+            + (float)request('cost_of_point') 
+            + (float)request('exclusives_referral_fee');
         $modifiedColumn = $inputs ? implode(',', array_keys($inputs)) : null;
 
         DB::beginTransaction();
         try {
             //get original order_products value
             $oldValues = $this->orderProduct->selectRaw($modifiedColumn)->find($productID)->toArray();
-            $UpdatedData = array_diff($inputs, $oldValues);
+            $UpdatedData = array_diff_assoc($inputs, $oldValues);
 
             //update order_product
             $this->orderProduct->where('id', $productID)->update($UpdatedData);

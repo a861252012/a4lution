@@ -118,7 +118,7 @@
                             <td class="order_price">{{ $item->order_price }}</td>
                             <td class="supplier">{{ $item->supplier }}</td>
                             <td class="updated_at">{{ \Carbon\Carbon::parse($item->updated_at)
-                                                        ->setTimezone(config('services.timezone.taipei')) }}</td>
+                                ->setTimezone(config('services.timezone.taipei')) }}</td>
                             <input class="hidden" type="hidden" value="{{ $item->currency_code_org }}">
                         </tr>
                     @endforeach
@@ -252,13 +252,15 @@
                         $("button#inline_submit").click(function () {
                             let id = $("button#edit_btn").attr('data-attr');
                             let data = {};
-                            data.first_mile_shipping_fee = $("input[name='first_mile_shipping_fee']").val();
-                            data.first_mile_tariff = $("input[name='first_mile_tariff']").val();
-                            data.last_mile_shipping_fee = $("input[name='last_mile_shipping_fee']").val();
-                            data.paypal_fee = $("input[name='paypal_fee']").val();
-                            data.transaction_fee = $("input[name='transaction_fee']").val();
-                            data.fba_fee = $("input[name='fba_fee']").val();
-                            data.other_transaction = $("input[name='other_transaction']").val();
+                            data.first_mile_shipping_fee = parseFloat($("input[name='first_mile_shipping_fee']").val());
+                            data.first_mile_tariff = parseFloat($("input[name='first_mile_tariff']").val());
+                            data.last_mile_shipping_fee = parseFloat($("input[name='last_mile_shipping_fee']").val());
+                            data.other_fee = parseFloat($("input[name='other_fee']").val());
+                            data.marketplace_tax = parseFloat($("input[name='marketplace_tax']").val());
+                            data.cost_of_point = parseFloat($("input[name='cost_of_point']").val());
+                            data.exclusives_referral_fee = parseFloat($("input[name='exclusives_referral_fee']").val());
+                            data.fba_fee = parseFloat($("input[name='fba_fee']").val());
+                            data.other_transaction = parseFloat($("input[name='other_transaction']").val());
                             // data.product_id = $("button#edit_btn").attr('data-attr');
 
                             $.ajaxSetup({
