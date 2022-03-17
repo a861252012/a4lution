@@ -15,21 +15,6 @@ class BillingStatement extends Model
 
     public $timestamps = false;
 
-    protected $casts = [
-        'opex_invoice' => 'float',
-        "fba_storage_fee_invoice" => 'float',
-        "sales_credit" => 'float',
-        "a4_account_refund_and_resend" => 'float',
-        "a4_account_sales_amount" => 'float',
-        "a4_account_platform_fee" => 'float',
-        "a4_account_fba_fee" => 'float',
-        "a4_account_fba_storage_fee" => 'float',
-        "sales_tax_handling" => 'float',
-        "a4_account_miscellaneous" => 'float',
-        "extraordinary_item" => 'float',
-        "avolution_commission" => 'float',
-    ];
-
     /**
      * The attributes that should be cast to native types.
      *
