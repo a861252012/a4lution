@@ -65,7 +65,7 @@ class BillingStatementRepository extends BaseRepository
                 'commission_type',
                 'total_sales_orders',
                 'total_sales_amount',
-                'total_expenses',
+                'created_at',
                 DB::raw("date_format(report_date,'%b-%Y') as 'report_date'")
             )->active()
             ->when($clientCode, fn ($q) => $q->where('client_code', $clientCode))
