@@ -14,7 +14,7 @@ class BillingStatement extends Model
     protected $guarded = ['id'];
 
     public $timestamps = false;
-    
+
     /**
      * The attributes that should be cast to native types.
      *
@@ -33,7 +33,7 @@ class BillingStatement extends Model
         'a4_account_miscellaneous' => 'float',
         'extraordinary_item' => 'float',
         'avolution_commission' => 'float',
-        'created_at' => 'date',
+        'created_at' => 'datetime',
     ];
 
     /**
