@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +31,15 @@ class BillingStatement extends Model
     ];
 
     /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'created_at' => 'date',
+    ];
+
+    /**
      * The "booted" method of the model.
      *
      * @return void
@@ -52,5 +62,14 @@ class BillingStatement extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('active', 1);
+    }
+
+    ###############
+    ## Accessors ##
+    ###############
+
+    public function getCreatedAtTwAttribute(): Carbon
+    {
+        return $this->created_at->setTimezone((config('services.timezone.taipei')));
     }
 }
