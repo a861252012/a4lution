@@ -2,11 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -14,27 +10,27 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Events\AfterSheet;
-use Maatwebsite\Excel\Excel;
 use Throwable;
 
-class ExtraordinaryItemExport implements WithTitle, FromQuery, WithHeadings, withMapping, WithStrictNullComparison, WithEvents
+class ExtraordinaryItemExport implements
+    WithTitle,
+    FromQuery,
+    WithHeadings,
+    withMapping,
+    WithStrictNullComparison,
+    WithEvents
 {
     use RegistersEventListeners;
 
-    private $reportDate;
-    private $clientCode;
-    private $insertInvoiceID;
+    private string $reportDate;
+    private string $clientCode;
 
     public function __construct(
         string $reportDate,
-        string $clientCode,
-        int    $insertInvoiceID
-    )
-    {
+        string $clientCode
+    ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
-        $this->insertInvoiceID = $insertInvoiceID;
     }
 
     public function title(): string
@@ -44,10 +40,6 @@ class ExtraordinaryItemExport implements WithTitle, FromQuery, WithHeadings, wit
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoice::findOrFail($this->insertInvoiceID);
-        $invoice->doc_status = "deleted";
-        $invoice->save();
-
         \Log::channel('daily_queue_export')
             ->info('ExtraordinaryItemExport')
             ->info($exception);
@@ -91,17 +83,6 @@ class ExtraordinaryItemExport implements WithTitle, FromQuery, WithHeadings, wit
                 $row->payable_amount,
                 $row->item_amount,
             ]
-        ];
-    }
-
-    public function registerEvents(): array
-    {
-        return [
-            AfterSheet::class => function (AfterSheet $event) {
-                $invoice = Invoice::findOrFail($this->insertInvoiceID);
-                $invoice->doc_status = "active";
-                $invoice->save();
-            },
         ];
     }
 }

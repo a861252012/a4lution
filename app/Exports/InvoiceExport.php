@@ -2,8 +2,6 @@
 
 namespace App\Exports;
 
-use App\Models\Invoice;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
@@ -34,11 +32,7 @@ class InvoiceExport implements
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoice::findOrFail($this->insertInvoiceID);
-        $invoice->doc_status = "failed_bye";
-        $invoice->save();
-
-        Log::channel('daily_queue_export')
+        \Log::channel('daily_queue_export')
             ->info("[InvoiceExport]" . $exception);
     }
 
@@ -49,7 +43,6 @@ class InvoiceExport implements
         $sheets[0] = new SalesExpenseExport(
             $this->reportDate,
             $this->clientCode,
-            $this->insertInvoiceID,
             $this->insertBillingID
         );
         $sheets[1] = new PaymentExport(
@@ -75,13 +68,13 @@ class InvoiceExport implements
             $this->clientCode,
             $this->insertInvoiceID
         );
-        $sheets[5] = new FBADateExport($this->reportDate, $this->clientCode, $this->insertInvoiceID);
-        $sheets[6] = new AllOrdersExport($formatYmDate, $this->clientCode, $this->insertInvoiceID);
-        $sheets[7] = new ADSPromotionExport($this->reportDate, $this->clientCode, $this->insertInvoiceID);
-        $sheets[8] = new ReturnAndRefundExport($formatYmDate, $this->clientCode, $this->insertInvoiceID);
-        $sheets[9] = new MisCellaneousExport($this->reportDate, $this->clientCode, $this->insertInvoiceID);
-        $sheets[10] = new StorageFeeExport($this->reportDate, $this->clientCode, $this->insertInvoiceID);
-        $sheets[11] = new ExtraordinaryItemExport($this->reportDate, $this->clientCode, $this->insertInvoiceID);
+        $sheets[5] = new FBADateExport($this->reportDate, $this->clientCode);
+        $sheets[6] = new AllOrdersExport($formatYmDate, $this->clientCode);
+        $sheets[7] = new ADSPromotionExport($this->reportDate, $this->clientCode);
+        $sheets[8] = new ReturnAndRefundExport($formatYmDate, $this->clientCode);
+        $sheets[9] = new MiscellaneousExport($this->reportDate, $this->clientCode);
+        $sheets[10] = new StorageFeeExport($this->reportDate, $this->clientCode);
+        $sheets[11] = new ExtraordinaryItemExport($this->reportDate, $this->clientCode);
 
         return $sheets;
     }

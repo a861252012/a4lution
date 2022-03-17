@@ -40,10 +40,6 @@ class OpexInvoiceExport implements
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoice::findOrFail($this->insertInvoiceID);
-        $invoice->doc_status = "deleted";
-        $invoice->save();
-
         \Log::channel('daily_queue_export')
             ->info('OpexInvoiceExport')
             ->info($exception);
@@ -53,9 +49,9 @@ class OpexInvoiceExport implements
     {
         return [
             BeforeSheet::class => function (BeforeSheet $event) {
-                $invoice = Invoice::findOrFail($this->insertInvoiceID);
+                $invoice = Invoice::find($this->insertInvoiceID);
 
-                $billing = BillingStatement::findOrFail($this->insertBillingID);
+                $billing = BillingStatement::find($this->insertBillingID);
 
                 $event->sheet->SetCellValue("E5", "OPEX Invoice");
                 $event->sheet->SetCellValue("D8", "Details");
@@ -109,23 +105,23 @@ class OpexInvoiceExport implements
                 //item.B
                 $event->sheet->SetCellValue("B19", 'B');
                 $event->sheet->SetCellValue("C19", 'Platform fee');
-                $event->sheet->SetCellValue("D19", "HKD  " . (float)$billing->a4_account_platform_fee);
+                $event->sheet->SetCellValue("D19", "HKD  " . $billing->a4_account_platform_fee);
                 $event->sheet->SetCellValue("E19", 1);
-                $event->sheet->SetCellValue("F19", "HKD  " . (float)$billing->a4_account_platform_fee);
+                $event->sheet->SetCellValue("F19", "HKD  " . $billing->a4_account_platform_fee);
 
                 //item.C
                 $event->sheet->SetCellValue("B21", 'C');
                 $event->sheet->SetCellValue("C21", 'FBA fee');
-                $event->sheet->SetCellValue("D21", "HKD  " . (float)$billing->a4_account_fba_fee);
+                $event->sheet->SetCellValue("D21", "HKD  " . $billing->a4_account_fba_fee);
                 $event->sheet->SetCellValue("E21", 1);
-                $event->sheet->SetCellValue("F21", "HKD  " . (float)$billing->a4_account_fba_fee);
+                $event->sheet->SetCellValue("F21", "HKD  " . $billing->a4_account_fba_fee);
 
                 //item.D
                 $event->sheet->SetCellValue("B23", 'D');
                 $event->sheet->SetCellValue("C23", 'FBA Storage Fee');
-                $event->sheet->SetCellValue("D23", "HKD  " . (float)$billing->a4_account_fba_storage_fee);
+                $event->sheet->SetCellValue("D23", "HKD  " . $billing->a4_account_fba_storage_fee);
                 $event->sheet->SetCellValue("E23", 1);
-                $event->sheet->SetCellValue("F23", "HKD  " . (float)$billing->a4_account_fba_storage_fee);
+                $event->sheet->SetCellValue("F23", "HKD  " . $billing->a4_account_fba_storage_fee);
 
                 //item.E
                 $UnitPriceKeys = [
@@ -143,30 +139,30 @@ class OpexInvoiceExport implements
                 //item.F
                 $event->sheet->SetCellValue("B27", 'F');
                 $event->sheet->SetCellValue("C27", 'Sales Tax Handling');
-                $event->sheet->SetCellValue("D27", "HKD  " . (float)$billing->sales_tax_handling);
+                $event->sheet->SetCellValue("D27", "HKD  " . $billing->sales_tax_handling);
                 $event->sheet->SetCellValue("E27", 1);
-                $event->sheet->SetCellValue("F27", "HKD  " . (float)$billing->sales_tax_handling);
+                $event->sheet->SetCellValue("F27", "HKD  " . $billing->sales_tax_handling);
 
                 //item.G
                 $event->sheet->SetCellValue("B29", 'G');
                 $event->sheet->SetCellValue("C29", 'Miscellaneous');
-                $event->sheet->SetCellValue("D29", "HKD  " . (float)$billing->a4_account_miscellaneous);
+                $event->sheet->SetCellValue("D29", "HKD  " . $billing->a4_account_miscellaneous);
                 $event->sheet->SetCellValue("E29", 1);
-                $event->sheet->SetCellValue("F29", "HKD  " . (float)$billing->a4_account_miscellaneous);
+                $event->sheet->SetCellValue("F29", "HKD  " . $billing->a4_account_miscellaneous);
 
                 //item.H
                 $event->sheet->SetCellValue("B31", 'H');
                 $event->sheet->SetCellValue("C31", 'Extraordinary item');
-                $event->sheet->SetCellValue("D31", "HKD  " . (float)$billing->extraordinary_item);
+                $event->sheet->SetCellValue("D31", "HKD  " . $billing->extraordinary_item);
                 $event->sheet->SetCellValue("E31", 1);
-                $event->sheet->SetCellValue("F31", "HKD  " . (float)$billing->extraordinary_item);
+                $event->sheet->SetCellValue("F31", "HKD  " . $billing->extraordinary_item);
 
                 //item.I
                 $event->sheet->SetCellValue("B33", 'I');
                 $event->sheet->SetCellValue("C33", 'A4lution Commission');
-                $event->sheet->SetCellValue("D33", "HKD  " . (float)$billing->avolution_commission);
+                $event->sheet->SetCellValue("D33", "HKD  " . $billing->avolution_commission);
                 $event->sheet->SetCellValue("E33", 1);
-                $event->sheet->SetCellValue("F33", "HKD  " . (float)$billing->avolution_commission);
+                $event->sheet->SetCellValue("F33", "HKD  " . $billing->avolution_commission);
 
                 //item Total
                 $totalKeys = [
@@ -198,8 +194,6 @@ class OpexInvoiceExport implements
                 $event->sheet->SetCellValue("B49", '     c) Swift code: HSBCHKHHHKH');
                 $event->sheet->SetCellValue("B50", '     d) Account no.: 004-747-095693-838');
                 $event->sheet->SetCellValue("B51", '2) Payment Term: within 10 working days from the date of Invoice');
-
-                //TODO 公司印章和公司聯絡資訊的圖片(共兩張) 待補上
             }
         ];
     }

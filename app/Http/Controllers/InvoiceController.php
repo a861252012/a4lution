@@ -21,7 +21,6 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -146,7 +145,6 @@ class InvoiceController extends Controller
     }
 
     // TODO: add Request
-
     public function editView(Request $request)
     {
         $data['clientCode'] = $request->client_code ?? null;
@@ -228,7 +226,7 @@ class InvoiceController extends Controller
         $invoice = Invoice::create($data);
         $invoiceID = $invoice->id;
 
-        $batch = Bus::batch([
+        \Bus::batch([
             [
                 new SetSaveDir($invoiceID),
                 new ExportInvoiceExcel($invoice),

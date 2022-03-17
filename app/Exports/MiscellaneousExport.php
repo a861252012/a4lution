@@ -3,9 +3,7 @@
 namespace App\Exports;
 
 use App\Models\AmazonDateRangeReport;
-use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -13,7 +11,7 @@ use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Throwable;
 
-class MisCellaneousExport implements
+class MiscellaneousExport implements
     WithTitle,
     FromQuery,
     WithHeadings,
@@ -22,16 +20,13 @@ class MisCellaneousExport implements
 {
     private string $reportDate;
     private string $clientCode;
-    private int $insertInvoiceID;
 
     public function __construct(
         string $reportDate,
-        string $clientCode,
-        int    $insertInvoiceID
+        string $clientCode
     ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
-        $this->insertInvoiceID = $insertInvoiceID;
     }
 
     public function title(): string
@@ -41,12 +36,8 @@ class MisCellaneousExport implements
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoice::findOrFail($this->insertInvoiceID);
-        $invoice->doc_status = "deleted";
-        $invoice->save();
-
-        Log::channel('daily_queue_export')
-            ->info('MisCellaneousExport')
+        \Log::channel('daily_queue_export')
+            ->info('MiscellaneousExport')
             ->info($exception);
     }
 
