@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -12,21 +11,23 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 use App\Models\PlatformAdFee;
 use Throwable;
 
-class ADSPromotionExport implements WithTitle, FromQuery, WithHeadings, withMapping, WithStrictNullComparison
+class ADSPromotionExport implements
+    WithTitle,
+    FromQuery,
+    WithHeadings,
+    withMapping,
+    WithStrictNullComparison
 {
 
-    private $reportDate;
-    private $clientCode;
-    private $insertInvoiceID;
+    private string $reportDate;
+    private string $clientCode;
 
     public function __construct(
         string $reportDate,
-        string $clientCode,
-        int    $insertInvoiceID
+        string $clientCode
     ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
-        $this->insertInvoiceID = $insertInvoiceID;
     }
 
     public function title(): string
@@ -36,10 +37,6 @@ class ADSPromotionExport implements WithTitle, FromQuery, WithHeadings, withMapp
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoice::findOrFail($this->insertInvoiceID);
-        $invoice->doc_status = "deleted";
-        $invoice->save();
-
         \Log::channel('daily_queue_export')
             ->info('ADSPromotionExport')
             ->info($exception);

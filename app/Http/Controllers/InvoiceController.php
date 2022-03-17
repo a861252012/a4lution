@@ -16,11 +16,11 @@ use App\Services\InvoiceService;
 use App\Support\ERPRequester;
 use Carbon\Carbon;
 use Illuminate\Bus\Batch;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -145,7 +145,6 @@ class InvoiceController extends Controller
     }
 
     // TODO: add Request
-
     public function editView(Request $request)
     {
         $data['clientCode'] = $request->client_code ?? null;
@@ -227,7 +226,7 @@ class InvoiceController extends Controller
         $invoice = Invoice::create($data);
         $invoiceID = $invoice->id;
 
-        $batch = Bus::batch([
+        \Bus::batch([
             [
                 new SetSaveDir($invoiceID),
                 new ExportInvoiceExcel($invoice),
@@ -285,23 +284,31 @@ class InvoiceController extends Controller
 
     public function deleteInvoice(Request $request): JsonResponse
     {
-        $id = $request->route('id');
+        try {
+            $invoice = $this->invoice->findOrFail($request->invoiceId);
 
-        if (!$id) {
-            return response()->json(['msg' => 'wrong ID', 'status' => 'error', 'icon' => 'error']);
+            $invoice->active = 0;
+            $invoice->updated_by = Auth::id();
+            $invoice->doc_status = 'deleted';
+            $invoice->save();
+
+            $this->billingStatementRepo->update(
+                $request->billingStatementId,
+                [
+                    'active' => 0,
+                    'deleted_at' => now()->toDateTimeString(),
+                    'deleted_by' => Auth::id()
+                ]
+            );
+        } catch (ModelNotFoundException $exception) {
+            abort(Response::HTTP_INTERNAL_SERVER_ERROR, 'Deleted Failed');
         }
 
-        $invoice = $this->invoice->findOrFail($id);
-
-        if (!$invoice) {
-            return response()->json(['msg' => 'wrong ID', 'status' => 'error', 'icon' => 'error']);
-        }
-
-        $invoice->active = 0;
-        $invoice->updated_by = Auth::id();
-        $invoice->doc_status = 'deleted';
-        $invoice->save();
-
-        return response()->json(['msg' => 'deleted', 'status' => 'success', 'icon' => 'success']);
+        return response()->json(
+            [
+                'status' => Response::HTTP_OK,
+                'msg' => 'Deleted'
+            ]
+        );
     }
 }

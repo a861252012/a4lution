@@ -5,30 +5,27 @@ namespace App\Exports;
 use App\Models\FirstMileShipmentFee;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Events\BeforeSheet;
-use Maatwebsite\Excel\Excel;
 use Throwable;
 
-class FBAFirstMileShipmentFeesExport implements WithTitle, WithEvents
+class FBAFirstMileShipmentFeesExport implements
+    WithTitle,
+    WithEvents
 {
     use RegistersEventListeners;
 
-    private $reportDate;
-    private $clientCode;
-    private $insertInvoiceID;
+    private string $reportDate;
+    private string $clientCode;
+    private int $insertInvoiceID;
 
     public function __construct(
         string $reportDate,
         string $clientCode,
         int    $insertInvoiceID
-    )
-    {
+    ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
@@ -41,10 +38,6 @@ class FBAFirstMileShipmentFeesExport implements WithTitle, WithEvents
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoice::findOrFail($this->insertInvoiceID);
-        $invoice->doc_status = "deleted";
-        $invoice->save();
-
         \Log::channel('daily_queue_export')
             ->info('PaymentExport')
             ->info($exception);
@@ -54,7 +47,7 @@ class FBAFirstMileShipmentFeesExport implements WithTitle, WithEvents
     {
         return [
             BeforeSheet::class => function (BeforeSheet $event) {
-                $invoice = Invoice::findOrFail($this->insertInvoiceID);
+                $invoice = Invoice::find($this->insertInvoiceID);
 
                 $event->sheet->SetCellValue("E5", "INVOICE");
                 $event->sheet->SetCellValue("D8", "DETAILS");

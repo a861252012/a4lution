@@ -51,6 +51,7 @@ class InvoiceRepository extends BaseRepository
             ->select(
                 DB::raw("date_format(report_date,'%M-%Y') AS report_date"),
                 'id',
+                'billing_statement_id',
                 'client_code',
                 'opex_invoice_no',
                 'doc_file_name',

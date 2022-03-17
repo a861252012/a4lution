@@ -3,7 +3,6 @@
 namespace App\Exports;
 
 use App\Models\AmazonDateRangeReport;
-use App\Models\Invoice;
 use App\Models\RmaRefundList;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -22,16 +21,13 @@ class ReturnAndRefundExport implements
 {
     private string $reportDate;
     private string $clientCode;
-    private int $insertInvoiceID;
 
     public function __construct(
         string $reportDate,
-        string $clientCode,
-        int    $insertInvoiceID
+        string $clientCode
     ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
-        $this->insertInvoiceID = $insertInvoiceID;
     }
 
     public function title(): string
@@ -41,10 +37,6 @@ class ReturnAndRefundExport implements
 
     public function failed(Throwable $exception): void
     {
-        $invoice = Invoice::findOrFail($this->insertInvoiceID);
-        $invoice->doc_status = "deleted";
-        $invoice->save();
-
         \Log::channel('daily_queue_export')
             ->info('ReturnAndRefundExport')
             ->info($exception);
