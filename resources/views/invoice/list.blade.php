@@ -117,8 +117,7 @@
                                 <span class="btn-inner--text">Download</span>
                             </button>
                             <button class="btn btn-danger delete_btn btn-sm _fz-1" type="button"
-                                    data-invoice-id="{{$item->id}}"
-                                    data-billing-statement-id="{{$item->billing_statement_id}}">
+                                    data-id="{{$item->id}}">
                                 <span class="btn-inner--text">Delete</span>
                             </button>
                         </td>
@@ -159,8 +158,7 @@
             });
 
             $('button.delete_btn').click(function () {
-                let invoiceID = $(this).data('invoice-id');
-                let billingStatementID = $(this).data('billing-statement-id');
+                let invoiceID = $(this).data("id");
 
                 swal({
                     title: "Are you sure?",
@@ -176,11 +174,11 @@
                         });
 
                         $.ajax({
-                            url: origin + '/invoice/' + invoiceID + '/' + billingStatementID,
+                            url: origin + '/invoice/' + invoiceID,
                             type: 'delete',
                             success: function (res) {
                                 swal({
-                                    icon: 'success',
+                                    icon: res.icon,
                                     text: res.msg
                                 });
                             }, error: function (e) {

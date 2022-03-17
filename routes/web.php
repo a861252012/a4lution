@@ -77,7 +77,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/list', 'InvoiceController@listView')->name('invoice.list.view');
         Route::get('/issue', 'InvoiceController@issueView')->name('invoice.issue.view');
         Route::delete('/issue/{type}/{condition}', 'InvoiceController@deleteIssue');
-        Route::delete('/{invoiceId}/{billingStatementId}', 'InvoiceController@deleteInvoice');
+        Route::delete('/{id}', 'InvoiceController@deleteInvoice');
 
         Route::get('/download/{token?}', 'InvoiceController@downloadFile');
         Route::get('/validation/{date}/{clientCode}', 'InvoiceController@reportValidation')
