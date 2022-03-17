@@ -86,7 +86,7 @@
                         <th>Commission Type</th>
                         <th>Total Sales Orders</th>
                         <th>Total Sales Amount</th>
-                        <th>Total Expense</th>
+                        <th>Created At</th>
                         <th>Action</th>
                     </tr>
                     </thead>
@@ -95,13 +95,13 @@
                     @forelse ($lists as $item)
                         <tr>
                             <input type="hidden" name="bill_state_id" value="{{ $item->id }}">
-                            <td class="report_date">{{ $item->report_date ?? '' }}</td>
-                            <td class="client_code">{{ $item->client_code ?? '' }}</td>
-                            <td class="avolution_commission">{{ $item->avolution_commission ?? '' }}</td>
-                            <td class="commission_type">{{ $item->commission_type ?? '' }}</td>
-                            <td class="total_sales_orders">{{ $item->total_sales_orders ?? '' }}</td>
-                            <td class="total_sales_amount">{{ $item->total_sales_amount ?? '' }}</td>
-                            <td class="total_expenses">{{ $item->total_expenses ?? '' }}</td>
+                            <td class="report_date">{{ $item->report_date }}</td>
+                            <td class="client_code">{{ $item->client_code }}</td>
+                            <td>{{ $item->avolution_commission }}</td>
+                            <td>{{ $item->commission_type }}</td>
+                            <td>{{ $item->total_sales_orders }}</td>
+                            <td>{{ $item->total_sales_amount }}</td>
+                            <td>{{ $item->created_at_tw }}</td>
                             <td>
                                 <button class="btn btn-primary issue_btn btn-sm _fz-1" type="button"
                                         billing-statement-id="{{ $item->id }}"
