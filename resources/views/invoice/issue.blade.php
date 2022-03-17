@@ -95,12 +95,12 @@
                     @forelse ($lists as $item)
                         <tr>
                             <input type="hidden" name="bill_state_id" value="{{ $item->id }}">
-                            <td class="report_date">{{ $item->report_date ?? '' }}</td>
-                            <td class="client_code">{{ $item->client_code ?? '' }}</td>
-                            <td>{{ $item->avolution_commission ?? '' }}</td>
-                            <td>{{ $item->commission_type ?? '' }}</td>
-                            <td>{{ $item->total_sales_orders ?? '' }}</td>
-                            <td>{{ $item->total_sales_amount ?? '' }}</td>
+                            <td class="report_date">{{ $item->report_date }}</td>
+                            <td class="client_code">{{ $item->client_code }}</td>
+                            <td>{{ $item->avolution_commission }}</td>
+                            <td>{{ $item->commission_type }}</td>
+                            <td>{{ $item->total_sales_orders }}</td>
+                            <td>{{ $item->total_sales_amount }}</td>
                             <td>{{ $item->created_at_tw }}</td>
                             <td>
                                 <button class="btn btn-primary issue_btn btn-sm _fz-1" type="button"
