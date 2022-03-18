@@ -46,19 +46,19 @@ class FeeService
 
         switch ($feeType) {
             case 'platform_ad_fees':
-                $diff = $headings->diff(ImportTitleConstant::PLATFORM_AD) ?? null;
+                $diff = collect(ImportTitleConstant::PLATFORM_AD)->diff($headings) ?? null;
                 break;
             case 'amazon_date_range':
-                $diff = $headings->diff(ImportTitleConstant::AMZ_DATE_RANGE) ?? null;
+                $diff = collect(ImportTitleConstant::AMZ_DATE_RANGE)->diff($headings) ?? null;
                 break;
             case 'long_term_storage_fees':
-                $diff = $headings->diff(ImportTitleConstant::LONG_TERM) ?? null;
+                $diff = collect(ImportTitleConstant::LONG_TERM)->diff($headings) ?? null;
                 break;
             case 'monthly_storage_fees':
-                $diff = $headings->diff(ImportTitleConstant::MONTHLY_STORAGE) ?? null;
+                $diff = collect(ImportTitleConstant::MONTHLY_STORAGE)->diff($headings) ?? null;
                 break;
             case 'first_mile_shipment_fees':
-                $diff = $headings->diff(ImportTitleConstant::FIRST_MILE_SHIPMENT) ?? null;
+                $diff = collect(ImportTitleConstant::FIRST_MILE_SHIPMENT)->diff($headings) ?? null;
                 break;
 
             default:
