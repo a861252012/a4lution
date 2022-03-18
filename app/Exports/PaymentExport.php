@@ -51,7 +51,7 @@ class PaymentExport implements
     {
         return [
             BeforeSheet::class => function (BeforeSheet $event) {
-                $formattedDate = date('d-M-y', strtotime($this->reportDate));
+                $formattedDate = date('d-F-y', strtotime($this->reportDate));
                 $invoice = Invoice::find($this->insertInvoiceID);
                 $billing = BillingStatement::find($this->insertBillingID);
 
@@ -81,11 +81,11 @@ class PaymentExport implements
                 $sumOfAmount = $billing->opex_invoice + $billing->fba_storage_fee_invoice + $billing->sales_credit;
 
                 $event->sheet->SetCellValue("A17", "Amount (金額)");
-                $event->sheet->SetCellValue("C17", "$  {$sumOfAmount}");
+                $event->sheet->SetCellValue("C17", "HK  " . number_format($sumOfAmount, 2));
 
                 $event->sheet->SetCellValue("A19", "Due Date (到期日期)");
 
-                $formattedDueDate = date('d M Y', strtotime($invoice->due_date));
+                $formattedDueDate = date('d F Y', strtotime($invoice->due_date));
 
                 $event->sheet->SetCellValue("C19", $formattedDueDate);
 
@@ -101,22 +101,22 @@ class PaymentExport implements
                 $event->sheet->SetCellValue("C23", $invoice->opex_invoice_no);
                 $event->sheet->SetCellValue("D23", 'Invoice');
                 $event->sheet->SetCellValue("E23", 'OPEX');
-                $event->sheet->SetCellValue("F23", "$  {$billing->opex_invoice}");
+                $event->sheet->SetCellValue("F23", "$  " . number_format($billing->opex_invoice, 2));
 
                 $event->sheet->SetCellValue("C24", $invoice->fba_shipment_invoice_no);
                 $event->sheet->SetCellValue("D24", 'Invoice');
                 $event->sheet->SetCellValue("E24", 'FBA Shipment');
-                $event->sheet->SetCellValue("F24", "$  {$billing->fba_storage_fee_invoice}");
+                $event->sheet->SetCellValue("F24", "$  " . number_format($billing->fba_storage_fee_invoice, 2));
 
                 $event->sheet->SetCellValue("C25", $this->getCreditNote($invoice->credit_note_no));
                 $event->sheet->SetCellValue("D25", 'Credit Note');
                 $event->sheet->SetCellValue("E25", 'Sales Credit');
-                $event->sheet->SetCellValue("F25", "$  {$billing->sales_credit}");
-                $event->sheet->SetCellValue("F26", "$  {$sumOfAmount}");
+                $event->sheet->SetCellValue("F25", "$  " . number_format($billing->sales_credit, 2));
+                $event->sheet->SetCellValue("F26", "$  " . number_format($sumOfAmount, 2));
 
 
                 $event->sheet->SetCellValue("C28", 'DBS Bank (Hong Kong) Limited');
-                $event->sheet->SetCellValue("C29", $sumOfAmount);
+                $event->sheet->SetCellValue("C29", "ACCOUNT NO.");
                 $event->sheet->SetCellValue("C30", "Account Name : " . $invoice->supplier_name);
 
 
