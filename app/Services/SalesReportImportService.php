@@ -122,11 +122,19 @@ class SalesReportImportService
                 // 檢查分頁 ERP Orders 的 Shipped Date 欄位是否等於 Report Date
                 if ($sheetName == self::SHEET_ERP_ORDERS) {
                     
-                    // 只比對第一行的 Shipped Date
-                    $firstRow = $excel->headersToSnakeCase()->getRowsBySheet($sheet)->first();
+                    // 比對 Shipped Date
+                    $sheet = $excel->headersToSnakeCase()->getRowsBySheet($sheet);
+                    $firstRow = $sheet->first();
+                    $lastRow = $sheet->last();
 
-                    if (Carbon::parse($firstRow['shipped_date'])->format('Ym') <> $this->reportDate->format('Ym')) {
-                        abort(Response::HTTP_FORBIDDEN, "Sheet [{$sheetName}]: Report date is different with shipped date.");
+                    if (Carbon::parse($firstRow['shipped_date'])->format('Ym') <> $this->reportDate->format('Ym')
+                        || Carbon::parse($lastRow['shipped_date'])->format('Ym') <> $this->reportDate->format('Ym')) {
+                        abort(
+                            Response::HTTP_FORBIDDEN, 
+                            "Partial orders were not shipped in {$this->reportDate->format('M Y')}.
+                            Review the data set details for the \"Shipped Date\" of [ERP orders] you are importing and make sure your upload file matches the {$this->reportDate->format('M Y')}.
+                            Please revise the file and upload again."
+                        );
                     }
 
                 }
