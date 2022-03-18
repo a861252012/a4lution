@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
@@ -45,9 +46,10 @@ class StorageFeeExport implements
             ->info($exception);
     }
 
-    public function query()
+    public function query(): Builder
     {
-        $firstQuery = DB::query()->from("monthly_storage_fees as m")
+        $firstQuery = DB::query()
+            ->from("monthly_storage_fees as m")
             ->select(
                 DB::raw("'1' AS order_seq"),
                 DB::raw("m.account AS account"),
@@ -79,16 +81,19 @@ class StorageFeeExport implements
                 "m.eligible_for_discount",
                 "m.qualified_for_discount",
                 DB::raw("'Monthly Storage Fee' AS storage_fee_type"),
-                DB::raw("m.monthly_storage_fee_est AS 'storage_fee'"),
-                DB::raw("(m.monthly_storage_fee_est * r.exchange_rate) AS 'storage_fee_HKD'")
+                DB::raw("m.monthly_storage_fee_est AS storage_fee"),
+                DB::raw("(m.monthly_storage_fee_est * r.exchange_rate) AS storage_fee_hkd")
             )->leftJoin('exchange_rates as r', function ($join) {
                 $join->on('m.report_date', '=', 'r.quoted_date')
-                    ->where('m.currency', '=', 'r.base_currency')
+                    ->on('m.currency', '=', 'r.base_currency')
                     ->where('r.active', 1);
-            })->where('m.supplier', $this->clientCode)
-            ->where('m.report_date', $this->reportDate);
+            })
+            ->where('m.supplier', $this->clientCode)
+            ->where('m.report_date', $this->reportDate)
+            ->where('m.active', 1);
 
-        $secQuery = DB::query()->from("long_term_storage_fees as t")
+        $secQuery = DB::query()
+            ->from("long_term_storage_fees as t")
             ->select(
                 DB::raw("'2' AS order_seq"),
                 "t.account",
@@ -121,13 +126,15 @@ class StorageFeeExport implements
                 DB::raw("'' AS qualified_for_discount"),
                 DB::raw("'' AS storage_fee_type"),
                 DB::raw("t.12_mo_long_terms_storage_fee AS storage_fee"),
-                DB::raw("(t.12_mo_long_terms_storage_fee * r.exchange_rate) AS storage_fee_HKD")
+                DB::raw("(t.12_mo_long_terms_storage_fee * r.exchange_rate) AS storage_fee_hkd")
             )->leftJoin('exchange_rates as r', function ($join) {
                 $join->on('t.report_date', '=', 'r.quoted_date')
-                    ->where('t.currency', '=', 'r.base_currency')
+                    ->on('t.currency', '=', 'r.base_currency')
                     ->where('r.active', 1);
-            })->where('t.supplier', $this->clientCode)
-            ->where('t.report_date', $this->reportDate);
+            })
+            ->where('t.supplier', $this->clientCode)
+            ->where('t.report_date', $this->reportDate)
+            ->where('t.active', 1);
 
         $subQuery = $firstQuery->unionAll($secQuery);
 
@@ -169,7 +176,7 @@ class StorageFeeExport implements
             'qualified-for-discount',
             'Storage Fee Type',
             'Storage Fee',
-            'Storage fee (HKD)',
+            'Storage fee (HKD)'
         ];
     }
 
@@ -207,7 +214,7 @@ class StorageFeeExport implements
                 $row->qualified_for_discount,
                 $row->storage_fee_type,
                 $row->storage_fee,
-                $row->storage_fee_HKD,
+                $row->storage_fee_hkd
             ]
         ];
     }
