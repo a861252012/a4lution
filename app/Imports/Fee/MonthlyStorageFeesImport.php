@@ -82,7 +82,6 @@ class MonthlyStorageFeesImport implements
             'hkd' => $row['hkd'],
             'monthly_storage_fee_est' => $row['monthly_storage_fee_est'],
             'hkd_rate' => $row['hkd_rate'],
-            'dangerous_goods_storage_type' => $row['dangerous_goods_storage_type'],
             'category' => $row['category'],
             'eligible_for_discount' => $row['eligible_for_discount'],
             'qualified_for_discount' => $row['qualified_for_discount'],
