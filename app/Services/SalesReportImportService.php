@@ -122,7 +122,7 @@ class SalesReportImportService
                 // 檢查分頁 ERP Orders 的 Shipped Date 欄位是否等於 Report Date
                 if ($sheetName == self::SHEET_ERP_ORDERS) {
                     
-                    // 只比對第一行的 Shipped Date
+                    // 比對 Shipped Date
                     $sheet = $excel->headersToSnakeCase()->getRowsBySheet($sheet);
                     $firstRow = $sheet->first();
                     $lastRow = $sheet->last();
