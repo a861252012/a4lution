@@ -55,18 +55,18 @@ class ADSPromotionExport implements
                 "platform_ad_fees.clicks",
                 "platform_ad_fees.ctr",
                 "platform_ad_fees.spendings",
-                DB::raw("(platform_ad_fees.spendings * r.exchange_rate) AS Spendings_HKD"),
+                DB::raw("(platform_ad_fees.spendings * r.exchange_rate) AS spendings_hkd"),
                 "platform_ad_fees.cpc",
                 "platform_ad_fees.sales_qty",
                 "platform_ad_fees.sales_amount",
-                DB::raw("(platform_ad_fees.sales_amount * r.exchange_rate) AS sales_amount_HKD"),
+                DB::raw("(platform_ad_fees.sales_amount * r.exchange_rate) AS sales_amount_hkd"),
                 "platform_ad_fees.acos",
                 "platform_ad_fees.exchange_rate"
             )
             ->leftJoin('exchange_rates as r', function ($join) {
                 $join->on('platform_ad_fees.report_date', '=', 'r.quoted_date');
                 $join->on('platform_ad_fees.currency', '=', 'r.base_currency');
-                $join->where('r.exchange_rate', 1);
+                $join->where('r.active', 1);
             })
             ->where('platform_ad_fees.active', 1)
             ->where('platform_ad_fees.client_code', $this->clientCode)
@@ -108,11 +108,11 @@ class ADSPromotionExport implements
                 $row->clicks,
                 $row->ctr,
                 $row->spendings,
-                $row->Spendings_HKD,
+                $row->spendings_hkd,
                 $row->cpc,
                 $row->sales_qty,
                 $row->sales_amount,
-                $row->sales_amount_HKD,
+                $row->sales_amount_hkd,
                 $row->acos,
                 $row->exchange_rate,
             ]
