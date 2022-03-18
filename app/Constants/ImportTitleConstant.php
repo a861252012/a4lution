@@ -119,7 +119,6 @@ class ImportTitleConstant
         "monthly_storage_fee_est",
         "hkd",
         "hkd_rate",
-        // "dangerous_goods_storage_type",
         "category",
         "eligible_for_discount",
         "qualified_for_discount",
