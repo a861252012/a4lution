@@ -101,18 +101,18 @@ class PaymentExport implements
                 $event->sheet->SetCellValue("C23", $invoice->opex_invoice_no);
                 $event->sheet->SetCellValue("D23", 'Invoice');
                 $event->sheet->SetCellValue("E23", 'OPEX');
-                $event->sheet->SetCellValue("F23", "HK  " . number_format($billing->opex_invoice, 2));
+                $event->sheet->SetCellValue("F23", "$  " . number_format($billing->opex_invoice, 2));
 
                 $event->sheet->SetCellValue("C24", $invoice->fba_shipment_invoice_no);
                 $event->sheet->SetCellValue("D24", 'Invoice');
                 $event->sheet->SetCellValue("E24", 'FBA Shipment');
-                $event->sheet->SetCellValue("F24", "HK  " . number_format($billing->fba_storage_fee_invoice, 2));
+                $event->sheet->SetCellValue("F24", "$  " . number_format($billing->fba_storage_fee_invoice, 2));
 
                 $event->sheet->SetCellValue("C25", $this->getCreditNote($invoice->credit_note_no));
                 $event->sheet->SetCellValue("D25", 'Credit Note');
                 $event->sheet->SetCellValue("E25", 'Sales Credit');
-                $event->sheet->SetCellValue("F25", "HK  " . number_format($billing->sales_credit, 2));
-                $event->sheet->SetCellValue("F26", "HK  " . number_format($sumOfAmount, 2));
+                $event->sheet->SetCellValue("F25", "$  " . number_format($billing->sales_credit, 2));
+                $event->sheet->SetCellValue("F26", "$  " . number_format($sumOfAmount, 2));
 
 
                 $event->sheet->SetCellValue("C28", 'DBS Bank (Hong Kong) Limited');
