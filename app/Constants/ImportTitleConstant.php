@@ -218,4 +218,33 @@ class ImportTitleConstant
         "gross_margin",
         "order_quantity_statistics",
     ];
+
+    // ERP Orders
+    const RETURN_HELPER_CHARGE = [
+        'returnrequestnumber',
+        'transactiontypecode',
+        'transactionname',
+        'currencycode',
+        'amount',
+        'rate',
+        'supplier',
+        'notes',
+        'transactioncreateon',
+        'transactionnumber',
+        'rma',
+        'shipmentnumber',
+        'warehousecountry',
+        'shipmentstate',
+        'shipmentpostalcode',
+        'shipmentreceivedate',
+        'trackingnumber',
+        'actualweight',
+        'actuallength',
+        'actualwidth',
+        'actualheight',
+        'weight',
+        'lenth',
+        'width',
+        'height',
+    ];
 }

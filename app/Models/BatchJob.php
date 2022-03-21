@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\PlatformAdFee;
 use App\Models\MonthlyStorageFee;
 use App\Models\LongTermStorageFee;
+use App\Models\ReturnHelperCharge;
 use App\Models\FirstMileShipmentFee;
 use App\Models\AmazonDateRangeReport;
 use Illuminate\Database\Eloquent\Model;
@@ -57,5 +58,10 @@ class BatchJob extends Model
     public function continStorageFees()
     {
         return $this->hasMany(ContinStorageFee::class, 'upload_id');
+    }
+
+    public function returnHelperCharges()
+    {
+        return $this->hasMany(ReturnHelperCharge::class, 'upload_id');
     }
 }
