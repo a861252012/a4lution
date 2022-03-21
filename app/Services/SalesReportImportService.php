@@ -26,6 +26,7 @@ class SalesReportImportService
     const SHEET_LONG_TERM_STORAGE_FEE_CHARGE = 'long_term_storage_fee_charge';
     const SHEET_FIRST_MILE_SHIPMENT_FEE = 'fba';
     const SHEET_CONTIN_STORAGE_FEE = 'contin_storage_fee';
+    const SHEET_RETURN_HELPER_CHARGE = 'return_helper_charge';
 
     // 每個分頁對應的表頭欄位
     private static $sheetsHeader = [
@@ -40,6 +41,7 @@ class SalesReportImportService
         self::SHEET_LONG_TERM_STORAGE_FEE_CHARGE => ImportTitleConstant::LONG_TERM,
         self::SHEET_FIRST_MILE_SHIPMENT_FEE => ImportTitleConstant::FIRST_MILE_SHIPMENT,
         self::SHEET_CONTIN_STORAGE_FEE => 0,
+        self::SHEET_RETURN_HELPER_CHARGE => ImportTitleConstant::RETURN_HELPER_CHARGE,
         
     ];
 
@@ -56,6 +58,7 @@ class SalesReportImportService
         self::SHEET_LONG_TERM_STORAGE_FEE_CHARGE => BatchJobConstant::FEE_TYPE_LONG_TERM_STORAGE_FEES,
         self::SHEET_FIRST_MILE_SHIPMENT_FEE => BatchJobConstant::FEE_TYPE_FIRST_MILE_SHIPMENT_FEES,
         self::SHEET_CONTIN_STORAGE_FEE => BatchJobConstant::IMPORT_TYPE_CONTIN_STORAGE_FEE,
+        self::SHEET_RETURN_HELPER_CHARGE => BatchJobConstant::IMPORT_TYPE_RETURN_HELPER_CHARGE,
     ];
 
     public $file;
