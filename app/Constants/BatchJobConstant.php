@@ -19,6 +19,7 @@ class BatchJobConstant
     const IMPORT_TYPE_ERP_ORDERS = 'erp_orders'; 
     const IMPORT_TYPE_CONTIN_STORAGE_FEE = 'contin_storage_fee';
     const IMPORT_TYPE_RETURN_HELPER_CHARGE = 'return_helper_charge';
+    const IMPORT_TYPE_WFS_STORAGE_FEE = 'wfs_storage_fee';
 
     public static function mapFeeType(): array
     {

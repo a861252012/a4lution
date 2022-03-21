@@ -211,4 +211,14 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
             $this->userId
         );
     }
+
+    private function importWfsStorageFee(LazyCollection $collection)
+    {
+        (new WfsStorageFeeImportService)->import(
+            $collection,
+            $this->batchIds[BatchJobConstant::IMPORT_TYPE_RETURN_HELPER_CHARGE],
+            $this->reportDate,
+            $this->userId
+        );
+    }
 }
