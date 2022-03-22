@@ -32,6 +32,7 @@ use App\Services\SalesReportImport\OrderImportService;
 use App\Services\SalesReportImport\MonthlyStorageFeeImport;
 use App\Services\SalesReportImport\LongTermStorageFeeImport;
 use App\Services\SalesReportImport\PlatformAdFeeImportService;
+use App\Services\SalesReportImport\WfsStorageFeeImportService;
 use App\Services\SalesReportImport\AmazonDateRangeImportService;
 use App\Services\SalesReportImport\ContinStorageFeeImportService;
 use App\Services\SalesReportImport\ReturnHelperChargeImportService;
@@ -216,7 +217,7 @@ class ImportSalesReport implements ShouldQueue, ShouldBeUnique
     {
         (new WfsStorageFeeImportService)->import(
             $collection,
-            $this->batchIds[BatchJobConstant::IMPORT_TYPE_RETURN_HELPER_CHARGE],
+            $this->batchIds[BatchJobConstant::IMPORT_TYPE_WFS_STORAGE_FEE],
             $this->reportDate,
             $this->userId
         );

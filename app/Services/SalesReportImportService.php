@@ -60,7 +60,7 @@ class SalesReportImportService
         self::SHEET_FIRST_MILE_SHIPMENT_FEE => BatchJobConstant::FEE_TYPE_FIRST_MILE_SHIPMENT_FEES,
         self::SHEET_CONTIN_STORAGE_FEE => BatchJobConstant::IMPORT_TYPE_CONTIN_STORAGE_FEE,
         self::SHEET_RETURN_HELPER_CHARGE => BatchJobConstant::IMPORT_TYPE_RETURN_HELPER_CHARGE,
-        self::SHEET_WFS_STORAGE_FEE => BatchJobConstant::IMPORT_TYPE_RETURN_HELPER_CHARGE,
+        self::SHEET_WFS_STORAGE_FEE => BatchJobConstant::IMPORT_TYPE_WFS_STORAGE_FEE,
     ];
 
     public $file;

@@ -2,6 +2,14 @@
 
 namespace App\Services\SalesReportImport;
 
+use Carbon\Carbon;
+use App\Models\BatchJob;
+use App\Models\WfsStorageFee;
+use App\Services\ImportService;
+use Illuminate\Support\Facades\DB;
+use App\Constants\BatchJobConstant;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\LazyCollection;
 use App\Services\SalesReportImport\ImportInterface;
 
 class WfsStorageFeeImportService implements ImportInterface
@@ -30,9 +38,9 @@ class WfsStorageFeeImportService implements ImportInterface
                             'height' => $item['height'],
                             'volume' => $item['volume'],
                             'weight' => $item['weight'],
-                            // 'standard_daily_storage_cost_per_unit_off_peak_aged_under_365_days' => $item['shipmentnumber'],
-                            // 'peak_daily_storage_cost_per_unit_aged_over_30_days' => $item['warehousecountry'],
-                            // 'long_term_daily_storage_cost_per_unit_aged_over_365_days' => $item['shipmentstate'],
+                            'standard_daily_storage_cost' => $item['standard_daily_storage_cost_per_unit_off_peak_aged_under_365_days'],
+                            'peak_daily_storage_cost' => $item['peak_daily_storage_cost_per_unit_aged_over_30_days'],
+                            'long_term_daily_storage_cost' => $item['long_term_daily_storage_cost_per_unit_aged_over_365_days'],
                             'average_units_on_hand' => $item['average_units_on_hand'],
                             'ending_units_on_hand' => $item['ending_units_on_hand'],
                             'storage_fee_for_selected_time_period' => $item['storage_fee_for_selected_time_period'],
@@ -49,7 +57,7 @@ class WfsStorageFeeImportService implements ImportInterface
                     }
                 }
 
-                ReturnHelperCharge::insert($data);
+                WfsStorageFee::insert($data);
 
                 DB::commit();
             } catch (\Throwable $e) {
@@ -58,7 +66,7 @@ class WfsStorageFeeImportService implements ImportInterface
                 Log::channel('daily_queue_import')
                     ->error("[A4lutionSalesReport.errors]" . $e);
 
-                $batchJob->returnHelperCharges()->update(['active' => 0]);
+                $batchJob->wfsStorageFees()->update(['active' => 0]);
 
                 $batchJob->update([
                     'status' => BatchJobConstant::STATUS_FAILED,
@@ -71,14 +79,14 @@ class WfsStorageFeeImportService implements ImportInterface
             }
         }
 
-        ReturnHelperCharge::where('report_date', $reportDate->toDateString())
+        WfsStorageFee::where('report_date', $reportDate->toDateString())
                 ->where('upload_id', '!=', $batchId)
                 ->active()
                 ->update(['active' => 0]);
 
         $batchJob->update([
             'status' => BatchJobConstant::STATUS_COMPLETED,
-            'total_count' => ReturnHelperCharge::where('upload_id', $batchId)->active()->count(),
+            'total_count' => WfsStorageFee::where('upload_id', $batchId)->active()->count(),
         ]);
     }
 }
