@@ -219,7 +219,6 @@ class ImportTitleConstant
         "order_quantity_statistics",
     ];
 
-    // ERP Orders
     const RETURN_HELPER_CHARGE = [
         'returnrequestnumber',
         'transactiontypecode',
@@ -246,5 +245,28 @@ class ImportTitleConstant
         'lenth',
         'width',
         'height',
+    ];
+
+
+    const WFS_STORAGE_FEE = [
+        'partner_gtin',
+        'vendor_sku',
+        'supplier_type',
+        'supplier',
+        'walmart_item_id',
+        'item_name',
+        'length',
+        'width',
+        'height',
+        'volume',
+        'weight',
+        'standard_daily_storage_cost_per_unit_off_peak_aged_under_365_days',
+        'peak_daily_storage_cost_per_unit_aged_over_30_days',
+        'long_term_daily_storage_cost_per_unit_aged_over_365_days',
+        'average_units_on_hand',
+        'ending_units_on_hand',
+        'storage_fee_for_selected_time_period',
+        'hkd_rate',
+        'storage_fee_hkd',
     ];
 }
