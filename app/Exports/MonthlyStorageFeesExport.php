@@ -16,7 +16,7 @@ class MonthlyStorageFeesExport implements FromArray
                 'Supplier', 'Longest side', 'Median side', 'Shortest side', 'Measurement units', 'weight',
                 'Weight units', 'Item volume', 'Volume units', 'Product size tier', 'Average quantity on hand',
                 'Average quantity pending removal', 'Total item volume (est.)', 'Month of charge', 'Storage rate',
-                'currency', 'Monthly storage fee (est.)', 'HKD', 'HKD Rate', 'dangerous-goods-storage-type', 'category',
+                'currency', 'Monthly storage fee (est.)', 'HKD', 'HKD Rate', 'category',
                 'eligible-for-discount', 'qualified-for-discount', 'total-incentive-fee-amount',
                 'breakdown-incentive-fee-amount', 'average-quantity-customer-orders']
         ];

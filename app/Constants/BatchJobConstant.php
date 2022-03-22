@@ -15,8 +15,11 @@ class BatchJobConstant
     const FEE_TYPE_MONTHLY_STORAGE_FEES = 'monthly_storage_fees';
     const FEE_TYPE_FIRST_MILE_SHIPMENT_FEES = 'first_mile_shipment_fees';
 
-    const IMPORT_TYPE_ERP_ORDERS = 'erp_orders'; // For 「A4lution Sales Reports」
-    const IMPORT_TYPE_CONTIN_STORAGE_FEE = 'contin_storage_fee'; // For 「A4lution Sales Reports」
+    // For 「A4lution Sales Reports」
+    const IMPORT_TYPE_ERP_ORDERS = 'erp_orders'; 
+    const IMPORT_TYPE_CONTIN_STORAGE_FEE = 'contin_storage_fee';
+    const IMPORT_TYPE_RETURN_HELPER_CHARGE = 'return_helper_charge';
+    const IMPORT_TYPE_WFS_STORAGE_FEE = 'wfs_storage_fee';
 
     public static function mapFeeType(): array
     {

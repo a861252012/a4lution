@@ -9,7 +9,6 @@ use Illuminate\Support\Str;
 use App\Services\FeeService;
 use Illuminate\Http\Request;
 use App\Models\PlatformAdFee;
-use App\Models\BillingStatement;
 use App\Models\ExtraordinaryItem;
 use App\Models\MonthlyStorageFee;
 use Illuminate\Http\JsonResponse;
@@ -22,9 +21,7 @@ use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PlatformAdFeesExport;
 use App\Models\AmazonDateRangeReport;
-use App\Constants\ImportTitleConstant;
 use App\Exports\AmazonDateRangeExport;
-use Maatwebsite\Excel\HeadingRowImport;
 use App\Repositories\CustomerRepository;
 use App\Exports\MonthlyStorageFeesExport;
 use App\Exports\LongTermStorageFeesExport;
@@ -38,13 +35,11 @@ class FeeController extends Controller
 {
     const BATCH_STATUS = 'processing';
 
-    private BatchJob $batchJob;
     private AmazonDateRangeReport $amazonDateRangeReport;
     private PlatformAdFee $platformAdFee;
     private MonthlyStorageFee $monthlyStorageFee;
     private LongTermStorageFee $longTermStorageFee;
     private FirstMileShipmentFee $firstMileShipmentFee;
-    private BillingStatement $billingStatement;
     private CustomerRepository $customerRepository;
     private ExchangeRateRepository $exchangeRateRepository;
 
@@ -55,17 +50,14 @@ class FeeController extends Controller
         MonthlyStorageFee      $monthlyStorageFee,
         LongTermStorageFee     $longTermStorageFee,
         FirstMileShipmentFee   $firstMileShipmentFee,
-        BillingStatement       $billingStatement,
         CustomerRepository     $customerRepository,
         ExchangeRateRepository $exchangeRateRepository
     ) {
-        $this->batchJob = $batchJob;
         $this->amazonDateRangeReport = $amazonDateRangeReport;
         $this->platformAdFee = $platformAdFee;
         $this->monthlyStorageFee = $monthlyStorageFee;
         $this->longTermStorageFee = $longTermStorageFee;
         $this->firstMileShipmentFee = $firstMileShipmentFee;
-        $this->billingStatement = $billingStatement;
         $this->customerRepository = $customerRepository;
         $this->exchangeRateRepository = $exchangeRateRepository;
     }
