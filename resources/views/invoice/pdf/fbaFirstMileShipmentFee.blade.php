@@ -171,21 +171,21 @@
                 @php($loopCount = 1)
 
                 {{-- 1. Contin Storage Fee start --}}
-                @php($total += round((float)$continStorageFee->unit_price, 2))
-                @php($averageCbmUsage = number_format((float)$continStorageFee->unit_price / 300, 2))
+                @php($total += round($continStorageFee, 2))
+                @php($averageCbmUsage = number_format($continStorageFee / 300, 2))
                     <tr>
                         <td class="col col-1">{{ $loopCount }}</td>
                         <td class="col col-2">Contin Storage Fee</td>
                         <td class="col col-3"></td>
                         <td class="col col-4"></td>
-                        <td class="col col-5">HKD  {{ number_format((float)$continStorageFee->unit_price, 2) }}</td>
+                        <td class="col col-5">HKD  {{ number_format($continStorageFee, 2) }}</td>
                     </tr>
                     <tr>
                         <td class="col col-1"></td>
                         <td class="col col-2">
                             {{ sprintf("Average CBM Usage: %d", $averageCbmUsage); }}
                         </td>
-                        <td class="col col-3">$ {{ number_format((float)$continStorageFee->unit_price, 2) }}</td>
+                        <td class="col col-3">$ {{ number_format($continStorageFee, 2) }}</td>
                         <td class="col col-4">1</td>
                         <td class="col col-5"></td>
                     </tr>

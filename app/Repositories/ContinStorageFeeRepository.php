@@ -48,10 +48,9 @@ class ContinStorageFeeRepository extends BaseRepository
     public function getContinStorageFee(
         string $reportDate,
         string $clientCode
-    ) {
-        return $this->model
-            ->selectRaw('"Contin Storage Fee" AS item_description,
-            SUM(contin_storage_fees.amount * exchange_rates.exchange_rate) AS unit_price')
+    ):float {
+        return (float)$this->model
+            ->selectRaw('SUM(contin_storage_fees.amount * exchange_rates.exchange_rate) AS unit_price')
             ->leftJoin('exchange_rates', function ($join) {
                 $join->on('contin_storage_fees.report_date', '=', 'exchange_rates.quoted_date')
                     ->on('contin_storage_fees.currency', '=', 'exchange_rates.base_currency')
@@ -60,6 +59,6 @@ class ContinStorageFeeRepository extends BaseRepository
             ->where('contin_storage_fees.active', 1)
             ->where('report_date', $reportDate)
             ->where('supplier', $clientCode)
-            ->first();
+            ->value('unit_price');
     }
 }
