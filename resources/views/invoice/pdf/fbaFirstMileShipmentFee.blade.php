@@ -170,18 +170,6 @@
                 @php($total = 0)
                 @php($loopCount = 1)
 
-{{--                $event->sheet->SetCellValue("B16", $this->serialNumber);--}}
-{{--                $event->sheet->SetCellValue("C16", "{$continStorageFee->item_description}");--}}
-{{--                $event->sheet->SetCellValue("F16", "HKD  " . number_format($continStorageFee->unit_price, 2));--}}
-
-{{--                $this->totalValue =  number_format($continStorageFee->unit_price, 2);--}}
-
-{{--                $cbmPricePerMonth = 300;--}}
-{{--                $averageCbmUsage = $continStorageFee->unit_price / $cbmPricePerMonth;--}}
-{{--                $event->sheet->SetCellValue("C17", "Average CBM Usage: {$averageCbmUsage}");--}}
-{{--                $event->sheet->SetCellValue("D17", "$  {$continStorageFee->unit_price}");--}}
-{{--                $event->sheet->SetCellValue("E17", 1);--}}
-
                 {{-- 1. Contin Storage Fee start --}}
                 @php($total += round($continStorageFee->unit_price, 2))
                 @php($averageCbmUsage = number_format($continStorageFee->unit_price / 300, 2))

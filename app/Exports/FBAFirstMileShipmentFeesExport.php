@@ -49,7 +49,7 @@ class FBAFirstMileShipmentFeesExport implements
 
     public function registerEvents(): array
     {
-        return array(
+        return [
             BeforeSheet::class => function (BeforeSheet $event) {
                 $invoice = Invoice::find($this->insertInvoiceID);
 
@@ -190,6 +190,6 @@ class FBAFirstMileShipmentFeesExport implements
                 $event->sheet->SetCellValue("B" . ($descNum + 14), '  c) Swift Code: HSBCHKHHHKH');
                 $event->sheet->SetCellValue("B" . ($descNum + 15), '  d) Account No.: 004-747-095693-838');
             }
-        );
+        ];
     }
 }
