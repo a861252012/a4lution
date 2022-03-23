@@ -6,7 +6,6 @@ use App\Models\FirstMileShipmentFee;
 use App\Models\Invoice;
 use App\Models\ReturnHelperCharge;
 use App\Repositories\ContinStorageFeeRepository;
-use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -23,6 +22,7 @@ class FBAFirstMileShipmentFeesExport implements
     private string $clientCode;
     private int $insertInvoiceID;
     private int $serialNumber = 1;
+    private int $firstMileCol = 0;
     private float $totalValue = 0.0;
 
     public function __construct(
@@ -134,14 +134,14 @@ class FBAFirstMileShipmentFeesExport implements
                             $item->shipped_qty,
                         );
 
-                        $colNum = 19 + $k * 3;//record start from B19
-                        $descNum = $colNum + 1;
-                        $event->sheet->SetCellValue("B{$colNum}", $this->serialNumber);
-                        $event->sheet->SetCellValue("C{$colNum}", 'FBA shipment Fee from Continental HK warehouse to Amazon FBA warehouse:');
+                        $this->firstMileCol = 19 + $k * 3;//record start from B19
+                        $descNum = $this->firstMileCol + 1;
+                        $event->sheet->SetCellValue("B{$this->firstMileCol}", $this->serialNumber);
+                        $event->sheet->SetCellValue("C{$this->firstMileCol}", 'FBA shipment Fee from Continental HK warehouse to Amazon FBA warehouse:');
                         $event->sheet->SetCellValue("C{$descNum}", $itemDesc);
                         $event->sheet->SetCellValue("D{$descNum}", "$ " .  number_format($item->unit_price, 2));
                         $event->sheet->SetCellValue("E{$descNum}", "1");
-                        $event->sheet->SetCellValue("F{$colNum}", "HKD  " .  number_format($item->unit_price, 2));
+                        $event->sheet->SetCellValue("F{$this->firstMileCol}", "HKD  " .  number_format($item->unit_price, 2));
 
                         $this->totalValue +=  number_format($item->unit_price, 2);
                     }
@@ -163,7 +163,7 @@ class FBAFirstMileShipmentFeesExport implements
 
                 if (count($returnHelperList) > 0) {
                     foreach ($returnHelperList as $k => $item) {
-                        $col = $colNum + 3 + $k * 3;//record start from B19
+                        $col = $this->firstMileCol + 3 + $k * 3;//record start from B19
                         $descNum = $col + 1;
                         $this->serialNumber++;
 
