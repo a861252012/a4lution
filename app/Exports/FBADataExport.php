@@ -51,10 +51,10 @@ class FBADataExport implements
                     $this->clientCode
                 );
 
-                $event->sheet->SetCellValue("A{$column}", $continStorageFee->item_description);
+                $event->sheet->SetCellValue("A{$column}", 'Contin Storage Fee');
                 $event->sheet->SetCellValue(
                     "B{$column}",
-                    "$ " . number_format((float)$continStorageFee->unit_price, 2)
+                    "$ " . number_format($continStorageFee, 2)
                 );
 
                 // 2.)  Contin 寄FBA的頭程費用 : 依據shipment
