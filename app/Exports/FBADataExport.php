@@ -52,7 +52,10 @@ class FBADataExport implements
                 );
 
                 $event->sheet->SetCellValue("A{$column}", $continStorageFee->item_description);
-                $event->sheet->SetCellValue("B{$column}", "$ " . number_format($continStorageFee->unit_price, 2));
+                $event->sheet->SetCellValue(
+                    "B{$column}",
+                    "$ " . number_format((float)$continStorageFee->unit_price, 2)
+                );
 
                 // 2.)  Contin 寄FBA的頭程費用 : 依據shipment
                 $firstMileShipmentFeeList = FirstMileShipmentFee::selectRaw("
