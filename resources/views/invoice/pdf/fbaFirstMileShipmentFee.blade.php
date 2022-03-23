@@ -244,7 +244,7 @@
                     <tr>
                         <td class="col col-1"></td>
                         <td class="col col-2">{{ $returnHelperItem->notes }}</td>
-                        <td class="col col-3">$ {{ number_format($firstMileShipmentFee->amount_hkd, 2) }}</td>
+                        <td class="col col-3">$ {{ number_format($returnHelperItem->amount_hkd, 2) }}</td>
                         <td class="col col-4">1</td>
                         <td class="col col-5"></td>
                     </tr>
