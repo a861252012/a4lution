@@ -68,7 +68,7 @@ class InvoiceExport implements
             $this->clientCode,
             $this->insertInvoiceID
         );
-        $sheets[5] = new FBADateExport($this->reportDate, $this->clientCode);
+        $sheets[5] = new FBADataExport($this->reportDate, $this->clientCode);
         $sheets[6] = new AllOrdersExport($formatYmDate, $this->clientCode);
         $sheets[7] = new ADSPromotionExport($this->reportDate, $this->clientCode);
         $sheets[8] = new ReturnAndRefundExport($formatYmDate, $this->clientCode);

@@ -80,7 +80,7 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
                     fba_shipment as 'shipment_id',
                     COUNT(DISTINCT ids_sku) AS 'sku',
                     SUM(shipped) as 'shipped_qty',
-                    ROUND(total, 2) as 'unit_price'")
+                    total as 'unit_price'")
             ->where('active', 1)
             ->where('report_date', $invoice->report_date)
             ->where('client_code', $invoice->client_code)
@@ -90,7 +90,7 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
         // 3.)  Return Helper : 逐筆列出
         $returnHelperList = ReturnHelperCharge::selectRaw("
                 return_helper_charges.notes,
-                (return_helper_charges.amount * exchange_rates.exchange_rate) AS 'amount_hkd'")
+                ABS(return_helper_charges.amount * exchange_rates.exchange_rate) AS 'amount_hkd'")
             ->leftJoin('exchange_rates', function ($join) {
                 $join->on('return_helper_charges.report_date', '=', 'exchange_rates.quoted_date')
                     ->on('return_helper_charges.currency_code', '=', 'exchange_rates.base_currency')
