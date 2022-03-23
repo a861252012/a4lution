@@ -35,7 +35,7 @@ class OrderRepository extends BaseRepository
         return $this->model
             ->selectRaw(
                 'sum(order_products.last_mile_shipping_fee * exchange_rates.exchange_rate) AS "logistics_fee_hkd",
-                sum((order_products.transaction_fee + order_products.other_transaction) * exchange_rates.exchange_rate)
+                sum((order_products.transaction_fee + order_products.paypal_fee) * exchange_rates.exchange_rate)
                 AS "platform_fee_hkd",
                 SUM(order_products.fba_fee * exchange_rates.exchange_rate) AS "FBA_fees_hkd"'
             )
