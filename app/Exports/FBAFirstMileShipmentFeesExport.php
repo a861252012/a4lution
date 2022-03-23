@@ -100,12 +100,15 @@ class FBAFirstMileShipmentFeesExport implements
                 );
                 $event->sheet->SetCellValue("B16", $this->serialNumber);
                 $event->sheet->SetCellValue("C16", "{$continStorageFee->item_description}");
-                $event->sheet->SetCellValue("F16", "HKD  " . number_format($continStorageFee->unit_price, 2));
+                $event->sheet->SetCellValue(
+                    "F16",
+                    "HKD  " . number_format((float)$continStorageFee->unit_price, 2)
+                );
 
-                $this->totalValue =  number_format($continStorageFee->unit_price, 2);
+                $this->totalValue =  number_format((float)$continStorageFee->unit_price, 2);
 
                 $cbmPricePerMonth = 300;
-                $averageCbmUsage = number_format($continStorageFee->unit_price / $cbmPricePerMonth, 2);
+                $averageCbmUsage = number_format((float)$continStorageFee->unit_price / $cbmPricePerMonth, 2);
                 $event->sheet->SetCellValue("C17", "Average CBM Usage: {$averageCbmUsage}");
                 $event->sheet->SetCellValue("D17", "$  " . (float)number_format($continStorageFee->unit_price, 2));
                 $event->sheet->SetCellValue("E17", 1);
