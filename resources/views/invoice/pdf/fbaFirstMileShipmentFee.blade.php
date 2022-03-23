@@ -65,9 +65,9 @@
 
     /* payment-info */
     .payment-info { padding-top: 60px; }
-    .payment-info ul { 
+    .payment-info ul {
         list-style: none;
-        padding-left: 0; 
+        padding-left: 0;
         color: rgb(77, 75, 75);
         border-top: 1px solid;
         border-bottom: 1px solid
@@ -156,9 +156,9 @@
             <thead>
                 <tr>
                     <th class="col col-1">NO.</th>
-                    <th class="col col-2"> 
-                        {{sprintf("Description  (for the period of %s to %s)", 
-                            $invoice->report_date->format('jS M Y'), 
+                    <th class="col col-2">
+                        {{sprintf("Description  (for the period of %s to %s)",
+                            $invoice->report_date->format('jS M Y'),
                             $invoice->report_date->endOfMonth()->format('jS M Y')); }}
                     </th>
                     <th class="col col-3">Unit Price</th>
@@ -168,10 +168,50 @@
             </thead>
             <tbody>
                 @php($total = 0)
+                @php($loopCount = 1)
+
+{{--                $event->sheet->SetCellValue("B16", $this->serialNumber);--}}
+{{--                $event->sheet->SetCellValue("C16", "{$continStorageFee->item_description}");--}}
+{{--                $event->sheet->SetCellValue("F16", "HKD  " . number_format($continStorageFee->unit_price, 2));--}}
+
+{{--                $this->totalValue =  number_format($continStorageFee->unit_price, 2);--}}
+
+{{--                $cbmPricePerMonth = 300;--}}
+{{--                $averageCbmUsage = $continStorageFee->unit_price / $cbmPricePerMonth;--}}
+{{--                $event->sheet->SetCellValue("C17", "Average CBM Usage: {$averageCbmUsage}");--}}
+{{--                $event->sheet->SetCellValue("D17", "$  {$continStorageFee->unit_price}");--}}
+{{--                $event->sheet->SetCellValue("E17", 1);--}}
+
+                {{-- 1. Contin Storage Fee start --}}
+                @php($total += round($continStorageFee->unit_price, 2))
+                @php($averageCbmUsage = number_format($continStorageFee->unit_price / 300, 2))
+                    <tr>
+                        <td class="col col-1">{{ $loopCount }}</td>
+                        <td class="col col-2">Contin Storage Fee</td>
+                        <td class="col col-3"></td>
+                        <td class="col col-4"></td>
+                        <td class="col col-5">HKD  {{ number_format($continStorageFee->unit_price, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="col col-1"></td>
+                        <td class="col col-2">
+                            {{ sprintf("Average CBM Usage: %d", $averageCbmUsage); }}
+                        </td>
+                        <td class="col col-3">$ {{ number_format($continStorageFee->unit_price, 2) }}</td>
+                        <td class="col col-4">1</td>
+                        <td class="col col-5"></td>
+                    </tr>
+                {{-- 1. Contin Storage Fee end --}}
+
+
+                {{-- 2. Contin 寄FBA的頭程費用 start --}}
                 @forelse ($firstMileShipmentFees as $firstMileShipmentFee)
                     @php($total += $firstMileShipmentFee->unit_price)
+                    @if($loop->last)
+                        @php($loopCount = $loop->count + 1)
+                    @endif
                     <tr>
-                        <td class="col col-1">{{ $loop->iteration }}</td>
+                        <td class="col col-1">{{  $loop->iteration + 1 }}</td>
                         <td class="col col-2">FBA shipment Fee from Continental HK warehouse to Amazon FBA warehouse:</td>
                         <td class="col col-3"></td>
                         <td class="col col-4"></td>
@@ -201,6 +241,36 @@
                         <td class="col col-5"></td>
                     </tr>
                 @endforelse
+                {{-- 2. Contin 寄FBA的頭程費用 end --}}
+
+                {{-- 3. Contin 寄FBA的頭程費用 start --}}
+                @forelse ($returnHelperList as $returnHelperItem)
+                    @php($total += number_format($returnHelperItem->amount_hkd, 2))
+                    <tr>
+                        <td class="col col-1">{{ $loopCount + $loop->iteration }}</td>
+                        <td class="col col-2">Return Helper Charges</td>
+                        <td class="col col-3"></td>
+                        <td class="col col-4"></td>
+                        <td class="col col-5">HKD  {{ number_format($returnHelperItem->amount_hkd, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="col col-1"></td>
+                        <td class="col col-2">{{ $returnHelperItem->notes }}</td>
+                        <td class="col col-3">$ {{ number_format($firstMileShipmentFee->amount_hkd, 2) }}</td>
+                        <td class="col col-4">1</td>
+                        <td class="col col-5"></td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td class="col col-1"></td>
+                        <td class="col col-2">No Data.</td>
+                        <td class="col col-3"></td>
+                        <td class="col col-4"></td>
+                        <td class="col col-5"></td>
+                    </tr>
+                @endforelse
+                {{-- 3. Contin 寄FBA的頭程費用 end --}}
+
             </tbody>
             <tfoot>
                 <tr>

@@ -13,9 +13,11 @@ use App\Repositories\FirstMileShipmentFeeRepository;
 use App\Repositories\OrderProductRepository;
 use App\Repositories\OrderRepository;
 use App\Repositories\PlatformAdFeeRepository;
+use App\Repositories\ReturnHelperChargeRepository;
 use App\Repositories\RmaRefundListRepository;
 use App\Repositories\CustomerRepository;
 use App\Repositories\SellerAccountRepository;
+use App\Repositories\WfsStorageFeeRepository;
 use App\Support\Calculation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -120,14 +122,14 @@ class BillingStatementService
         $fees['client_account_refund_and_resend'] = $clientAmazonTotal + $clientRefundFees + $clientAccountResend;
 
         //getAccountMiscellaneous
-        $fees['clientAccountMiscellaneous'] = -1 * abs($this->amzDateRangeRepo->getAccountMiscellaneous(
+        $fees['clientAccountMiscellaneous'] = abs($this->amzDateRangeRepo->getAccountMiscellaneous(
             $reportDate,
             $clientCode,
             $sellerAccount,
             false
         )->Miscellaneous);
 
-        $fees['a4AccountMiscellaneous'] = -1 * abs($this->amzDateRangeRepo->getAccountMiscellaneous(
+        $fees['a4AccountMiscellaneous'] = abs($this->amzDateRangeRepo->getAccountMiscellaneous(
             $reportDate,
             $clientCode,
             $sellerAccount,
@@ -150,41 +152,36 @@ class BillingStatementService
         );
 
         //getAccountMarketingAndPromotion
-        $fees['clientAccountMarketingAndPromotion'] = $this->amzDateRangeRepo->getAccountMarketingAndPromotion(
+        $fees['clientAccountMarketingAndPromotion'] = abs($this->amzDateRangeRepo->getAccountMarketingAndPromotion(
             $reportDate,
             $clientCode,
             $sellerAccount,
             false
-        );
+        ));
 
-        $fees['a4AccountMarketingAndPromotion'] = $this->amzDateRangeRepo->getAccountMarketingAndPromotion(
+        $fees['a4AccountMarketingAndPromotion'] = abs($this->amzDateRangeRepo->getAccountMarketingAndPromotion(
             $reportDate,
             $clientCode,
             $sellerAccount,
             true
-        );
+        ));
 
         //getAccountFbaStorageFee
-        $clientAccountFbaStorageFee = (float)optional($this->orderRepo->getAccountFbaStorageFee(
+        $storageFeeHKD = app(WfsStorageFeeRepository::class)->getStorageFee($reportDate, $clientCode);
+
+        $fees['clientAccountFbaStorageFee'] = (float)optional($this->orderRepo->getAccountFbaStorageFee(
             $reportDate,
             $clientCode,
             $sellerAccount,
             false
         )[0])->storage_fee_hkd_sum;
-
-        $storageFeeHkd = app(ContinStorageFeeRepository::class)->getAccountRefund(
-            $reportDate,
-            $clientCode
-        );
-
-        $fees['clientAccountFbaStorageFee'] = $clientAccountFbaStorageFee + $storageFeeHkd;
 
         $fees['a4AccountFbaStorageFee'] = (float)optional($this->orderRepo->getAccountFbaStorageFee(
             $reportDate,
             $clientCode,
             $sellerAccount,
             true
-        )[0])->storage_fee_hkd_sum;
+        )[0])->storage_fee_hkd_sum + $storageFeeHKD;
 
         //4-2 Expenses Breakdown end
 
@@ -365,15 +362,22 @@ class BillingStatementService
         $billingItems['created_by'] = Auth::id();
         $billingItems['active'] = 1;
 
-        $getFbaStorageFeeInvoices = app(FirstMileShipmentFeeRepository::class)->getFbaStorageFeeInvoice(
-            $reportDate,
-            $clientCode
-        );
-
-        $billingItems['fba_storage_fee_invoice'] = $this->calculation->numberFormatPrecision(
-            collect($getFbaStorageFeeInvoices)->sum('total'),
+        $firstMileTotalVal = $this->calculation->numberFormatPrecision(
+            app(FirstMileShipmentFeeRepository::class)->getSumOfTotalValue($reportDate, $clientCode),
             4
         );
+
+        $returnHelperTotalVal = $this->calculation->numberFormatPrecision(
+            app(ReturnHelperChargeRepository::class)->getSumOfAmount($reportDate, $clientCode),
+            4
+        );
+
+        $continSumOfAmount = $this->calculation->numberFormatPrecision(
+            app(ContinStorageFeeRepository::class)->getSumOfAmount($reportDate, $clientCode),
+            4
+        );
+
+        $billingItems['fba_storage_fee_invoice'] = $firstMileTotalVal + $returnHelperTotalVal + $continSumOfAmount;
 
         //count opexInvoice value
         $opexInvoiceKeys = [
