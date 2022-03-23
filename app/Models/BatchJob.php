@@ -5,6 +5,7 @@ namespace App\Models;
 
 use App\Models\User;
 use App\Models\PlatformAdFee;
+use App\Models\WfsStorageFee;
 use App\Models\MonthlyStorageFee;
 use App\Models\LongTermStorageFee;
 use App\Models\ReturnHelperCharge;
@@ -63,5 +64,10 @@ class BatchJob extends Model
     public function returnHelperCharges()
     {
         return $this->hasMany(ReturnHelperCharge::class, 'upload_id');
+    }
+
+    public function wfsStorageFees()
+    {
+        return $this->hasMany(WfsStorageFee::class, 'upload_id');
     }
 }
