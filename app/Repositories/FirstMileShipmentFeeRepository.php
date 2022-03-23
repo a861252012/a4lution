@@ -18,7 +18,7 @@ class FirstMileShipmentFeeRepository extends BaseRepository
         string $reportDate,
         string $clientCode
     ): float {
-        return DB::query()->fromSub(function ($query) use ($clientCode, $reportDate) {
+        return (float)DB::query()->fromSub(function ($query) use ($clientCode, $reportDate) {
             $query->from('first_mile_shipment_fees')
                 ->selectRaw('total AS unit_price')
                 ->where('report_date', $reportDate)
