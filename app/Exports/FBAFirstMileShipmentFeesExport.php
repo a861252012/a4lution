@@ -107,7 +107,7 @@ class FBAFirstMileShipmentFeesExport implements
                 $cbmPricePerMonth = 300;
                 $averageCbmUsage = number_format($continStorageFee->unit_price / $cbmPricePerMonth, 2);
                 $event->sheet->SetCellValue("C17", "Average CBM Usage: {$averageCbmUsage}");
-                $event->sheet->SetCellValue("D17", "$  {$continStorageFee->unit_price}");
+                $event->sheet->SetCellValue("D17", "$  " . (float)number_format($continStorageFee->unit_price, 2));
                 $event->sheet->SetCellValue("E17", 1);
 
                 // 2.)  Contin 寄FBA的頭程費用 : 依據shipment
@@ -116,7 +116,7 @@ class FBAFirstMileShipmentFeesExport implements
                     fba_shipment as 'shipment_id',
                     COUNT(DISTINCT ids_sku) AS 'sku',
                     SUM(shipped) as 'shipped_qty',
-                    ROUND(total, 2) as 'unit_price'")
+                    total as 'unit_price'")
                     ->where('active', 1)
                     ->where('report_date', $this->reportDate)
                     ->where('client_code', $this->clientCode)
@@ -137,11 +137,17 @@ class FBAFirstMileShipmentFeesExport implements
                         $this->firstMileCol = 19 + $k * 3;//record start from B19
                         $descNum = $this->firstMileCol + 1;
                         $event->sheet->SetCellValue("B{$this->firstMileCol}", $this->serialNumber);
-                        $event->sheet->SetCellValue("C{$this->firstMileCol}", 'FBA shipment Fee from Continental HK warehouse to Amazon FBA warehouse:');
+                        $event->sheet->SetCellValue(
+                            "C{$this->firstMileCol}",
+                            'FBA shipment Fee from Continental HK warehouse to Amazon FBA warehouse:'
+                        );
                         $event->sheet->SetCellValue("C{$descNum}", $itemDesc);
-                        $event->sheet->SetCellValue("D{$descNum}", "$ " .  number_format($item->unit_price, 2));
+                        $event->sheet->SetCellValue("D{$descNum}", "$ " .  (float)number_format($item->unit_price, 2));
                         $event->sheet->SetCellValue("E{$descNum}", "1");
-                        $event->sheet->SetCellValue("F{$this->firstMileCol}", "HKD  " .  number_format($item->unit_price, 2));
+                        $event->sheet->SetCellValue(
+                            "F{$this->firstMileCol}",
+                            "HKD  " . number_format($item->unit_price, 2)
+                        );
 
                         $this->totalValue +=  number_format($item->unit_price, 2);
                     }
@@ -150,7 +156,7 @@ class FBAFirstMileShipmentFeesExport implements
                 // 3.)  Return Helper : 逐筆列出
                 $returnHelperList = ReturnHelperCharge::selectRaw("
                 return_helper_charges.notes,
-                (return_helper_charges.amount * exchange_rates.exchange_rate) AS 'amount_hkd'")
+                ABS(return_helper_charges.amount * exchange_rates.exchange_rate) AS 'amount_hkd'")
                     ->leftJoin('exchange_rates', function ($join) {
                         $join->on('return_helper_charges.report_date', '=', 'exchange_rates.quoted_date')
                             ->on('return_helper_charges.currency_code', '=', 'exchange_rates.base_currency')
@@ -170,9 +176,9 @@ class FBAFirstMileShipmentFeesExport implements
                         $event->sheet->SetCellValue("B{$col}", $this->serialNumber);
                         $event->sheet->SetCellValue("C{$col}", 'Return Helper Charges');
                         $event->sheet->SetCellValue("C{$descNum}", "{$item->notes}");
-                        $event->sheet->SetCellValue("D{$descNum}", "$ " . number_format($item->amount_hkd, 2));
+                        $event->sheet->SetCellValue("D{$descNum}", "$ " . (float)number_format($item->amount_hkd, 2));
                         $event->sheet->SetCellValue("E{$descNum}", "1");
-                        $event->sheet->SetCellValue("F{$col}", "HKD  " . number_format($item->amount_hkd, 2));
+                        $event->sheet->SetCellValue("F{$col}", "HKD  " . (float) number_format($item->amount_hkd, 2));
 
                         $this->totalValue += number_format($item->amount_hkd, 2);
                     }

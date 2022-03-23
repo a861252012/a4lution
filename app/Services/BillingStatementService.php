@@ -363,7 +363,7 @@ class BillingStatementService
         $billingItems['active'] = 1;
 
         $firstMileTotalVal = $this->calculation->numberFormatPrecision(
-            app(FirstMileShipmentFeeRepository::class)->getSumOfTotalValue($reportDate, $clientCode),
+            app(FirstMileShipmentFeeRepository::class)->getSumOfAmountValue($reportDate, $clientCode),
             4
         );
 

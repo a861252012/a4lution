@@ -4,6 +4,7 @@
 namespace App\Repositories;
 
 use App\Models\FirstMileShipmentFee;
+use Illuminate\Support\Facades\DB;
 
 class FirstMileShipmentFeeRepository extends BaseRepository
 {
@@ -13,15 +14,17 @@ class FirstMileShipmentFeeRepository extends BaseRepository
         parent::__construct(new FirstMileShipmentFee);
     }
 
-    public function getSumOfTotalValue(
+    public function getSumOfAmountValue(
         string $reportDate,
         string $clientCode
     ): float {
-        return (float)$this->model
-            ->selectRaw('sum(total) as total')
-            ->active()
-            ->where('report_date', $reportDate)
-            ->where('client_code', $clientCode)
-            ->value('total');
+        return DB::query()->fromSub(function ($query) use ($clientCode, $reportDate) {
+            $query->from('first_mile_shipment_fees')
+                ->selectRaw('total AS unit_price')
+                ->where('report_date', $reportDate)
+                ->where('client_code', $clientCode)
+                ->where('active', 1)
+                ->groupBy(['fulfillment_center', 'fba_shipment']);
+        }, 'x')->selectRaw('SUM(x.unit_price) as sum')->value('sum');
     }
 }

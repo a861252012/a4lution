@@ -18,7 +18,6 @@ class FBADataExport implements
 {
     private string $reportDate;
     private string $clientCode;
-    private int  $serialNumber;
 
     public function __construct(
         string $reportDate,
@@ -45,15 +44,15 @@ class FBADataExport implements
     {
         return [
             BeforeSheet::class => function (BeforeSheet $event) {
-
+                $column = 1;
                 //1.)   Contin Storage Fee :  (一筆加總的數值)
                 $continStorageFee = app(ContinStorageFeeRepository::class)->getContinStorageFee(
                     $this->reportDate,
                     $this->clientCode
                 );
 
-                $event->sheet->SetCellValue("A1", $continStorageFee->item_description);
-                $event->sheet->SetCellValue("B1", "$ {$continStorageFee->unit_price}");
+                $event->sheet->SetCellValue("A{$column}", $continStorageFee->item_description);
+                $event->sheet->SetCellValue("B{$column}", "$ " . number_format($continStorageFee->unit_price, 2));
 
                 // 2.)  Contin 寄FBA的頭程費用 : 依據shipment
                 $firstMileShipmentFeeList = FirstMileShipmentFee::selectRaw("
@@ -61,7 +60,7 @@ class FBADataExport implements
                     fba_shipment as 'shipment_id',
                     COUNT(DISTINCT ids_sku) AS 'sku',
                     SUM(shipped) as 'shipped_qty',
-                    ROUND(total, 2) as 'unit_price'")
+                    total as 'unit_price'")
                     ->where('active', 1)
                     ->where('report_date', $this->reportDate)
                     ->where('client_code', $this->clientCode)
@@ -70,7 +69,7 @@ class FBADataExport implements
 
                 if (count($firstMileShipmentFeeList) > 0) {
                     foreach ($firstMileShipmentFeeList as $item) {
-                        $this->serialNumber++;
+                        $column++;
                         $itemDesc = sprintf(
                             "Country:%s, Shipment ID:%s, SKU:%d, Shipped Qty:%d",
                             $item->country,
@@ -79,15 +78,15 @@ class FBADataExport implements
                             $item->shipped_qty,
                         );
 
-                        $event->sheet->SetCellValue("A{$this->serialNumber}", $itemDesc);
-                        $event->sheet->SetCellValue("B{$this->serialNumber}", $this->unit_price);
+                        $event->sheet->SetCellValue("A{$column}", $itemDesc);
+                        $event->sheet->SetCellValue("B{$column}", "$ " . number_format($item->unit_price, 2));
                     }
                 }
 
                 // 3.)  Return Helper : 逐筆列出
                 $returnHelperList = ReturnHelperCharge::selectRaw("
                 return_helper_charges.notes,
-                (return_helper_charges.amount * exchange_rates.exchange_rate) AS 'amount_hkd'")
+                ABS(return_helper_charges.amount * exchange_rates.exchange_rate) AS 'amount_hkd'")
                     ->leftJoin('exchange_rates', function ($join) {
                         $join->on('return_helper_charges.report_date', '=', 'exchange_rates.quoted_date')
                             ->on('return_helper_charges.currency_code', '=', 'exchange_rates.base_currency')
@@ -100,10 +99,10 @@ class FBADataExport implements
 
                 if (count($returnHelperList) > 0) {
                     foreach ($returnHelperList as $item) {
-                        $this->serialNumber++;
+                        $column++;
 
-                        $event->sheet->SetCellValue("A{$this->serialNumber}", $item->notes);
-                        $event->sheet->SetCellValue("B{$this->serialNumber}", $item->amount_hkd);
+                        $event->sheet->SetCellValue("A{$column}", $item->notes);
+                        $event->sheet->SetCellValue("B{$column}", "$ " . number_format($item->amount_hkd, 2));
                     }
                 }
             }
