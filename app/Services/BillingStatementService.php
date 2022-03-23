@@ -122,14 +122,14 @@ class BillingStatementService
         $fees['client_account_refund_and_resend'] = $clientAmazonTotal + $clientRefundFees + $clientAccountResend;
 
         //getAccountMiscellaneous
-        $fees['clientAccountMiscellaneous'] = abs($this->amzDateRangeRepo->getAccountMiscellaneous(
+        $fees['clientAccountMiscellaneous'] = -1 * abs($this->amzDateRangeRepo->getAccountMiscellaneous(
             $reportDate,
             $clientCode,
             $sellerAccount,
             false
         )->Miscellaneous);
 
-        $fees['a4AccountMiscellaneous'] = abs($this->amzDateRangeRepo->getAccountMiscellaneous(
+        $fees['a4AccountMiscellaneous'] = -1 * abs($this->amzDateRangeRepo->getAccountMiscellaneous(
             $reportDate,
             $clientCode,
             $sellerAccount,

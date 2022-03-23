@@ -92,10 +92,13 @@ class PaymentExport implements
                 $event->sheet->SetCellValue("A15", "Name of Beneficiary (收款單位)");
                 $event->sheet->SetCellValue("C15", $invoice->supplier_name);
 
-                $sumOfAmount = $billing->opex_invoice + $billing->fba_storage_fee_invoice + $billing->sales_credit;
+                $paymentAmount = number_format(
+                    $billing->sales_credit - $billing->fba_storage_fee_invoice - $billing->opex_invoice,
+                    2
+                );
 
                 $event->sheet->SetCellValue("A17", "Amount (金額)");
-                $event->sheet->SetCellValue("C17", "HK  " . number_format($sumOfAmount, 2));
+                $event->sheet->SetCellValue("C17", "HK  " . $paymentAmount);
 
                 $event->sheet->SetCellValue("A19", "Due Date (到期日期)");
 
@@ -126,7 +129,7 @@ class PaymentExport implements
                 $event->sheet->SetCellValue("D25", 'Credit Note');
                 $event->sheet->SetCellValue("E25", 'Sales Credit');
                 $event->sheet->SetCellValue("F25", "$  " . number_format($billing->sales_credit, 2));
-                $event->sheet->SetCellValue("F26", "$  " . number_format($sumOfAmount, 2));
+                $event->sheet->SetCellValue("F26", "$  " . $paymentAmount);
 
 
                 $event->sheet->SetCellValue("C28", 'DBS Bank (Hong Kong) Limited');
