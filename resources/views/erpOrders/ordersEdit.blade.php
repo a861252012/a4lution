@@ -103,7 +103,7 @@
         </div>
         <div class="col-4 form-group _fz-1">
             <label class="form-control-label _fz-1"
-                   style="font-weight:bold;">Item Id(ASIN):</label>{{ $lists['asin_or_item'] }}
+                style="font-weight:bold;">Item Id(ASIN):</label>{{ $lists['asin_or_item'] }}
         </div>
         <div class="col-4 form-group _fz-1" id="supplier" data-label="{{ $supplier }}">
             <label class="form-control-label _fz-1" style="font-weight:bold;">Supplier:</label>{{ $supplier }}
@@ -190,7 +190,7 @@
 
         <tr class="table-success">
             <th scope="row"><strong>Order Price</strong></th>
-            <td>Order Price</td>
+            <th>Order Price</th>
             <td>{{ $order_price }}</td>
             <td>{{ $lists['order_price_hkd'] }}</td>
         </tr>
@@ -198,7 +198,7 @@
         {{--  PRODUCT COST  --}}
         <tr class="table-info">
             <th rowspan="2"><strong>Product Cost</strong></th>
-            <td>Purchase Shipping Fee</td>
+            <th>Purchase Shipping Fee</th>
             <td>{{ $lists['purchase_shipping_fee'] }}</td>
             <td>{{ $lists['purchase_shipping_fee_hkd'] }}</td>
         </tr>
@@ -233,7 +233,27 @@
 
         {{-- PLATFORM FEE --}}
         <tr class="table-info">
-            <th rowspan="4"><strong>Platform Fee</strong></th>
+            <th rowspan="2"><strong>Platform Fee</strong></th>
+            <th>Paypal Fee</th>
+            <td><input type="text" name="paypal_fee" class="editable" value="{{ $lists['paypal_fee'] }}" readonly></td>
+            <td>{{ $lists['paypal_fee_hkd'] }}</td>
+        </tr>
+        <tr class="table-info">
+            <th scope="row">Transaction Fee</th>
+            <td><input type="text" name="transaction_fee" class="editable" value="{{ $lists['transaction_fee'] }}" readonly></td>
+            <td>{{ $lists['transaction_fee_hkd'] }}</td>
+
+        {{-- FBA FEE --}}
+        <tr>
+            <th scope="row"><strong>Fba Fee</strong></th>
+            <th>Fba Fee</th>
+            <td><input type="text" name="fba_fee" class="editable" value="{{ $lists['fba_fee'] }}" readonly></td>
+            <td>{{ $lists['fba_fee_hkd'] }}</td>
+        </tr>
+
+        {{-- OTHER TRANSACTION FEE --}}
+        <tr class="table-info">
+            <th rowspan="4"><strong>Other Transaction</strong></th>
             <th>Other Fee</th>
             <td><input type="text" name="other_fee" class="editable" value="{{ $lists['other_fee'] }}"
                 readonly></td>
@@ -256,24 +276,6 @@
             <td><input type="text" name="exclusives_referral_fee" class="editable" value="{{ $lists['exclusives_referral_fee'] }}"
                 readonly></td>
             <td>{{ $lists['exclusives_referral_fee_hkd'] }}</td>
-        </tr>
-
-        {{-- FBA FEE --}}
-        <tr>
-            <th scope="row"><strong>Fba Fee</strong></th>
-            <td>Fba Fee</td>
-            <td><input type="text" name="fba_fee" class="editable" value="{{ $lists['fba_fee'] }}" readonly></td>
-            <td>{{ $lists['fba_fee_hkd'] }}</td>
-        </tr>
-
-        {{-- OTHER TRANSACTION FEE --}}
-        <tr class="table-info">
-            <th><strong>Other Transaction</strong></th>
-            <td>Other Transaction</td>
-            <td><input type="text" name="other_transaction" class="editable" value="{{ $lists['other_transaction'] }}"
-                readonly>
-            </td>
-            <td>{{ $lists['other_transaction_hkd'] }}</td>
         </tr>
         </tbody>
     </table>
