@@ -397,7 +397,9 @@ class BillingStatementService
         ];
 
         if ($billingItems['client_code'] === 'G73A') {
-            $opexInvoiceKeys = collect($opexInvoiceKeys)->forget('client_account_logistics_fee')->all();
+            $opexInvoiceKeys = collect($opexInvoiceKeys)
+                ->filter(fn ($val, $key) => $val !== 'client_account_logistics_fee')
+                ->all();
         }
 
         $billingItems['opex_invoice'] = $this->getSumValue(

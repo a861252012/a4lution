@@ -182,13 +182,15 @@ class OpexInvoiceExport implements
                 ];
 
                 if ($billing->client_code === 'G73A') {
-                    $totalKeys = collect($totalKeys)->forget('client_account_logistics_fee')->all();
+                    $totalKeys = collect($totalKeys)
+                        ->filter(fn ($value, $key) => $value !== 'client_account_logistics_fee')
+                        ->all();
                 }
 
                 $total = $this->getSumValue($billing, $totalKeys) - (float)$billing->a4_account_refund_and_resend;
 
                 $event->sheet->SetCellValue("B35", 'Total');
-                $event->sheet->SetCellValue("F35", "HKD  " . round($total, 4));
+                $event->sheet->SetCellValue("F35", "HKD  {$total}");
 
                 //footer
                 $event->sheet->SetCellValue("B44", 'Payment Method:');
