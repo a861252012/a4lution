@@ -4,13 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Customer;
-use App\Constants\CommissionConstant;
 use App\Models\CustomerRelation;
 use App\Models\CommissionSetting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\CommissionSkuSetting;
 use Illuminate\Support\Facades\Auth;
+use App\Constants\CommissionConstant;
 use App\Http\Requests\Customer\IndexRequest;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\Customer\AjaxStoreRequest;
