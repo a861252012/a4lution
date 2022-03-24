@@ -185,7 +185,7 @@ class OpexInvoiceExport implements
                     $totalKeys = collect($totalKeys)->forget('client_account_logistics_fee')->all();
                 }
 
-                $total =$this->getSumValue($billing, $totalKeys) - (float)$billing->a4_account_refund_and_resend;
+                $total = $this->getSumValue($billing, $totalKeys) - (float)$billing->a4_account_refund_and_resend;
 
                 $event->sheet->SetCellValue("B35", 'Total');
                 $event->sheet->SetCellValue("F35", "HKD  " . round($total, 4));
@@ -202,7 +202,7 @@ class OpexInvoiceExport implements
         ];
     }
 
-    public function getSumValue(array $fees, array $keys = []): float
+    public function getSumValue(?object $fees, array $keys = []): float
     {
         $feesCollection = collect($fees);
 
