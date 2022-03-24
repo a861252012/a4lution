@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Customer;
 
-use App\Constants\CommissionConstant;
 use App\Rules\CheckCalculationType;
+use App\Constants\CommissionConstant;
 use App\Http\Requests\BaseFormRequest;
 
 class AjaxStoreRequest extends BaseFormRequest
@@ -32,13 +32,13 @@ class AjaxStoreRequest extends BaseFormRequest
             'tier_2_threshold' => 'nullable|integer|min:0|gt:tier_1_threshold',
             'tier_3_threshold' => 'nullable|integer|min:0|gt:tier_2_threshold',
             'tier_4_threshold' => 'nullable|integer|min:0|gt:tier_3_threshold',
-            'tier_1_amount' => 'nullable|numeric|min:0|required_if:calculation_type,'.CommissionConstant::CALCULATION_TYPE_TIER,
+            'tier_1_amount' => 'nullable|numeric|min:0',
             'tier_2_amount' => 'nullable|numeric|min:0|gt:tier_1_amount',
             'tier_3_amount' => 'nullable|numeric|min:0|gt:tier_2_amount',
             'tier_4_amount' => 'nullable|numeric|min:0|gt:tier_3_amount',
             'tier_top_amount' => 'nullable|numeric|min:0|required_if:calculation_type,'.CommissionConstant::CALCULATION_TYPE_TIER,
 
-            'tier_1_rate' => 'nullable|integer|between:0,100|required_if:calculation_type,'.CommissionConstant::CALCULATION_TYPE_TIER,
+            'tier_1_rate' => 'nullable|integer|between:0,100',
             'tier_2_rate' => 'nullable|integer|between:0,100|gt:tier_1_rate',
             'tier_3_rate' => 'nullable|integer|between:0,100|gt:tier_2_rate',
             'tier_4_rate' => 'nullable|integer|between:0,100|gt:tier_3_rate',
@@ -66,7 +66,6 @@ class AjaxStoreRequest extends BaseFormRequest
             'tier_4_threshold.min' => 'The [ Amount Threshold 4 ] must be at least :min',
             'tier_4_threshold.gt' => 'The [ Amount Threshold 4 ] amount must be greater than [ Amount Threshold 3 ].',
 
-            'tier_1_amount.required_if' => 'The [ Commission Amount 1 ] field is required when calculation type is [ Tier ].',
             'tier_1_amount.min' => 'The [ Commission Amount 1 ] must be at least :min',
             'tier_2_amount.gt' => 'The [ Commission Amount 2 ] amount must be greater than [ Commission Amount 1 ].',
             'tier_2_amount.min' => 'The [ Commission Amount 2 ] must be at least :min',
@@ -77,7 +76,6 @@ class AjaxStoreRequest extends BaseFormRequest
             'tier_top_amount.required_if' => 'The [ Commission Maximum Amount ] field is required when calculation type is [ Tier ].',
             'tier_top_amount.min' => 'The [ Commission Maximum Amount ] must be at least :min',
 
-            'tier_1_rate.required_if' => 'The [ Commission Rate 1 ] field is required when calculation type is [ Tier ].',
             'tier_1_rate.integer' => 'The [ Commission Rate 1 ] must be an integer.',
             'tier_1_rate.between' => 'The [ Commission Rate 1 ] must be between :min - :max.',
             'tier_2_rate.gt' => 'The [ Commission Rate 2 ] amount must be greater than [ Commission Rate 1 ].',
