@@ -255,12 +255,14 @@
                             data.first_mile_shipping_fee = parseFloat($("input[name='first_mile_shipping_fee']").val());
                             data.first_mile_tariff = parseFloat($("input[name='first_mile_tariff']").val());
                             data.last_mile_shipping_fee = parseFloat($("input[name='last_mile_shipping_fee']").val());
+                            data.paypal_fee = parseFloat($("input[name='paypal_fee']").val());
+                            data.transaction_fee = parseFloat($("input[name='transaction_fee']").val());
+                            data.fba_fee = parseFloat($("input[name='fba_fee']").val());
                             data.other_fee = parseFloat($("input[name='other_fee']").val());
                             data.marketplace_tax = parseFloat($("input[name='marketplace_tax']").val());
                             data.cost_of_point = parseFloat($("input[name='cost_of_point']").val());
                             data.exclusives_referral_fee = parseFloat($("input[name='exclusives_referral_fee']").val());
-                            data.fba_fee = parseFloat($("input[name='fba_fee']").val());
-                            data.other_transaction = parseFloat($("input[name='other_transaction']").val());
+                            // data.other_transaction = parseFloat($("input[name='other_transaction']").val());
                             // data.product_id = $("button#edit_btn").attr('data-attr');
 
                             $.ajaxSetup({
