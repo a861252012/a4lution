@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Customer;
 
-use App\Rules\TierRequiredField;
 use App\Rules\CheckCalculationType;
 use App\Constants\CommissionConstant;
 use App\Http\Requests\BaseFormRequest;
@@ -33,7 +32,7 @@ class AjaxStoreRequest extends BaseFormRequest
             'tier_2_threshold' => 'nullable|integer|min:0|gt:tier_1_threshold',
             'tier_3_threshold' => 'nullable|integer|min:0|gt:tier_2_threshold',
             'tier_4_threshold' => 'nullable|integer|min:0|gt:tier_3_threshold',
-            'tier_1_amount' => ['nullable', 'numeric', 'min:0', new TierRequiredField],
+            'tier_1_amount' => 'nullable|numeric|min:0',
             'tier_2_amount' => 'nullable|numeric|min:0|gt:tier_1_amount',
             'tier_3_amount' => 'nullable|numeric|min:0|gt:tier_2_amount',
             'tier_4_amount' => 'nullable|numeric|min:0|gt:tier_3_amount',
