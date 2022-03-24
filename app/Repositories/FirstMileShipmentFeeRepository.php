@@ -3,27 +3,28 @@
 
 namespace App\Repositories;
 
+use App\Models\FirstMileShipmentFee;
 use Illuminate\Support\Facades\DB;
 
-class FirstMileShipmentFeeRepository
+class FirstMileShipmentFeeRepository extends BaseRepository
 {
 
     public function __construct()
     {
+        parent::__construct(new FirstMileShipmentFee);
     }
 
-    public function getFbaStorageFeeInvoice(string $reportDate, string $clientCode)
-    {
-        $sql = "SELECT
-    f.fba_shipment, f.total
-FROM
-    first_mile_shipment_fees f
-WHERE
-    f.active = 1
-        AND f.report_date = '{$reportDate}'
-        AND f.client_code = '{$clientCode}'
-GROUP BY f.fulfillment_center , f.fba_shipment";
-
-        return DB::select($sql);
+    public function getSumOfAmountValue(
+        string $reportDate,
+        string $clientCode
+    ): float {
+        return (float)DB::query()->fromSub(function ($query) use ($clientCode, $reportDate) {
+            $query->from('first_mile_shipment_fees')
+                ->selectRaw('total AS unit_price')
+                ->where('report_date', $reportDate)
+                ->where('client_code', $clientCode)
+                ->where('active', 1)
+                ->groupBy(['fulfillment_center', 'fba_shipment']);
+        }, 'x')->selectRaw('SUM(x.unit_price) as sum')->value('sum');
     }
 }

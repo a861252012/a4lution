@@ -7,14 +7,17 @@ use App\Models\User;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Events\BeforeSheet;
 use Throwable;
 
 class PaymentExport implements
     WithTitle,
-    WithEvents
+    WithEvents,
+    WithColumnWidths
 {
     use RegistersEventListeners;
 
@@ -45,6 +48,17 @@ class PaymentExport implements
         \Log::channel('daily_queue_export')
             ->info('PaymentExport')
             ->info($exception);
+    }
+
+    public function columnWidths(): array
+    {
+        $cols['A'] = 21;
+        $cols['C'] = 39;
+        $cols['D'] = 12;
+        $cols['E'] = 14;
+        $cols['F'] = 13;
+
+        return $cols;
     }
 
     public function registerEvents(): array
@@ -78,10 +92,13 @@ class PaymentExport implements
                 $event->sheet->SetCellValue("A15", "Name of Beneficiary (收款單位)");
                 $event->sheet->SetCellValue("C15", $invoice->supplier_name);
 
-                $sumOfAmount = $billing->opex_invoice + $billing->fba_storage_fee_invoice + $billing->sales_credit;
+                $paymentAmount = number_format(
+                    $billing->sales_credit - $billing->fba_storage_fee_invoice - $billing->opex_invoice,
+                    2
+                );
 
                 $event->sheet->SetCellValue("A17", "Amount (金額)");
-                $event->sheet->SetCellValue("C17", "HK  " . number_format($sumOfAmount, 2));
+                $event->sheet->SetCellValue("C17", "HK  " . $paymentAmount);
 
                 $event->sheet->SetCellValue("A19", "Due Date (到期日期)");
 
@@ -112,7 +129,7 @@ class PaymentExport implements
                 $event->sheet->SetCellValue("D25", 'Credit Note');
                 $event->sheet->SetCellValue("E25", 'Sales Credit');
                 $event->sheet->SetCellValue("F25", "$  " . number_format($billing->sales_credit, 2));
-                $event->sheet->SetCellValue("F26", "$  " . number_format($sumOfAmount, 2));
+                $event->sheet->SetCellValue("F26", "$  " . $paymentAmount);
 
 
                 $event->sheet->SetCellValue("C28", 'DBS Bank (Hong Kong) Limited');
@@ -130,6 +147,184 @@ class PaymentExport implements
                 $event->sheet->SetCellValue("C40", $user->full_name);
 
                 $event->sheet->SetCellValue("A43", 'Approved by');
+            },
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet;
+
+                // 自動換行
+                $sheet->getDelegate()->getStyle('A1:Z43')->getAlignment()->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 12,
+                    ]
+                ])->setWrapText(true);
+
+                //TODO A4lution Logo
+
+                //A3:F3
+                $sheet->getDelegate()->getStyle('A3:F3')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
+
+                // C7:F7
+                $sheet->getDelegate()->getStyle('C7:F7')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
+
+                // C9:F9
+                $sheet->getDelegate()->getStyle('C9:F9')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
+
+                // C11:F11
+                $sheet->getDelegate()->getStyle('C11:F11')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
+
+                // C15:F15
+                $sheet->getDelegate()->getStyle('C15:F15')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ],
+                    ]
+                ]);
+
+                // C17:D17
+                $sheet->getDelegate()->getStyle('C17:D17')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
+
+                // C19:D19
+                $sheet->getDelegate()->getStyle('C19:D19')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
+
+                // C22:F25
+                $sheet->getDelegate()->getStyle('C22:F25')->applyFromArray([
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+                        ],
+                    ]
+                ]);
+
+                // D26:F26
+                $sheet->getDelegate()->getStyle('D26:F26')->applyFromArray([
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+                        ],
+                    ]
+                ]);
+
+                // C27
+                $sheet->getDelegate()->getStyle('C27')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
+
+                // C28
+                $sheet->getDelegate()->getStyle('C28')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
+
+                // C29
+                $sheet->getDelegate()->getStyle('C29')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
+
+                // C30
+                $sheet->getDelegate()->getStyle('C30')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
+
+                // C31
+                $sheet->getDelegate()->getStyle('C31')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
+
+                // C34
+                $sheet->mergeCells('C34:D34');
+
+                // C34
+                $sheet->getDelegate()->getStyle('C34')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
+
+                // C37:D37
+                $sheet->getDelegate()->getStyle('C37:D37')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
+
+                // C40:D40
+                $sheet->getDelegate()->getStyle('C40:D40')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
+
+                // C43
+                $sheet->getDelegate()->getStyle('C43')->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED
+                        ]
+                    ]
+                ]);
             }
         ];
     }

@@ -4,7 +4,8 @@ namespace App\Exports;
 
 use App\Models\FirstMileShipmentFee;
 use App\Models\Invoice;
-use Illuminate\Support\Facades\DB;
+use App\Models\ReturnHelperCharge;
+use App\Repositories\ContinStorageFeeRepository;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -20,6 +21,8 @@ class FBAFirstMileShipmentFeesExport implements
     private string $reportDate;
     private string $clientCode;
     private int $insertInvoiceID;
+    private int $serialNumber = 1;
+    private int $firstMileCol = 19;
 
     public function __construct(
         string $reportDate,
@@ -89,13 +92,28 @@ class FBAFirstMileShipmentFeesExport implements
                 $event->sheet->SetCellValue("E15", 'Quantity');
                 $event->sheet->SetCellValue("F15", 'Amount');
 
-                $lists = FirstMileShipmentFee::select(
-                    DB::raw("fulfillment_center as 'country'"),
-                    DB::raw("fba_shipment as 'shipment_id'"),
-                    DB::raw("COUNT(DISTINCT ids_sku) AS 'sku'"),
-                    DB::raw("SUM(shipped) as 'shipped_qty'"),
-                    DB::raw("ROUND(first_mile, 2) as 'unit_price'"),
-                )
+                //1.)   Contin Storage Fee :  (一筆加總的數值)
+                $continStorageFee = app(ContinStorageFeeRepository::class)->getContinStorageFee(
+                    $this->reportDate,
+                    $this->clientCode
+                );
+                $event->sheet->SetCellValue("B16", $this->serialNumber);
+                $event->sheet->SetCellValue("C16", "Contin Storage Fee");
+                $event->sheet->SetCellValue("F16", "HKD  {$continStorageFee}");
+
+                $totalValue = $continStorageFee;
+
+                $event->sheet->SetCellValue("C17", "Average CBM Usage: " . $continStorageFee / 300);
+                $event->sheet->SetCellValue("D17", "$  " . $continStorageFee);
+                $event->sheet->SetCellValue("E17", 1);
+
+                // 2.)  Contin 寄FBA的頭程費用 : 依據shipment
+                $lists = FirstMileShipmentFee::selectRaw("
+                    fulfillment_center as 'country',
+                    fba_shipment as 'shipment_id',
+                    COUNT(DISTINCT ids_sku) AS 'sku',
+                    SUM(shipped) as 'shipped_qty',
+                    total as 'unit_price'")
                     ->where('active', 1)
                     ->where('report_date', $this->reportDate)
                     ->where('client_code', $this->clientCode)
@@ -103,8 +121,8 @@ class FBAFirstMileShipmentFeesExport implements
                     ->get();
 
                 if (count($lists) > 0) {
-                    $totalAmount = 0;
                     foreach ($lists as $k => $item) {
+                        $this->serialNumber++;
                         $itemDesc = sprintf(
                             "Country:%s, Shipment ID:%s, SKU:%d, Shipped Qty:%d",
                             $item->country,
@@ -113,20 +131,61 @@ class FBAFirstMileShipmentFeesExport implements
                             $item->shipped_qty,
                         );
 
-                        $colNum = 16 + $k * 3;
-                        $descNum = $colNum + 1;
-                        $event->sheet->SetCellValue("B{$colNum}", $k + 1);//16
-                        $event->sheet->SetCellValue("C{$colNum}", 'FBA shipment Fee from Continental HK warehouse to Amazon FBA warehouse:');
+                        $this->firstMileCol = $k * 3;//record start from B19
+                        $descNum = $this->firstMileCol + 1;
+                        $event->sheet->SetCellValue("B{$this->firstMileCol}", $this->serialNumber);
+                        $event->sheet->SetCellValue(
+                            "C{$this->firstMileCol}",
+                            'FBA shipment Fee from Continental HK warehouse to Amazon FBA warehouse:'
+                        );
                         $event->sheet->SetCellValue("C{$descNum}", $itemDesc);
-                        $event->sheet->SetCellValue("D{$descNum}", "$ {$item->unit_price}");
+                        $event->sheet->SetCellValue("D{$descNum}", "$ " .  number_format((float)$item->unit_price, 2));
                         $event->sheet->SetCellValue("E{$descNum}", "1");
-                        $event->sheet->SetCellValue("F{$colNum}", "HKD  {$item->unit_price}");
+                        $event->sheet->SetCellValue(
+                            "F{$this->firstMileCol}",
+                            "HKD  " . number_format((float)$item->unit_price, 2)
+                        );
 
-                        $totalAmount += $item->unit_price;
+                        $totalValue +=  (float)$item->unit_price;
+                    }
+                }
+
+                // 3.)  Return Helper : 逐筆列出
+                $returnHelperList = ReturnHelperCharge::selectRaw("
+                return_helper_charges.notes,
+                ABS(return_helper_charges.amount * exchange_rates.exchange_rate) AS 'amount_hkd'")
+                    ->leftJoin('exchange_rates', function ($join) {
+                        $join->on('return_helper_charges.report_date', '=', 'exchange_rates.quoted_date')
+                            ->on('return_helper_charges.currency_code', '=', 'exchange_rates.base_currency')
+                            ->where('exchange_rates.active', 1);
+                    })
+                    ->where('return_helper_charges.supplier', $this->clientCode)
+                    ->where('return_helper_charges.report_date', $this->reportDate)
+                    ->where('return_helper_charges.active', 1)
+                    ->get();
+
+                if (count($returnHelperList) > 0) {
+                    foreach ($returnHelperList as $k => $item) {
+                        $col = $this->firstMileCol + 3 + $k * 3;
+                        if ($this->firstMileCol === 19) {
+                            $col = $this->firstMileCol + $k * 3;
+                        }
+
+                        $descNum = $col + 1;
+                        $this->serialNumber++;
+
+                        $event->sheet->SetCellValue("B{$col}", $this->serialNumber);
+                        $event->sheet->SetCellValue("C{$col}", 'Return Helper Charges');
+                        $event->sheet->SetCellValue("C{$descNum}", "{$item->notes}");
+                        $event->sheet->SetCellValue("D{$descNum}", "$ " . number_format((float)$item->amount_hkd, 2));
+                        $event->sheet->SetCellValue("E{$descNum}", "1");
+                        $event->sheet->SetCellValue("F{$col}", "HKD  " . number_format((float)$item->amount_hkd, 2));
+
+                        $totalValue += (float)$item->amount_hkd;
                     }
 
                     $event->sheet->SetCellValue("B" . ($descNum + 4), 'Total');
-                    $event->sheet->SetCellValue("F" . ($descNum + 4), "HKD  {$totalAmount}");
+                    $event->sheet->SetCellValue("F" . ($descNum + 4), "HKD  " . number_format((float)$totalValue, 2));
                 }
 
                 //footer

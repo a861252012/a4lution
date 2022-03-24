@@ -3,6 +3,8 @@
 namespace App\Jobs\Invoice;
 
 use App\Models\Invoice;
+use App\Models\ReturnHelperCharge;
+use App\Repositories\ContinStorageFeeRepository;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
@@ -65,21 +67,45 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
             $invoice->client_code,
             $invoice->fba_shipment_invoice_no,
         );
-        $firstMileShipmentFees = FirstMileShipmentFee::query()
-            ->select(
-                DB::raw("fulfillment_center as 'country'"),
-                DB::raw("fba_shipment as 'shipment_id'"),
-                DB::raw("COUNT(DISTINCT ids_sku) AS 'sku'"),
-                DB::raw("SUM(shipped) as 'shipped_qty'"),
-                DB::raw("ROUND(first_mile, 2) as 'unit_price'"),
-            )
+
+        //1.)   Contin Storage Fee :  (一筆加總的數值)
+        $continStorageFee = app(ContinStorageFeeRepository::class)->getContinStorageFee(
+            $invoice->report_date,
+            $invoice->client_code
+        );
+
+        // 2.)  Contin 寄FBA的頭程費用 : 依據shipment
+        $firstMileShipmentFees = FirstMileShipmentFee::selectRaw("
+                    fulfillment_center as 'country',
+                    fba_shipment as 'shipment_id',
+                    COUNT(DISTINCT ids_sku) AS 'sku',
+                    SUM(shipped) as 'shipped_qty',
+                    total as 'unit_price'")
             ->where('active', 1)
             ->where('report_date', $invoice->report_date)
             ->where('client_code', $invoice->client_code)
             ->groupBy(['fulfillment_center', 'fba_shipment'])
             ->get();
 
-        \PDF::loadView('invoice.pdf.fbaFirstMileShipmentFee', compact('invoice', 'firstMileShipmentFees'))
-            ->save($saveDir . $fileName);
+        // 3.)  Return Helper : 逐筆列出
+        $returnHelperList = ReturnHelperCharge::selectRaw("
+                return_helper_charges.notes,
+                ABS(return_helper_charges.amount * exchange_rates.exchange_rate) AS 'amount_hkd'")
+            ->leftJoin('exchange_rates', function ($join) {
+                $join->on('return_helper_charges.report_date', '=', 'exchange_rates.quoted_date')
+                    ->on('return_helper_charges.currency_code', '=', 'exchange_rates.base_currency')
+                    ->where('exchange_rates.active', 1);
+            })
+            ->where('return_helper_charges.supplier', $invoice->client_code)
+            ->where('return_helper_charges.report_date', $invoice->report_date)
+            ->where('return_helper_charges.active', 1)
+            ->get();
+
+        \PDF::loadView('invoice.pdf.fbaFirstMileShipmentFee', compact(
+            'invoice',
+            'continStorageFee',
+            'firstMileShipmentFees',
+            'returnHelperList'
+        ))->save($saveDir . $fileName);
     }
 }

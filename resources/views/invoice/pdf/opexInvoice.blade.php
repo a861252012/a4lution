@@ -248,8 +248,8 @@
                         'a4_account_fba_storage_fee',
                         'a4_account_advertisement',
                         'a4_account_marketing_and_promotion',
-                        'a4_account_sales_tax_handling',
                         'a4_account_miscellaneous',
+                        'sales_tax_handling',
                         'avolution_commission',
                         'extraordinary_item'
                     ])
