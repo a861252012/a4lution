@@ -23,7 +23,6 @@ class FBAFirstMileShipmentFeesExport implements
     private int $insertInvoiceID;
     private int $serialNumber = 1;
     private int $firstMileCol = 0;
-    private float $totalValue = 0.0;
 
     public function __construct(
         string $reportDate,
@@ -100,17 +99,12 @@ class FBAFirstMileShipmentFeesExport implements
                 );
                 $event->sheet->SetCellValue("B16", $this->serialNumber);
                 $event->sheet->SetCellValue("C16", "Contin Storage Fee");
-                $event->sheet->SetCellValue(
-                    "F16",
-                    "HKD  " . number_format($continStorageFee, 2)
-                );
+                $event->sheet->SetCellValue("F16", "HKD  {$continStorageFee}");
 
-                $this->totalValue =  number_format($continStorageFee, 2);
+                $totalValue = $continStorageFee;
 
-                $cbmPricePerMonth = 300;
-                $averageCbmUsage = number_format($continStorageFee / $cbmPricePerMonth, 2);
-                $event->sheet->SetCellValue("C17", "Average CBM Usage: {$averageCbmUsage}");
-                $event->sheet->SetCellValue("D17", "$  " . number_format($continStorageFee, 2));
+                $event->sheet->SetCellValue("C17", "Average CBM Usage: " . $continStorageFee / 300);
+                $event->sheet->SetCellValue("D17", "$  " . $continStorageFee);
                 $event->sheet->SetCellValue("E17", 1);
 
                 // 2.)  Contin 寄FBA的頭程費用 : 依據shipment
@@ -145,14 +139,14 @@ class FBAFirstMileShipmentFeesExport implements
                             'FBA shipment Fee from Continental HK warehouse to Amazon FBA warehouse:'
                         );
                         $event->sheet->SetCellValue("C{$descNum}", $itemDesc);
-                        $event->sheet->SetCellValue("D{$descNum}", "$ " .  (float)number_format($item->unit_price, 2));
+                        $event->sheet->SetCellValue("D{$descNum}", "$ " .  number_format((float)$item->unit_price, 2));
                         $event->sheet->SetCellValue("E{$descNum}", "1");
                         $event->sheet->SetCellValue(
                             "F{$this->firstMileCol}",
-                            "HKD  " . number_format($item->unit_price, 2)
+                            "HKD  " . number_format((float)$item->unit_price, 2)
                         );
 
-                        $this->totalValue +=  number_format($item->unit_price, 2);
+                        $totalValue +=  number_format((float)$item->unit_price, 2);
                     }
                 }
 
@@ -183,11 +177,11 @@ class FBAFirstMileShipmentFeesExport implements
                         $event->sheet->SetCellValue("E{$descNum}", "1");
                         $event->sheet->SetCellValue("F{$col}", "HKD  " . (float) number_format($item->amount_hkd, 2));
 
-                        $this->totalValue += number_format($item->amount_hkd, 2);
+                        $totalValue += number_format((float)$item->amount_hkd, 2);
                     }
 
                     $event->sheet->SetCellValue("B" . ($descNum + 4), 'Total');
-                    $event->sheet->SetCellValue("F" . ($descNum + 4), "HKD  {$this->totalValue}");
+                    $event->sheet->SetCellValue("F" . ($descNum + 4), "HKD  {$totalValue}");
                 }
 
                 //footer
