@@ -22,7 +22,7 @@ class FBAFirstMileShipmentFeesExport implements
     private string $clientCode;
     private int $insertInvoiceID;
     private int $serialNumber = 1;
-    private int $firstMileCol = 0;
+    private int $firstMileCol = 19;
 
     public function __construct(
         string $reportDate,
@@ -131,7 +131,7 @@ class FBAFirstMileShipmentFeesExport implements
                             $item->shipped_qty,
                         );
 
-                        $this->firstMileCol = 19 + $k * 3;//record start from B19
+                        $this->firstMileCol = $k * 3;//record start from B19
                         $descNum = $this->firstMileCol + 1;
                         $event->sheet->SetCellValue("B{$this->firstMileCol}", $this->serialNumber);
                         $event->sheet->SetCellValue(
@@ -146,7 +146,7 @@ class FBAFirstMileShipmentFeesExport implements
                             "HKD  " . number_format((float)$item->unit_price, 2)
                         );
 
-                        $totalValue +=  number_format((float)$item->unit_price, 2);
+                        $totalValue +=  (float)$item->unit_price;
                     }
                 }
 
@@ -173,15 +173,15 @@ class FBAFirstMileShipmentFeesExport implements
                         $event->sheet->SetCellValue("B{$col}", $this->serialNumber);
                         $event->sheet->SetCellValue("C{$col}", 'Return Helper Charges');
                         $event->sheet->SetCellValue("C{$descNum}", "{$item->notes}");
-                        $event->sheet->SetCellValue("D{$descNum}", "$ " . (float)number_format($item->amount_hkd, 2));
+                        $event->sheet->SetCellValue("D{$descNum}", "$ " . number_format((float)$item->amount_hkd, 2));
                         $event->sheet->SetCellValue("E{$descNum}", "1");
-                        $event->sheet->SetCellValue("F{$col}", "HKD  " . (float) number_format($item->amount_hkd, 2));
+                        $event->sheet->SetCellValue("F{$col}", "HKD  " . number_format((float)$item->amount_hkd, 2));
 
-                        $totalValue += number_format((float)$item->amount_hkd, 2);
+                        $totalValue += (float)$item->amount_hkd;
                     }
 
                     $event->sheet->SetCellValue("B" . ($descNum + 4), 'Total');
-                    $event->sheet->SetCellValue("F" . ($descNum + 4), "HKD  {$totalValue}");
+                    $event->sheet->SetCellValue("F" . ($descNum + 4), "HKD  " . number_format((float)$totalValue, 2));
                 }
 
                 //footer
