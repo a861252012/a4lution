@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\BillingStatement;
 use App\Models\Invoice;
+use App\Support\Calculation;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -128,7 +129,8 @@ class OpexInvoiceExport implements
                     'a4_account_advertisement',
                     'a4_account_marketing_and_promotion'
                 ];
-                $sumOfUnitPrice = $this->getTotalVal($billing, $UnitPriceKeys);
+
+                $sumOfUnitPrice = $this->getSumValue($billing, $UnitPriceKeys);
 
                 $event->sheet->SetCellValue("B25", 'E');
                 $event->sheet->SetCellValue("C25", 'Marketing Fee');
@@ -167,24 +169,28 @@ class OpexInvoiceExport implements
                 //item Total
                 $totalKeys = [
                     'a4_account_logistics_fee',
-                    'client_account_logistics_fee',
                     'a4_account_platform_fee',
                     'a4_account_fba_fee',
                     'a4_account_fba_storage_fee',
                     'a4_account_advertisement',
                     'a4_account_marketing_and_promotion',
-                    'sales_tax_handling',
                     'a4_account_miscellaneous',
+                    'client_account_logistics_fee',
+                    'sales_tax_handling',
                     'avolution_commission',
                     'extraordinary_item'
                 ];
 
                 if ($billing->client_code === 'G73A') {
-                    $totalKeys = collect($totalKeys)->forget('client_account_logistics_fee')->all();
+                    $totalKeys = collect($totalKeys)
+                        ->filter(fn ($value, $key) => $value !== 'client_account_logistics_fee')
+                        ->all();
                 }
 
+                $total = $this->getSumValue($billing, $totalKeys) - (float)$billing->a4_account_refund_and_resend;
+
                 $event->sheet->SetCellValue("B35", 'Total');
-                $event->sheet->SetCellValue("F35", "HKD  " . $this->getTotalVal($billing, $totalKeys));
+                $event->sheet->SetCellValue("F35", "HKD  {$total}");
 
                 //footer
                 $event->sheet->SetCellValue("B44", 'Payment Method:');
@@ -198,14 +204,14 @@ class OpexInvoiceExport implements
         ];
     }
 
-    private function getTotalVal(object $billing, array $keys): float
+    public function getSumValue(?object $fees, array $keys = []): float
     {
-        $billings = collect($billing)->only($keys);
+        $feesCollection = collect($fees);
 
-        $sum = 0;
-        foreach ($billings as $val) {
-            $sum += (float)$val;
+        if ($keys) {
+            $feesCollection = collect($fees)->only($keys);
         }
-        return $sum;
+
+        return $feesCollection->map(fn ($val) => app(Calculation::class)->numberFormatPrecision($val, 4))->sum();
     }
 }
