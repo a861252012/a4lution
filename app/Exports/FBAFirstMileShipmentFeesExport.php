@@ -166,7 +166,11 @@ class FBAFirstMileShipmentFeesExport implements
 
                 if (count($returnHelperList) > 0) {
                     foreach ($returnHelperList as $k => $item) {
-                        $col = $this->firstMileCol + 3 + $k * 3;//record start from B19
+                        $col = $this->firstMileCol + 3 + $k * 3;
+                        if ($this->firstMileCol === 19) {
+                            $col = $this->firstMileCol + $k * 3;
+                        }
+
                         $descNum = $col + 1;
                         $this->serialNumber++;
 
