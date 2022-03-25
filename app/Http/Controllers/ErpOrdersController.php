@@ -206,6 +206,7 @@ class ErpOrdersController extends Controller
             $data['lists']['last_mile_shipping_fee']
         ) : 0;
 
+        // PLATFORM FEE
         $data['lists']['paypal_fee_hkd'] = $data['lists']['paypal_fee'] ? $this->getHkdRate(
             $data['exchange_rate'][$data['lists']['currency_code_org']],
             $data['lists']['paypal_fee']
@@ -215,6 +216,12 @@ class ErpOrdersController extends Controller
             $data['lists']['transaction_fee']
         ) : 0;
 
+        $data['lists']['fba_fee_hkd'] = $data['lists']['fba_fee'] ? $this->getHkdRate(
+            $data['exchange_rate'][$data['lists']['currency_code_org']],
+            $data['lists']['fba_fee']
+        ) : 0;
+
+        // OTHER TRANSACTION FEE
         $data['lists']['other_fee_hkd'] = $data['lists']['other_fee'] ? $this->getHkdRate(
             $data['exchange_rate'][$data['lists']['currency_code_org']],
             $data['lists']['other_fee']
@@ -230,11 +237,6 @@ class ErpOrdersController extends Controller
         $data['lists']['exclusives_referral_fee_hkd'] = $data['lists']['exclusives_referral_fee'] ? $this->getHkdRate(
             $data['exchange_rate'][$data['lists']['currency_code_org']],
             $data['lists']['exclusives_referral_fee']
-        ) : 0;
-
-        $data['lists']['fba_fee_hkd'] = $data['lists']['fba_fee'] ? $this->getHkdRate(
-            $data['exchange_rate'][$data['lists']['currency_code_org']],
-            $data['lists']['fba_fee']
         ) : 0;
         $data['lists']['other_transaction_hkd'] = $data['lists']['other_transaction'] ? $this->getHkdRate(
             $data['exchange_rate'][$data['lists']['currency_code_org']],
