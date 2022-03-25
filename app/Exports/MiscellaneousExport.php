@@ -91,13 +91,12 @@ class MiscellaneousExport implements
             ->whereNotIn(
                 'amazon_date_range_report.type',
                 [
-                    'Refund',
                     'Order',
-                    'Debt',
-                    'Other FBA Inventory Fee',
-                    'Transfer',
+                    'Refund',
                     'Service Fee',
-                    'Liquidations'
+                    'Transfer',
+                    'Other FBA Inventory Fee',
+                    'Coupons'
                 ]
             );
     }

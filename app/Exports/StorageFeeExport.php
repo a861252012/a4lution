@@ -2,6 +2,9 @@
 
 namespace App\Exports;
 
+use App\Models\LongTermStorageFee;
+use App\Models\MonthlyStorageFee;
+use App\Models\WfsStorageFee;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromQuery;
@@ -136,7 +139,53 @@ class StorageFeeExport implements
             ->where('t.report_date', $this->reportDate)
             ->where('t.active', 1);
 
-        $subQuery = $firstQuery->unionAll($secQuery);
+
+        $thirdQuery = DB::query()
+            ->from("wfs_storage_fees as w")
+            ->selectRaw("
+            '3' AS order_seq,
+            '' AS 'account',
+            w.walmart_item_id AS 'ASIN',
+            w.vendor_sku AS 'fnsku',
+            w.item_name AS 'product_name',
+            '' AS 'fulfilment_center',
+            '' AS 'country_code',
+            w.supplier_type AS 'type',
+            w.supplier AS 'client',
+            '' AS 'longest_side',
+            '' AS 'median_side',
+            '' AS 'shortest_side',
+            '' AS 'measurement_units',
+            '' AS 'weight',
+            '' AS 'weight_units',
+            '' AS 'item_volume',
+            '' AS 'volume_units',
+            '' AS 'product_size_tier',
+            '' AS 'average_quantity_on_hand',
+            '' AS 'average_quantity_pending_removal',
+            '' AS 'total_item_volume_est',
+            w.report_date AS 'month_of_charge',
+            '' AS 'storage_rate',
+            'USD' AS 'currency',
+            r.exchange_rate AS 'exchange_rate',
+            '' AS 'dangerous_goods_storage_type',
+            '' AS 'category',
+            '' AS 'eligible_for_discount',
+            '' AS 'qualified_for_discount',
+            'Walmart Storage Fee' AS 'storage_fee_type',
+            w.storage_fee_for_selected_time_period AS 'storage_fee',
+            (w.storage_fee_for_selected_time_period * r.exchange_rate) AS 'storage_fee_hkd'
+            ")->leftJoin('exchange_rates as r', function ($join) {
+                $join->on('w.report_date', '=', 'r.quoted_date')
+                    ->where('r.base_currency', 'USD')
+                    ->where('r.active', 1);
+            })->where('w.supplier', 'S53A')
+            ->where('w.report_date', '2022-02-01')
+            ->where('w.active', 1);
+
+        $subQuery = $firstQuery->unionAll($secQuery)
+            ->unionAll($thirdQuery);
+
 
         return DB::table(DB::raw("({$subQuery->toSql()}) as x"))
             ->orderByRaw('x.order_seq ,x.account, x.asin')

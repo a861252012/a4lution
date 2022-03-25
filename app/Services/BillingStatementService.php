@@ -13,9 +13,11 @@ use App\Repositories\FirstMileShipmentFeeRepository;
 use App\Repositories\OrderProductRepository;
 use App\Repositories\OrderRepository;
 use App\Repositories\PlatformAdFeeRepository;
+use App\Repositories\ReturnHelperChargeRepository;
 use App\Repositories\RmaRefundListRepository;
 use App\Repositories\CustomerRepository;
 use App\Repositories\SellerAccountRepository;
+use App\Repositories\WfsStorageFeeRepository;
 use App\Support\Calculation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -150,41 +152,36 @@ class BillingStatementService
         );
 
         //getAccountMarketingAndPromotion
-        $fees['clientAccountMarketingAndPromotion'] = $this->amzDateRangeRepo->getAccountMarketingAndPromotion(
+        $fees['clientAccountMarketingAndPromotion'] = abs($this->amzDateRangeRepo->getAccountMarketingAndPromotion(
             $reportDate,
             $clientCode,
             $sellerAccount,
             false
-        );
+        ));
 
-        $fees['a4AccountMarketingAndPromotion'] = $this->amzDateRangeRepo->getAccountMarketingAndPromotion(
+        $fees['a4AccountMarketingAndPromotion'] = abs($this->amzDateRangeRepo->getAccountMarketingAndPromotion(
             $reportDate,
             $clientCode,
             $sellerAccount,
             true
-        );
+        ));
 
         //getAccountFbaStorageFee
-        $clientAccountFbaStorageFee = (float)optional($this->orderRepo->getAccountFbaStorageFee(
+        $storageFeeHKD = app(WfsStorageFeeRepository::class)->getStorageFee($reportDate, $clientCode);
+
+        $fees['clientAccountFbaStorageFee'] = (float)optional($this->orderRepo->getAccountFbaStorageFee(
             $reportDate,
             $clientCode,
             $sellerAccount,
             false
         )[0])->storage_fee_hkd_sum;
-
-        $storageFeeHkd = app(ContinStorageFeeRepository::class)->getAccountRefund(
-            $reportDate,
-            $clientCode
-        );
-
-        $fees['clientAccountFbaStorageFee'] = $clientAccountFbaStorageFee + $storageFeeHkd;
 
         $fees['a4AccountFbaStorageFee'] = (float)optional($this->orderRepo->getAccountFbaStorageFee(
             $reportDate,
             $clientCode,
             $sellerAccount,
             true
-        )[0])->storage_fee_hkd_sum;
+        )[0])->storage_fee_hkd_sum + $storageFeeHKD;
 
         //4-2 Expenses Breakdown end
 
@@ -337,11 +334,13 @@ class BillingStatementService
         //4-1 Commission Rate
 
         //get comission setting
-        $totalSalesAmount = $billingItems['sales_credit'] - $clientRefundFees - $clientAccountResend;
+        $totalRefundAndResend =  $fees['a4_account_refund_and_resend'] + $fees['client_account_refund_and_resend'];
+
         $commissionRate = $this->getCommissionRate(
             $clientCode,
             $reportDate,
-            (float)$totalSalesAmount
+            (float)$billingItems['total_sales_amount'],
+            $totalRefundAndResend
         );
 
         $totalRefundAndResend =  $fees['a4_account_refund_and_resend'] + $fees['client_account_refund_and_resend'];
@@ -365,36 +364,48 @@ class BillingStatementService
         $billingItems['created_by'] = Auth::id();
         $billingItems['active'] = 1;
 
-        $getFbaStorageFeeInvoices = app(FirstMileShipmentFeeRepository::class)->getFbaStorageFeeInvoice(
-            $reportDate,
-            $clientCode
-        );
-
-        $billingItems['fba_storage_fee_invoice'] = $this->calculation->numberFormatPrecision(
-            collect($getFbaStorageFeeInvoices)->sum('total'),
+        $firstMileTotalVal = $this->calculation->numberFormatPrecision(
+            app(FirstMileShipmentFeeRepository::class)->getSumOfAmountValue($reportDate, $clientCode),
             4
         );
+
+        $returnHelperTotalVal = $this->calculation->numberFormatPrecision(
+            app(ReturnHelperChargeRepository::class)->getSumOfAmount($reportDate, $clientCode),
+            4
+        );
+
+        $continSumOfAmount = $this->calculation->numberFormatPrecision(
+            app(ContinStorageFeeRepository::class)->getSumOfAmount($reportDate, $clientCode),
+            4
+        );
+
+        $billingItems['fba_storage_fee_invoice'] = $firstMileTotalVal + $returnHelperTotalVal + $continSumOfAmount;
 
         //count opexInvoice value
         $opexInvoiceKeys = [
             'a4_account_logistics_fee',
-            'client_account_logistics_fee',
             'a4_account_platform_fee',
             'a4_account_fba_fee',
             'a4_account_fba_storage_fee',
             'a4_account_advertisement',
             'a4_account_marketing_and_promotion',
-            'sales_tax_handling',
             'a4_account_miscellaneous',
+            'client_account_logistics_fee',
+            'sales_tax_handling',
             'avolution_commission',
             'extraordinary_item'
         ];
 
         if ($billingItems['client_code'] === 'G73A') {
-            $opexInvoiceKeys = collect($opexInvoiceKeys)->forget('client_account_logistics_fee')->all();
+            $opexInvoiceKeys = collect($opexInvoiceKeys)
+                ->filter(fn ($val, $key) => $val !== 'client_account_logistics_fee')
+                ->all();
         }
 
-        $billingItems['opex_invoice'] = $this->getSumValue($billingItems, $opexInvoiceKeys);
+        $billingItems['opex_invoice'] = $this->getSumValue(
+            $billingItems,
+            $opexInvoiceKeys
+        ) - (float)$billingItems['a4_account_refund_and_resend'];
 
         $billingItems['final_credit'] = $this->calculation->numberFormatPrecision(
             $billingItems['sales_credit'] - $billingItems['opex_invoice'] - $billingItems['fba_storage_fee_invoice'],
@@ -418,7 +429,8 @@ class BillingStatementService
     public function getCommissionRate(
         string $clientCode,
         string $reportDate,
-        float $totalSalesAmount
+        float $totalSalesAmount,
+        float $totalRefundAndResend
     ): array {
         $settings = CommissionSetting::where('client_code', $clientCode)->first();
 
@@ -457,8 +469,9 @@ class BillingStatementService
 
         //check if commission rate type is tiered
         if ($settings->calculation_type === CommissionConstant::CALCULATION_TYPE_TIER) {
-            return $this->getTieredInfo($clientCode, $totalSalesAmount);
+            return $this->getTieredInfo($clientCode, $totalSalesAmount, $totalRefundAndResend);
         }
+
         return ['type' => 'base_rate', 'value' => $settings->basic_rate, 'status' => 'success'];
     }
 
@@ -496,31 +509,32 @@ class BillingStatementService
 
     public function getTieredInfo(
         string $clientCode,
-        float $totalSalesAmount
+        float  $totalSalesAmount,
+        float  $totalRefundAndResend
     ): array {
         $setting = CommissionSetting::where('client_code', $clientCode)->first();
 
-        if (!empty($setting) & $totalSalesAmount >= $setting->tier_1_threshold) {
-            $newLevel = 1;
-            for ($i = 1; $i <= 4; $i++) {
-                $key = "tier_{$i}_threshold";
-                $val = $setting->$key;
-                if ($totalSalesAmount >= $val) {
-                    $newLevel = $i;
-                }
-            }
-            //如有amount則先取amount
-            $amountKey = "tier_{$newLevel}_amount";
-            if (!empty((float)$setting->$amountKey)) {
-                return ['type' => 'tier_amount', 'value' => $setting->$amountKey, 'status' => 'success'];
-            }
+        $totalSalesAmount = ($this->isDeductRefund($clientCode)) ? $totalSalesAmount - $totalRefundAndResend :
+            $totalSalesAmount;
 
-            $rateKey = "tier_{$newLevel}_rate";
+        $newLevel = 1;
+        for ($i = 1; $i <= 4; $i++) {
+            $key = "tier_{$i}_threshold";
+            $tierSettingValue = (float)$setting->$key;
 
-            return ['type' => 'tier_rate', 'value' => $setting->$rateKey, 'status' => 'success'];
+            if ($tierSettingValue && ($totalSalesAmount >= $tierSettingValue)) {
+                $newLevel = $i;
+            }
+        }
+        //如有amount則先取amount
+        $amountKey = "tier_{$newLevel}_amount";
+
+        if (!empty((float)$setting->$amountKey)) {
+            return ['type' => 'tier_amount', 'value' => $setting->$amountKey, 'status' => 'success'];
         }
 
-        return ['type' => 'base_rate', 'value' => $setting->basic_rate, 'status' => 'success'];
+        $rateKey = "tier_{$newLevel}_rate";
+        return ['type' => 'tier_rate', 'value' => $setting->$rateKey, 'status' => 'success'];
     }
 
     protected function isDeductRefund(string $clientCode): bool

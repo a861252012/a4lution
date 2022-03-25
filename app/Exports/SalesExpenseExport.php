@@ -128,7 +128,7 @@ class SalesExpenseExport implements
                 $event->sheet->SetCellValue("B22", "  - Advertisement");
                 $event->sheet->SetCellValue("C22", round($billing->a4_account_advertisement));
                 $event->sheet->SetCellValue("B23", "  - Marketing and Promotion");
-                $event->sheet->SetCellValue("C23", round($billing->a4_account_marketing_and_promotion));
+                $event->sheet->SetCellValue("C23", abs(round($billing->a4_account_marketing_and_promotion)));
 
                 //Client Sales
                 $event->sheet->SetCellValue("A25", "Client Account");
@@ -159,7 +159,7 @@ class SalesExpenseExport implements
                 $event->sheet->SetCellValue("B37", "  - Advertisement");
                 $event->sheet->SetCellValue("C37", round($billing->client_account_advertisement));
                 $event->sheet->SetCellValue("B38", "  - Marketing and Promotion");
-                $event->sheet->SetCellValue("C38", round($billing->client_account_marketing_and_promotion));
+                $event->sheet->SetCellValue("C38", abs(round($billing->client_account_marketing_and_promotion)));
 
                 //Avolution Commission and Sales Tax Handling
                 $event->sheet->SetCellValue("B40", "Avolution Commission");

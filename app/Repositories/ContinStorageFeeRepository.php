@@ -32,4 +32,33 @@ class ContinStorageFeeRepository extends BaseRepository
             ->mergeBindings($subQuery)
             ->value('storage_fee_hkd');
     }
+
+    public function getSumOfAmount(
+        string $reportDate,
+        string $clientCode
+    ): float {
+        return (float)$this->model
+            ->selectRaw('sum(amount) as sum')
+            ->active()
+            ->where('report_date', $reportDate)
+            ->where('supplier', $clientCode)
+            ->value('sum');
+    }
+
+    public function getContinStorageFee(
+        string $reportDate,
+        string $clientCode
+    ):float {
+        return (float)$this->model
+            ->selectRaw('SUM(contin_storage_fees.amount * exchange_rates.exchange_rate) AS unit_price')
+            ->leftJoin('exchange_rates', function ($join) {
+                $join->on('contin_storage_fees.report_date', '=', 'exchange_rates.quoted_date')
+                    ->on('contin_storage_fees.currency', '=', 'exchange_rates.base_currency')
+                    ->where('exchange_rates.active', 1);
+            })
+            ->where('contin_storage_fees.active', 1)
+            ->where('report_date', $reportDate)
+            ->where('supplier', $clientCode)
+            ->value('unit_price');
+    }
 }
