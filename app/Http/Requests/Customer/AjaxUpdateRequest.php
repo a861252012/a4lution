@@ -35,13 +35,13 @@ class AjaxUpdateRequest extends BaseFormRequest
             'tier_2_amount' => 'nullable|numeric|min:0',
             'tier_3_amount' => 'nullable|numeric|min:0',
             'tier_4_amount' => 'nullable|numeric|min:0',
-            'tier_top_amount' => 'nullable|numeric|min:0|required_if:calculation_type,'.CommissionConstant::CALCULATION_TYPE_TIER,
+            'tier_top_amount' => 'nullable|numeric|min:0',
 
             'tier_1_rate' => 'nullable|integer|between:0,100',
             'tier_2_rate' => 'nullable|integer|between:0,100',
             'tier_3_rate' => 'nullable|integer|between:0,100',
             'tier_4_rate' => 'nullable|integer|between:0,100',
-            'tier_top_rate' => 'nullable|integer|between:0,100|required_if:calculation_type,'.CommissionConstant::CALCULATION_TYPE_TIER,
+            'tier_top_rate' => 'nullable|integer|between:0,100',
 
             'percentage_off_promotion' => 'nullable|integer|between:0,100|required_with:tier_promotion',
             'tier_promotion' => 'nullable|integer|between:0,100|required_with:percentage_off_promotion',
@@ -69,7 +69,6 @@ class AjaxUpdateRequest extends BaseFormRequest
             'tier_2_amount.min' => 'The [ Commission Amount 2 ] must be at least :min',
             'tier_3_amount.min' => 'The [ Commission Amount 3 ] must be at least :min',
             'tier_4_amount.min' => 'The [ Commission Amount 4 ] must be at least :min',
-            'tier_top_amount.required_if' => 'The [ Commission Maximum Amount ] field is required when calculation type is [ Tier ].',
             'tier_top_amount.min' => 'The [ Commission Maximum Amount ] must be at least :min',
 
             'tier_1_rate.integer' => 'The [ Commission Rate 1 ] must be an integer.',
@@ -80,7 +79,6 @@ class AjaxUpdateRequest extends BaseFormRequest
             'tier_3_rate.between' => 'The [ Commission Rate 3 ] must be between :min - :max.',
             'tier_4_rate.integer' => 'The [ Commission Rate 4 ] must be an integer.',
             'tier_4_rate.between' => 'The [ Commission Rate 4 ] must be between :min - :max.',
-            'tier_top_rate.required_if' => 'The [ Commission Rate Maximum Amount ] field is required when calculation type is [ Tier ].',
             'tier_top_rate.integer' => 'The [ Commission Rate Maximum Amount ] must be an integer.',
             'tier_top_rate.between' => 'The [ Commission Rate Maximum Amount ] must be between :min - :max.',
 

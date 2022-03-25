@@ -9,22 +9,20 @@ use Illuminate\Contracts\Validation\DataAwareRule;
 
 class CheckCalculationType implements Rule, DataAwareRule
 {
-    protected $msg;
+    protected array $msg;
 
     public function passes($attribute, $value)
     {
         if ($value == CommissionConstant::CALCULATION_TYPE_SKU) {
-            $this->msg = 'Once the SKU commission(s) is created, you are able to select the "SKU".
+            $this->msg[] = 'Once the SKU commission(s) is created, you are able to select the "SKU".
                 Go to: Setting > SKU Commission > Upload SKU';
 
             return CommissionSkuSetting::where('client_code', $this->data['client_code'])->exists(); 
         }
 
         if ($value == CommissionConstant::CALCULATION_TYPE_TIER) {
-            $this->msg = 'The [ Commission Amount 1 ] or [ Commission Rate 1 ] field is required when calculation type is [ Tier ].';
 
-            // 至少一個欄位有值
-            return $this->data['tier_1_amount'] || $this->data['tier_1_rate'];
+            return $this->checkThresholdAmountRate() && $this->checkTopAmountRate();
         }
 
         return true;
@@ -32,7 +30,7 @@ class CheckCalculationType implements Rule, DataAwareRule
 
     public function message()
     {
-        return $this->msg;
+        return implode(PHP_EOL ,$this->msg);
     }
 
     public function setData($data)
@@ -40,5 +38,40 @@ class CheckCalculationType implements Rule, DataAwareRule
         $this->data = $data;
 
         return $this;
+    }
+
+    private function checkThresholdAmountRate()
+    {
+        $pass = 1;
+
+        for ($i = 1; $i <= 4; $i++) { 
+            $threshold = "tier_{$i}_threshold";
+            $amount = "tier_{$i}_amount";
+            $rate = "tier_{$i}_rate";
+
+            if ($this->data[$threshold]) {
+                // amount & rate 二擇一選擇
+                if (!$this->data[$amount] && !$this->data[$rate]) {
+                    $this->msg[] = "The [ Commission Amount {$i} ] or [ Commission Rate {$i} ] field is required when calculation type is [ Tier ] and [ Amount Threshold {$i} ] has value.";
+
+                    $pass = 0;
+                }
+            }
+        }
+        
+        return $pass;
+    }
+
+    private function checkTopAmountRate()
+    {
+        $pass = 1;
+
+        if (!$this->data['tier_top_amount'] && !$this->data['tier_top_rate']) {
+            $this->msg[] = "The [ Commission Maximum Amount ] or [ Commission Rate Maximum Amount ] field is required when calculation type is [ Tier ].";
+
+            $pass = 0;
+        }
+
+        return $pass;
     }
 }
