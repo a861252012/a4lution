@@ -73,7 +73,8 @@ class AmazonDateRangeReportRepository extends BaseRepository
                     'Service Fee',
                     'Transfer',
                     'Other FBA Inventory Fee',
-                    'Coupons'
+                    'Coupons',
+                    'FBA Inventory Fee'
                 ]
             )
             ->first();
