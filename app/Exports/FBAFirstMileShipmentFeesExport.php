@@ -103,7 +103,9 @@ class FBAFirstMileShipmentFeesExport implements
 
                 $totalValue = $continStorageFee;
 
-                $event->sheet->SetCellValue("C17", "Average CBM Usage: " . $continStorageFee / 300);
+                $averageCbmUsage =  number_format($continStorageFee / 300, 2);
+
+                $event->sheet->SetCellValue("C17", "Average CBM Usage: {$averageCbmUsage}");
                 $event->sheet->SetCellValue("D17", "$  " . $continStorageFee);
                 $event->sheet->SetCellValue("E17", 1);
 
