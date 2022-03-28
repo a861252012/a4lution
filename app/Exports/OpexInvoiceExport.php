@@ -187,7 +187,7 @@ class OpexInvoiceExport implements
                         ->all();
                 }
 
-                $total = $this->getSumValue($billing, $totalKeys) - (float)$billing->a4_account_refund_and_resend;
+                $total = $this->getSumValue($billing, $totalKeys);
 
                 $event->sheet->SetCellValue("B35", 'Total');
                 $event->sheet->SetCellValue("F35", "HKD  {$total}");
