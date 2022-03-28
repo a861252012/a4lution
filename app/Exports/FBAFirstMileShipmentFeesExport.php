@@ -131,7 +131,7 @@ class FBAFirstMileShipmentFeesExport implements
                             $item->shipped_qty,
                         );
 
-                        $this->firstMileCol = $k * 3;//record start from B19
+                        $this->firstMileCol = 19 + $k * 3;//record start from B19
                         $descNum = $this->firstMileCol + 1;
                         $event->sheet->SetCellValue("B{$this->firstMileCol}", $this->serialNumber);
                         $event->sheet->SetCellValue(

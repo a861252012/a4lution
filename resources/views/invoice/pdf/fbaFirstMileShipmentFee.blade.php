@@ -183,14 +183,13 @@
                     <tr>
                         <td class="col col-1"></td>
                         <td class="col col-2">
-                            {{ sprintf("Average CBM Usage: %d", $averageCbmUsage); }}
+                            {{ "Average CBM Usage: {$averageCbmUsage}" }}
                         </td>
                         <td class="col col-3">$ {{ number_format($continStorageFee, 2) }}</td>
                         <td class="col col-4">1</td>
                         <td class="col col-5"></td>
                     </tr>
                 {{-- 1. Contin Storage Fee end --}}
-
 
                 {{-- 2. Contin 寄FBA的頭程費用 start --}}
                 @forelse ($firstMileShipmentFees as $firstMileShipmentFee)
@@ -214,20 +213,13 @@
                                 $firstMileShipmentFee->shipment_id,
                                 $firstMileShipmentFee->sku,
                                 $firstMileShipmentFee->shipped_qty,
-                            ); }}
+                            ) }}
                         </td>
                         <td class="col col-3">$ {{ number_format($firstMileShipmentFee->unit_price, 2) }}</td>
                         <td class="col col-4">1</td>
                         <td class="col col-5"></td>
                     </tr>
                 @empty
-                    <tr>
-                        <td class="col col-1"></td>
-                        <td class="col col-2">No Data.</td>
-                        <td class="col col-3"></td>
-                        <td class="col col-4"></td>
-                        <td class="col col-5"></td>
-                    </tr>
                 @endforelse
                 {{-- 2. Contin 寄FBA的頭程費用 end --}}
 
@@ -249,13 +241,6 @@
                         <td class="col col-5"></td>
                     </tr>
                 @empty
-                    <tr>
-                        <td class="col col-1"></td>
-                        <td class="col col-2">No Data.</td>
-                        <td class="col col-3"></td>
-                        <td class="col col-4"></td>
-                        <td class="col col-5"></td>
-                    </tr>
                 @endforelse
                 {{-- 3. Contin 寄FBA的頭程費用 end --}}
 
