@@ -402,10 +402,7 @@ class BillingStatementService
                 ->all();
         }
 
-        $billingItems['opex_invoice'] = $this->getSumValue(
-            $billingItems,
-            $opexInvoiceKeys
-        ) - (float)$billingItems['a4_account_refund_and_resend'];
+        $billingItems['opex_invoice'] = $this->getSumValue($billingItems, $opexInvoiceKeys);
 
         $billingItems['final_credit'] = $this->calculation->numberFormatPrecision(
             $billingItems['sales_credit'] - $billingItems['opex_invoice'] - $billingItems['fba_storage_fee_invoice'],
