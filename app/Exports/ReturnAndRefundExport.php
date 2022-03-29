@@ -88,7 +88,7 @@ class ReturnAndRefundExport implements
                 );
                 $join->where('r.active', 1);
             })
-            ->where('d.type', 'Refund')
+            ->wherein('d.type', ['Chargeback Refund', 'Refund'])
             ->where('d.fulfillment', 'Amazon')
             ->where('d.supplier', $this->clientCode)
             ->where('d.active', 1)
