@@ -100,7 +100,7 @@ class AmazonDateRangeReportRepository extends BaseRepository
                     );
             })
             ->where('amazon_date_range_report.active', 1)
-            ->where('amazon_date_range_report.type', 'Refund')
+            ->whereIn('amazon_date_range_report.type', ['Refund', 'Chargeback Refund'])
             ->where('amazon_date_range_report.fulfillment', 'Amazon')
             ->where('amazon_date_range_report.supplier', $clientCode)
             ->whereRaw(
