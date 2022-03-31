@@ -97,7 +97,8 @@ class MiscellaneousExport implements
                     'Transfer',
                     'Other FBA Inventory Fee',
                     'Coupons',
-                    'FBA Inventory Fee'
+                    'FBA Inventory Fee',
+                    'Debt'
                 ]
             );
     }
