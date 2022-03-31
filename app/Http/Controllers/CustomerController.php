@@ -217,26 +217,26 @@ class CustomerController extends Controller
             // 更新 commission_settings
             $commissionData = collect([
                 'calculation_type' => $request->calculation_type ?? CommissionConstant::CALCULATION_TYPE_BASIC_RATE,
-                'basic_rate' => $request->basic_rate ? $request->basic_rate/100 : '',
+                'basic_rate' => $request->basic_rate ? $request->basic_rate/100 : null,
                 'promotion_threshold' => $request->promotion_threshold,
                 'tier_promotion' => $request->tier_promotion,
                 'tier_1_threshold' => $request->tier_1_threshold,
                 'tier_1_amount' => $request->tier_1_amount,
-                'tier_1_rate' => $request->tier_1_rate  ? $request->tier_1_rate/100 : '',
+                'tier_1_rate' => $request->tier_1_rate  ? $request->tier_1_rate/100 : null,
                 'tier_2_threshold' => $request->tier_2_threshold,
                 'tier_2_amount' => $request->tier_2_amount,
-                'tier_2_rate' => $request->tier_2_rate  ? $request->tier_2_rate/100 : '',
+                'tier_2_rate' => $request->tier_2_rate  ? $request->tier_2_rate/100 : null,
                 'tier_3_threshold' => $request->tier_3_threshold,
                 'tier_3_amount' => $request->tier_3_amount,
-                'tier_3_rate' => $request->tier_3_rate  ? $request->tier_3_rate/100 : '',
+                'tier_3_rate' => $request->tier_3_rate  ? $request->tier_3_rate/100 : null,
                 'tier_4_threshold' => $request->tier_4_threshold,
                 'tier_4_amount' => $request->tier_4_amount,
-                'tier_4_rate' => $request->tier_4_rate  ? $request->tier_4_rate/100 : '',
+                'tier_4_rate' => $request->tier_4_rate  ? $request->tier_4_rate/100 : null,
                 'tier_top_amount' => $request->tier_top_amount,
-                'tier_top_rate' => $request->tier_top_rate  ? $request->tier_top_rate/100 : '',
-                'promotion_threshold' => $request->percentage_off_promotion ? (100 - $request->percentage_off_promotion)/100 : '',
-                'tier_promotion' => $request->tier_promotion ? $request->tier_promotion/100 : '',
-            ])->filter()->toArray();
+                'tier_top_rate' => $request->tier_top_rate  ? $request->tier_top_rate/100 : null,
+                'promotion_threshold' => $request->percentage_off_promotion ? (100 - $request->percentage_off_promotion)/100 : null,
+                'tier_promotion' => $request->tier_promotion ? $request->tier_promotion/100 : null,
+            ])->toArray();
 
             CommissionSetting::updateOrCreate(
                 ['client_code' => $customer->client_code, 'active' => 1],
