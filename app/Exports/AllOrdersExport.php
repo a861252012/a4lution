@@ -53,7 +53,9 @@ class AllOrdersExport implements
                 DB::raw("d.currency_code_org AS currency"),
                 DB::raw("r.exchange_rate AS exchange_rate"),
                 DB::raw("ROUND(d.order_total_amount_org * r.exchange_rate, 4) AS total_sales_HKD"),
-                DB::raw("ROUND((p.last_mile_shipping_fee * r.exchange_rate ), 4) AS shipping_fee_HKD"),
+                DB::raw("ROUND((CASE WHEN orders.sm_code = 'AMAZONFBA' THEN (p.last_mile_shipping_fee * r.exchange_rate)
+                ELSE ((p.last_mile_shipping_fee + p.first_mile_shipping_fee + p.first_mile_tariff) * r.exchange_rate) 
+                END), 4) AS 'shipping_fee_HKD'"),
                 DB::raw("ROUND((p.transaction_fee+p.paypal_fee) * r.exchange_rate, 4) AS platform_fee_HKD"),
                 DB::raw("ROUND(p.fba_fee * r.exchange_rate, 4) AS FBA_fees_HKD"),
                 DB::raw("ROUND((p.other_transaction) * r.exchange_rate, 4) AS other_trans_fee_HKD"),
