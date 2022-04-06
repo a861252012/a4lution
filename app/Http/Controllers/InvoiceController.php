@@ -200,7 +200,7 @@ class InvoiceController extends Controller
 
         $data['opex_invoice_no'] = sprintf('INV-%d%s_1', $formattedIssueDate, $formattedSupplier);
         $data['fba_shipment_invoice_no'] = sprintf('INV-%d%s_FBA', $formattedIssueDate, $formattedSupplier);
-        $data['credit_note_no'] = sprintf('CR-%d%s_1', $formattedIssueDate, $formattedSupplier);
+        $data['credit_note_no'] = sprintf('INV-%d%s_1', $formattedIssueDate, $formattedSupplier);
         $data['created_at'] = date('Y-m-d H:i:s');
         $data['updated_at'] = date('Y-m-d H:i:s');
         $data['updated_by'] = Auth::id();
