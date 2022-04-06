@@ -46,6 +46,7 @@ class WfsStorageFeeImportService implements ImportInterface
                             'storage_fee_for_selected_time_period' => $item['storage_fee_for_selected_time_period'],
                             'hkd_rate' => $item['hkd_rate'],
                             'storage_fee_hkd' => $item['storage_fee_hkd'],
+                            'currency_code' => 'USD',
                             'upload_id' => $batchId,
                             'report_date' => $reportDate->toDateString(),
                             'active' => 1,
