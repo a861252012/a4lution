@@ -141,7 +141,7 @@ class ReturnAndRefundExport implements
             ->where(DB::raw("DATE_FORMAT(a.create_date,'%Y%m')"), $this->reportDate)
             ->where('a.product_sku', 'like', "{$this->clientCode}-%")
             ->where('a.shipping_method', '!=', 'AMAZONFBA')
-            ->whereRaw("length(a.warehouse_ship_date) > ?", 0)
+            ->whereRaw("a.warehouse_ship_date > ?", '2000-01-01')
             ->unionAll($amzQuery)
             ->get();
     }
