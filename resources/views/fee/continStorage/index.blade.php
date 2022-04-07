@@ -86,7 +86,14 @@
                             <td>{{ $fee->transaction_datetime }}</td>
                             <td>{{ $fee->volume }}</td>
                             <td>{{ $fee->quantity }}</td>
-                            <td>{{ $fee->amount }}</td>
+                            <td>
+                                <input type="text" 
+                                    update-id="{{ $fee->id }}" 
+                                    update-col="amount" 
+                                    class="_ajax-update text-right {{ $fee->is_revised ? 'text-red' : '' }}" 
+                                    style="width: 15ch;"
+                                    value="{{ $fee->amount }}">
+                            </td>
                             <td>{{ $fee->currency }}</td>
                         </tr>
                     @endforeach
@@ -119,6 +126,80 @@
             });
 
             $('#report_date').datepicker('update', $('#report_date').val());
+
+            // *******************
+            //  Change Data AJAX
+            // *******************
+
+            $('._ajax-update').on('focusin', function(){
+                $(this).data('old-val', $(this).val());
+            });
+
+            $('._ajax-update').change(function(){
+                var input = $(this);
+                var old_val = input.data('old-val');
+
+                var id = input.attr('update-id');
+                var col = input.attr('update-col');
+                var value = input.val();
+
+                if (id)
+                {
+                    let _token = $('meta[name="csrf-token"]').attr('content');
+
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': _token
+                        }
+                    });
+
+                    swal({
+                        text: "Are you sure to update?",
+                        icon: 'warning',
+                        buttons: ["No", "Yes"]
+                    })
+                    .then(function (isConfirm) {
+                        if (isConfirm) {
+                            $.ajax({
+                                url: "{{ route('continStorage.ajax.update') }}",
+                                type: "PUT",
+                                dataType: "text",
+                                data: "col="+col+"&id="+id+"&value="+value,
+                                data: {
+                                    id: id, 
+                                    col: col, 
+                                    value: value
+                                },
+                                success: function(data){
+                                    swal({
+                                        text: 'Updated Success!',
+                                        icon: 'success',
+                                    })
+
+                                    input.addClass('text-red');
+                                }, error: function (e) {
+                                    // 顯示 Validate Error
+                                    let errors = [];
+                                    $.each(JSON.parse(e.responseText).errors, function (col, msg) {
+                                        errors.push(msg.toString());
+                                    });
+
+                                    swal({
+                                        icon: 'error',
+                                        text: errors.join("\n")
+                                    });
+
+                                    input.val(old_val);
+
+                                }
+                            });
+
+                        } else {
+                            input.val(old_val);
+                        }
+                    });
+                }
+            });
         });
     </script>
 @endpush

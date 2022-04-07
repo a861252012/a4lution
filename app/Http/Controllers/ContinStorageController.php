@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\ContinStorageFee;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ContinStorage\AjaxUpdateRequest;
 
 class ContinStorageController extends Controller
 {
@@ -28,5 +29,14 @@ class ContinStorageController extends Controller
                 ->paginate();
 
         return view('fee.continStorage.index', compact('continStorageFees', 'reportDate'));
+    }
+
+    public function ajaxUpdate(AjaxUpdateRequest $request)
+    {
+        ContinStorageFee::findOrFail($request->id)
+            ->update([
+                $request->col => $request->value,
+                'is_revised' => 1,
+            ]);
     }
 }
