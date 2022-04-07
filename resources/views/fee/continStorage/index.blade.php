@@ -86,7 +86,14 @@
                             <td>{{ $fee->transaction_datetime }}</td>
                             <td>{{ $fee->volume }}</td>
                             <td>{{ $fee->quantity }}</td>
-                            <td>{{ $fee->amount }}</td>
+                            <td>
+                                <input type="text" 
+                                    update-id="{{ $fee->id }}" 
+                                    update-col="amount" 
+                                    class="_ajax-update text-right" 
+                                    style="width: 15ch;"
+                                    value="{{ $fee->amount }}">
+                            </td>
                             <td>{{ $fee->currency }}</td>
                         </tr>
                     @endforeach
@@ -119,6 +126,54 @@
             });
 
             $('#report_date').datepicker('update', $('#report_date').val());
+
+            // *******************
+            //  Change Data AJAX
+            // *******************
+            $('._ajax-update').change(function(){
+                var id = $(this).attr('update-id');
+                var col = $(this).attr('update-col');
+                var value = $(this).val();
+
+                if (id)
+                {
+                    let _token = $('meta[name="csrf-token"]').attr('content');
+
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': _token
+                        }
+                    });
+
+                    $.ajax({
+                        url: "{{ route('continStorage.ajax.update') }}",
+                        type: "PUT",
+                        dataType: "text",
+                        data: "col="+col+"&id="+id+"&value="+value,
+                        data: {
+                            id: id, 
+                            col: col, 
+                            value: value
+                        },
+                        beforeSend: function(){},
+                        complete: function() {},
+                        success: function(data){
+                            swal({
+                                text: 'Updated Success!',
+                                icon: 'success',
+                            })
+                        }, error: function (e) {
+                            let errors = ['Updated Failed!'];
+
+                            swal({
+                                icon: 'error',
+                                text: errors.join("\n")
+                            });
+                        }
+                    });
+                }
+
+            });
         });
     </script>
 @endpush
