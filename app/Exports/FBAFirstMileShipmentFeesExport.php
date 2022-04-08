@@ -199,7 +199,7 @@ class FBAFirstMileShipmentFeesExport implements
                 $email = $this->user->email;
                 if (isset($this->user->payment_checker_email)) {
                     $email = sprintf(
-                        '%s, and $s',
+                        '%s, and %s',
                         $this->user->payment_checker_email,
                         $this->user->email
                     );
