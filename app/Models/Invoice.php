@@ -17,6 +17,7 @@ class Invoice extends Model
     protected $casts = [
         'report_date' => 'date',
         'issue_date' => 'date',
+        'due_date' => 'date'
     ];
 
     /**
