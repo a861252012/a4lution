@@ -123,7 +123,7 @@
         <tr>
             <td class="col col-1">TO</td>
             <td class="col col-2">Credit Note:</td>
-            <td class="col col-3">{{ $invoice->credit_note_no }}</td>
+            <td class="col col-3">{{ $invoice->opex_invoice_no }}</td>
         </tr>
         <tr>
             <td class="col col-1">{{ $invoice->client_contact }}</td>
