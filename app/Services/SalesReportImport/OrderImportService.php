@@ -77,13 +77,13 @@ class OrderImportService implements ImportInterface
                     ) {
 
                         $order = $orders->first();
-                        $orderCollect = collect($orders);
+                        $ordersCollection = collect($orders);
 
-                        $other_fee_sum =  (float) $orderCollect->sum('other_fee_original_currency');
-                        $marketplace_tax_sum = (float) $orderCollect->sum('marketplace_tax_original_currency');
-                        $cost_of_point_sum = (float) $orderCollect->sum('cost_of_point_original_currency');
-                        $exclusives_referral_fee_sum = (float) $orderCollect->sum('exclusives_referral_fee_original_currency');
-                        $qty_sum = $orderCollect->sum('qty');
+                        $other_fee_sum =  (float) $ordersCollection->sum('other_fee_original_currency');
+                        $marketplace_tax_sum = (float) $ordersCollection->sum('marketplace_tax_original_currency');
+                        $cost_of_point_sum = (float) $ordersCollection->sum('cost_of_point_original_currency');
+                        $exclusives_referral_fee_sum = (float) $ordersCollection->sum('exclusives_referral_fee_original_currency');
+                        $qty_sum = $ordersCollection->sum('qty');
 
                         $orderProductData[] = [
                             'correlation_id' => $reportDate,
@@ -93,20 +93,20 @@ class OrderImportService implements ImportInterface
                             'supplier_type' => $order['supplier_type'],
                             'supplier' => $order['supplier'],
                             'currency_code' => $order['original_currency'],
-                            'sales_amount' => $orderCollect->sum('order_price_original_currency'),
-                            'paypal_fee' => $orderCollect->sum('paypal_fee_original_currency'),
-                            'transaction_fee' => $orderCollect->sum('transaction_fee_original_currency'),
-                            'fba_fee' => $orderCollect->sum('fba_fee_original_currency'),
-                            'first_mile_shipping_fee' => $orderCollect->sum('first_mile_shipping_fee_original_currency'),
-                            'first_mile_tariff' => $orderCollect->sum('first_mile_tariff_original_currency'),
-                            'last_mile_shipping_fee' => $orderCollect->sum('last_mile_shipping_fee_original_currency'),
+                            'sales_amount' => $ordersCollection->sum('order_price_original_currency'),
+                            'paypal_fee' => $ordersCollection->sum('paypal_fee_original_currency'),
+                            'transaction_fee' => $ordersCollection->sum('transaction_fee_original_currency'),
+                            'fba_fee' => $ordersCollection->sum('fba_fee_original_currency'),
+                            'first_mile_shipping_fee' => $ordersCollection->sum('first_mile_shipping_fee_original_currency'),
+                            'first_mile_tariff' => $ordersCollection->sum('first_mile_tariff_original_currency'),
+                            'last_mile_shipping_fee' => $ordersCollection->sum('last_mile_shipping_fee_original_currency'),
                             'other_fee' => $other_fee_sum,
-                            'purchase_shipping_fee' => $orderCollect->sum('purchase_shipping_fee_original_currency'),
-                            'product_cost' => $orderCollect->sum('product_cost_original_currency'),
+                            'purchase_shipping_fee' => $ordersCollection->sum('purchase_shipping_fee_original_currency'),
+                            'product_cost' => $ordersCollection->sum('product_cost_original_currency'),
                             'marketplace_tax' => $marketplace_tax_sum,
                             'cost_of_point' => $cost_of_point_sum,
                             'exclusives_referral_fee' => $exclusives_referral_fee_sum,
-                            'gross_profit' => $orderCollect->sum('gross_profit_original_currency'),
+                            'gross_profit' => $order['gross_profit_original_currency'],
                             'other_transaction' => $other_fee_sum + $marketplace_tax_sum + $cost_of_point_sum + $exclusives_referral_fee_sum,
                             'unit_sold' => $qty_sum,
                             'created_at' => now(),
@@ -128,7 +128,7 @@ class OrderImportService implements ImportInterface
                             'site_id' => $order['site'],
                             'seller_id' => $order['acc_nick_name'],
                             'currency_code_org' => $order['original_currency'],
-                            'order_total_amount_org' => $order['order_price_original_currency'],
+                            'order_total_amount_org' => $ordersCollection->sum('order_price_original_currency'),
                             'order_platform_type' => $order['order_type'],
                             'platform_reference_no' => trim($order['erp_order_id']),
                             'product_title' => $order['product_name'],
