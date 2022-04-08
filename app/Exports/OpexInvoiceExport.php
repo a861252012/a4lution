@@ -72,7 +72,7 @@ class OpexInvoiceExport implements
                 $event->sheet->SetCellValue("B14", $cityAddress);
 
                 $event->sheet->SetCellValue("D9", 'Invoice:');
-                $event->sheet->SetCellValue("E9", $invoice->credit_note_no);
+                $event->sheet->SetCellValue("E9", $invoice->opex_invoice_no);
 
                 $event->sheet->SetCellValue("D10", 'Issue Date:');
                 $event->sheet->SetCellValue("E10", $invoice->issue_date->format('d-M-y'));
