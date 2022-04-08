@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Fee\WfsStorageFeeRequest;
+use App\Repositories\WfsStorageFeeRepository;
 use Exception;
 use Carbon\Carbon;
 use App\Models\BatchJob;
@@ -44,7 +46,6 @@ class FeeController extends Controller
     private ExchangeRateRepository $exchangeRateRepository;
 
     public function __construct(
-        BatchJob               $batchJob,
         AmazonDateRangeReport  $amazonDateRangeReport,
         PlatformAdFee          $platformAdFee,
         MonthlyStorageFee      $monthlyStorageFee,
@@ -614,5 +615,14 @@ class FeeController extends Controller
                 ]
             );
         }
+    }
+
+    public function wfsStorageFeeView(WfsStorageFeeRequest $request)
+    {
+        $lists = empty(count($request->all()))
+            ? []
+            : app(WfsStorageFeeRepository::class)->getSearchResult($request->report_date, $request->supplier);
+
+        return view('fee.wfsStorageFee', compact('lists'));
     }
 }
