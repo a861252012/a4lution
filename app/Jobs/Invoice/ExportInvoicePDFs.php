@@ -7,7 +7,6 @@ use App\Models\ReturnHelperCharge;
 use App\Repositories\ContinStorageFeeRepository;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\DB;
 use App\Models\FirstMileShipmentFee;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -23,15 +22,19 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
         SerializesModels;
 
     private Invoice $invoice;
+    protected $user;
 
     public function __construct(
-        Invoice $invoice
+        Invoice $invoice,
+        $user
     ) {
         $this->invoice = $invoice;
+        $this->user = $user;
     }
 
     public function handle()
     {
+        $user = $this->user;
         $saveDir = $this->getSaveDir($this->invoice->id);
         $invoice = $this->invoice->load('billingStatement');
 
@@ -58,7 +61,7 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
             $invoice->opex_invoice_no,
         );
 
-        \PDF::loadView('invoice.pdf.opexInvoice', compact('invoice'))
+        \PDF::loadView('invoice.pdf.opexInvoice', compact('invoice', 'user'))
             ->save($saveDir . $fileName);
 
         // create fba-first-mile-shipment-fee.pdf
@@ -105,7 +108,8 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
             'invoice',
             'continStorageFee',
             'firstMileShipmentFees',
-            'returnHelperList'
+            'returnHelperList',
+            'user'
         ))->save($saveDir . $fileName);
     }
 }

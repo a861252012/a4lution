@@ -133,9 +133,7 @@
         <tr>
             <td class="col col-1"></td>
             <td class="col col-2">Due Date:</td>
-            <td class="col col-3">
-                {{ sprintf("%s%d", $invoice->issue_date->format('d-M-y'), $invoice->payment_terms); }}
-            </td>
+            <td class="col col-3">{{ $invoice->due_date->format('d-M-y') }}</td>
         </tr>
         <tr>
             <td class="col col-1">{{ $invoice->client_company }}</td>
@@ -280,14 +278,17 @@
 <div class="payment-info">
     <ul>
         <li>Payment Method:</li>
-        <li>1) By Transfer to the following HSBC account & send copy to <span
-                    class="email">sammi.chan@a4lution.com</span> and <span class="email">billy.kwan@a4lution.com</span>
+        <li>1) By Transfer to the following HSBC account & send copy to
+            @isset($user->payment_checker_email)
+                <span class="email">{{ $user->payment_checker_email }}</span>,and
+            @endisset
+            <span class="email">{{ $user->email }}</span>
         </li>
         <li>&nbsp;&nbsp;&nbsp;&nbsp;a) Beneficiary Name: A4lution Limited</li>
         <li>&nbsp;&nbsp;&nbsp;&nbsp;b) Beneficiary Bank: THE HONGKONG AND SHANGHAI BANKING CORPORATION LTD</li>
         <li>&nbsp;&nbsp;&nbsp;&nbsp;c) Swift code: HSBCHKHHHKH</li>
         <li>&nbsp;&nbsp;&nbsp;&nbsp;d) Account no.: 004-747-095693-838</li>
-        <li>2) Payment Term: within 10 working days from the date of Invoice</li>
+        <li>&nbsp;&nbsp;&nbsp;&nbsp;e) FPS registered email: info@a4lution.com</li>
     </ul>
 </div>
 <div class="footer">

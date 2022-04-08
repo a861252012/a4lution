@@ -191,16 +191,14 @@ class InvoiceController extends Controller
             ? date("Y-m-d", strtotime($data['issue_date']))
             : date("Y-m-d");
 
-        $data['due_date'] = isset($data['due_date'])
-            ? date("Y-m-d", strtotime($data['due_date']))
-            : date('Y-m-d', strtotime('+30 days'));
+        $data['due_date'] = Carbon::parse($data['issue_date'])->addDays($request->payment_terms)->format('Y-m-d');
 
         $formattedIssueDate = date("ymd", strtotime($data['issue_date']));
         $formattedSupplier = str_replace(' ', '_', ($data['supplier_name']));
 
         $data['opex_invoice_no'] = sprintf('INV-%d%s_1', $formattedIssueDate, $formattedSupplier);
         $data['fba_shipment_invoice_no'] = sprintf('INV-%d%s_FBA', $formattedIssueDate, $formattedSupplier);
-        $data['credit_note_no'] = sprintf('INV-%d%s_1', $formattedIssueDate, $formattedSupplier);
+        $data['credit_note_no'] = sprintf('CR-%d%s_1', $formattedIssueDate, $formattedSupplier);
         $data['created_at'] = date('Y-m-d H:i:s');
         $data['updated_at'] = date('Y-m-d H:i:s');
         $data['updated_by'] = Auth::id();
@@ -228,8 +226,8 @@ class InvoiceController extends Controller
         \Bus::batch([
             [
                 new SetSaveDir($invoiceID),
-                new ExportInvoiceExcel($invoice),
-                new ExportInvoicePDFs($invoice),
+                new ExportInvoiceExcel($invoice, Auth::user()),
+                new ExportInvoicePDFs($invoice, Auth::user()),
                 new CreateZipToS3($invoice),
             ],
         ])->then(function (Batch $batch) use ($invoiceID) {

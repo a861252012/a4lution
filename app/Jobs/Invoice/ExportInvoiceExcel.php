@@ -13,14 +13,22 @@ use Illuminate\Queue\SerializesModels;
 
 class ExportInvoiceExcel extends BaseInvoiceJob implements ShouldQueue
 {
-    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable,
+        Dispatchable,
+        InteractsWithQueue,
+        Queueable,
+        SerializesModels;
 
     private $invoice;
     private $saveDir;
+    private $user;
 
-    public function __construct(Invoice $invoice)
-    {
+    public function __construct(
+        Invoice $invoice,
+        $user
+    ) {
         $this->invoice = $invoice;
+        $this->user = $user;
     }
 
     public function handle()
@@ -31,6 +39,7 @@ class ExportInvoiceExcel extends BaseInvoiceJob implements ShouldQueue
                 $this->invoice->client_code,
                 $this->invoice->id,
                 $this->invoice->billing_statement_id,
+                $this->user
             ),
             // [資料夾(id)/檔案名稱]
             sprintf(

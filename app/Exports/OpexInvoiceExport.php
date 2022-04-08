@@ -21,17 +21,20 @@ class OpexInvoiceExport implements
     private string $clientCode;
     private int $insertInvoiceID;
     private int $insertBillingID;
+    private $user;
 
     public function __construct(
         string $reportDate,
         string $clientCode,
         int    $insertInvoiceID,
-        int    $insertBillingID
+        int    $insertBillingID,
+        $user
     ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
         $this->insertBillingID = $insertBillingID;
+        $this->user = $user;
     }
 
     public function title(): string
@@ -74,14 +77,8 @@ class OpexInvoiceExport implements
                 $event->sheet->SetCellValue("D10", 'Issue Date:');
                 $event->sheet->SetCellValue("E10", $invoice->issue_date->format('d-M-y'));
 
-                $dueDate = sprintf(
-                    "%s%d",
-                    $invoice->issue_date->format('d-M-y'),
-                    $invoice->payment_terms
-                );
-
                 $event->sheet->SetCellValue("D11", 'Due Date:');
-                $event->sheet->SetCellValue("E11", $dueDate);
+                $event->sheet->SetCellValue("E11", $invoice->due_date->format('d-M-y'));
 
                 $formattedStartDate = date('jS M Y', strtotime($this->reportDate));
                 $endOfDate = date("Y-m-t", strtotime($this->reportDate));
@@ -201,11 +198,26 @@ class OpexInvoiceExport implements
                 $event->sheet->SetCellValue("B35", 'Total');
                 $event->sheet->SetCellValue("F35", "HKD  {$total}");
 
+                $email = $this->user->email;
+                if (isset($this->user->payment_checker_email)) {
+                    $email = sprintf(
+                        '%s, and %s',
+                        $this->user->payment_checker_email,
+                        $this->user->email
+                    );
+                }
+
                 //footer
                 $event->sheet->SetCellValue("B44", 'Payment Method:');
-                $event->sheet->SetCellValue("B46", 'By Transfer to the following HSBC account & send copy to sammi.chan@a4lution.com and billy.kwan@a4lution.com');
+                $event->sheet->SetCellValue(
+                    "B46",
+                    "By Transfer to the following HSBC account & send copy to {$email}"
+                );
                 $event->sheet->SetCellValue("B47", '     a) Beneficiary Name: A4lution Limited');
-                $event->sheet->SetCellValue("B48", '     b) Beneficiary Bank: THE HONGKONG AND SHANGHAI BANKING CORPORATION LTD');
+                $event->sheet->SetCellValue(
+                    "B48",
+                    '     b) Beneficiary Bank: THE HONGKONG AND SHANGHAI BANKING CORPORATION LTD'
+                );
                 $event->sheet->SetCellValue("B49", '     c) Swift code: HSBCHKHHHKH');
                 $event->sheet->SetCellValue("B50", '     d) Account no.: 004-747-095693-838');
                 $event->sheet->SetCellValue("B51", '2) Payment Term: within 10 working days from the date of Invoice');
