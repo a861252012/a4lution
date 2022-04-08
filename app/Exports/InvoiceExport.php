@@ -17,17 +17,20 @@ class InvoiceExport implements
     private string $reportDate;
     private int $insertInvoiceID;
     private int $insertBillingID;
+    private $user;
 
     public function __construct(
         string $reportDate,
         string $clientCode,
         int    $insertInvoiceID,
-        int    $insertBillingID
+        int    $insertBillingID,
+        $user
     ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
         $this->insertBillingID = $insertBillingID;
+        $this->user = $user;
     }
 
     public function failed(Throwable $exception): void
@@ -66,7 +69,8 @@ class InvoiceExport implements
         $sheets[4] = new FBAFirstMileShipmentFeesExport(
             $this->reportDate,
             $this->clientCode,
-            $this->insertInvoiceID
+            $this->insertInvoiceID,
+            $this->user
         );
         $sheets[5] = new FBADataExport($this->reportDate, $this->clientCode);
         $sheets[6] = new AllOrdersExport($formatYmDate, $this->clientCode);

@@ -133,9 +133,7 @@
         <tr>
             <td class="col col-1"></td>
             <td class="col col-2">Due Date:</td>
-            <td class="col col-3">
-                {{ sprintf("%s%d", $invoice->issue_date->format('d-M-y'), $invoice->payment_terms); }}
-            </td>
+            <td class="col col-3">{{ $invoice->due_date }}</td>
         </tr>
         <tr>
             <td class="col col-1">{{ $invoice->client_company }}</td>

@@ -7,7 +7,6 @@ use App\Models\ReturnHelperCharge;
 use App\Repositories\ContinStorageFeeRepository;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\DB;
 use App\Models\FirstMileShipmentFee;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -23,11 +22,14 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
         SerializesModels;
 
     private Invoice $invoice;
+    protected $user;
 
     public function __construct(
-        Invoice $invoice
+        Invoice $invoice,
+        $user
     ) {
         $this->invoice = $invoice;
+        $this->user = $user;
     }
 
     public function handle()
@@ -101,11 +103,14 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
             ->where('return_helper_charges.active', 1)
             ->get();
 
+        $user = $this->user;
+
         \PDF::loadView('invoice.pdf.fbaFirstMileShipmentFee', compact(
             'invoice',
             'continStorageFee',
             'firstMileShipmentFees',
-            'returnHelperList'
+            'returnHelperList',
+            'user'
         ))->save($saveDir . $fileName);
     }
 }

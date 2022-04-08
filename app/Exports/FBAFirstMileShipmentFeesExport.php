@@ -21,17 +21,20 @@ class FBAFirstMileShipmentFeesExport implements
     private string $reportDate;
     private string $clientCode;
     private int $insertInvoiceID;
+    private $user;
     private int $serialNumber = 1;
     private int $firstMileCol = 19;
 
     public function __construct(
         string $reportDate,
         string $clientCode,
-        int    $insertInvoiceID
+        int    $insertInvoiceID,
+        $user
     ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
         $this->insertInvoiceID = $insertInvoiceID;
+        $this->user = $user;
     }
 
     public function title(): string
@@ -192,12 +195,29 @@ class FBAFirstMileShipmentFeesExport implements
 
                 //footer
                 $descNum = isset($descNum) ? ($descNum + 10) : 15;
+
+                $email = $this->user->email;
+                if (isset($this->user->payment_checker_email)) {
+                    $email = sprintf(
+                        '%s, and $s',
+                        $this->user->payment_checker_email,
+                        $this->user->email
+                    );
+                }
+
                 $event->sheet->SetCellValue("B" . ($descNum + 10), 'Payment Method:');
-                $event->sheet->SetCellValue("B" . ($descNum + 11), 'By Transfer to the following HSBC account & send copy to sammi.chan@a4lution.com and billy.kwan@a4lution.com');
+                $event->sheet->SetCellValue(
+                    "B" . ($descNum + 11),
+                    "By Transfer to the following HSBC account & send copy to  {$email}"
+                );
                 $event->sheet->SetCellValue("B" . ($descNum + 12), '  a) Beneficiary Name: A4LUTION LIMITED');
-                $event->sheet->SetCellValue("B" . ($descNum + 13), '  b) Beneficiary Bank: THE HONGKONG AND SHANGHAI BANKING CORPORATION LTD');
+                $event->sheet->SetCellValue(
+                    "B" . ($descNum + 13),
+                    '  b) Beneficiary Bank: THE HONGKONG AND SHANGHAI BANKING CORPORATION LTD'
+                );
                 $event->sheet->SetCellValue("B" . ($descNum + 14), '  c) Swift Code: HSBCHKHHHKH');
                 $event->sheet->SetCellValue("B" . ($descNum + 15), '  d) Account No.: 004-747-095693-838');
+                $event->sheet->SetCellValue("B" . ($descNum + 16), '  e) FPS registered email: info@a4lution.com');
             }
         ];
     }

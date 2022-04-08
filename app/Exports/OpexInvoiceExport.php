@@ -74,14 +74,8 @@ class OpexInvoiceExport implements
                 $event->sheet->SetCellValue("D10", 'Issue Date:');
                 $event->sheet->SetCellValue("E10", $invoice->issue_date->format('d-M-y'));
 
-                $dueDate = sprintf(
-                    "%s%d",
-                    $invoice->issue_date->format('d-M-y'),
-                    $invoice->payment_terms
-                );
-
                 $event->sheet->SetCellValue("D11", 'Due Date:');
-                $event->sheet->SetCellValue("E11", $dueDate);
+                $event->sheet->SetCellValue("E11", $invoice->due_date);
 
                 $formattedStartDate = date('jS M Y', strtotime($this->reportDate));
                 $endOfDate = date("Y-m-t", strtotime($this->reportDate));

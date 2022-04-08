@@ -235,9 +235,11 @@
                         </div>
 
                         <div class="col-3 form-group">
-                            <label class="form-control-label _fz-1" for="due_date">Due Date</label>
-                            <input class="form-control _fz-1" name="due_date" id="due_date" placeholder="due_date"
-                                   type="text" value="{{ $nextMonthDate ?? '' }}">
+                            <label class="form-control-label _fz-1" for="payment_terms">
+                                Payment Terms (# days net)
+                            </label>
+                            <input class="form-control _fz-1" name="payment_terms" id="payment_terms"
+                                   placeholder="payment_terms" type="text" value="10">
                         </div>
 
                         <div class="col-4 form-group">
@@ -257,11 +259,6 @@
                         </div>
 
                         <div class="col-3 form-group">
-                            <label class="form-control-label _fz-1" for="payment_terms">Payment Terms (# days
-                                net)</label>
-                            <input class="form-control _fz-1" name="payment_terms" id="payment_terms"
-                                   placeholder="payment_terms"
-                                   type="text" value="10">
                         </div>
 
                         <div class="col-3 form-group">
