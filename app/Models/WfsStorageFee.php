@@ -10,6 +10,10 @@ class WfsStorageFee extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'report_date' => 'date',
+    ];
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('active', 1);

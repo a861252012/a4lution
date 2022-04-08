@@ -72,7 +72,7 @@
                     <tbody>
                     @foreach ($lists as $item)
                         <tr>
-                            <td>{{ $item->report_date }}</td>
+                            <td>{{ $item->report_date->format('M-Y') }}</td>
                             <td>{{ $item->supplier }}</td>
                             <td>{{ $item->vendor_sku }}</td>
                             <td>{{ $item->storage_fee_for_selected_time_period }}</td>
