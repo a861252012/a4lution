@@ -201,7 +201,7 @@ class OpexInvoiceExport implements
                 $email = $this->user->email;
                 if (isset($this->user->payment_checker_email)) {
                     $email = sprintf(
-                        '%s, and $s',
+                        '%s, and %s',
                         $this->user->payment_checker_email,
                         $this->user->email
                     );
@@ -211,7 +211,7 @@ class OpexInvoiceExport implements
                 $event->sheet->SetCellValue("B44", 'Payment Method:');
                 $event->sheet->SetCellValue(
                     "B46",
-                    "By Transfer to the following HSBC account & send copy to  {$email}"
+                    "By Transfer to the following HSBC account & send copy to {$email}"
                 );
                 $event->sheet->SetCellValue("B47", '     a) Beneficiary Name: A4lution Limited');
                 $event->sheet->SetCellValue(
