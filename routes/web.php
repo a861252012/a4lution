@@ -56,6 +56,9 @@ Route::group(['middleware' => 'auth'], function () {
 
         Route::get('/clientCodeList', 'FeeController@getClientCodeList');
         Route::get('/allCurrency', 'FeeController@getAllCurrency');
+
+        //WFS Storage Fee
+        Route::get('/wfs-storage-fee', 'FeeController@wfsStorageFeeView')->name('fee.wfsStorageFee.view');
     });
 
     // ERP Orders
