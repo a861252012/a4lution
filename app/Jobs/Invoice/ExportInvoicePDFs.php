@@ -34,6 +34,7 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
 
     public function handle()
     {
+        $user = $this->user;
         $saveDir = $this->getSaveDir($this->invoice->id);
         $invoice = $this->invoice->load('billingStatement');
 
@@ -60,7 +61,7 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
             $invoice->opex_invoice_no,
         );
 
-        \PDF::loadView('invoice.pdf.opexInvoice', compact('invoice'))
+        \PDF::loadView('invoice.pdf.opexInvoice', compact('invoice', 'user'))
             ->save($saveDir . $fileName);
 
         // create fba-first-mile-shipment-fee.pdf
@@ -102,8 +103,6 @@ class ExportInvoicePDFs extends BaseInvoiceJob implements ShouldQueue
             ->where('return_helper_charges.report_date', $invoice->report_date)
             ->where('return_helper_charges.active', 1)
             ->get();
-
-        $user = $this->user;
 
         \PDF::loadView('invoice.pdf.fbaFirstMileShipmentFee', compact(
             'invoice',

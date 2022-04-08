@@ -58,7 +58,8 @@ class InvoiceExport implements
             $this->reportDate,
             $this->clientCode,
             $this->insertInvoiceID,
-            $this->insertBillingID
+            $this->insertBillingID,
+            $this->user
         );
         $sheets[3] = new CreditNoteExport(
             $this->reportDate,
