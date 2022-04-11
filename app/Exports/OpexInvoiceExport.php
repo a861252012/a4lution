@@ -7,13 +7,19 @@ use App\Models\Invoice;
 use App\Support\Calculation;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithDrawings;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Events\BeforeSheet;
 use Throwable;
 
 class OpexInvoiceExport implements
     WithTitle,
-    WithEvents
+    WithEvents,
+    WithColumnWidths,
+    WithDrawings
 {
     use RegistersEventListeners;
 
@@ -28,7 +34,7 @@ class OpexInvoiceExport implements
         string $clientCode,
         int    $insertInvoiceID,
         int    $insertBillingID,
-        $user
+               $user
     ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
@@ -47,6 +53,28 @@ class OpexInvoiceExport implements
         \Log::channel('daily_queue_export')
             ->info('OpexInvoiceExport')
             ->info($exception);
+    }
+
+    public function drawings(): Drawing
+    {
+        $drawing = new Drawing();
+        $drawing->setName('Logo');
+        $drawing->setPath(public_path('pictures/A4lution_logo.jpg'));
+        $drawing->setCoordinates('A1');
+
+        return $drawing;
+    }
+
+    public function columnWidths(): array
+    {
+        $cols['A'] = 12;
+        $cols['B'] = 16;
+        $cols['C'] = 54;
+        $cols['D'] = 16;
+        $cols['E'] = 13;
+        $cols['F'] = 15;
+
+        return $cols;
     }
 
     public function registerEvents(): array
@@ -189,7 +217,7 @@ class OpexInvoiceExport implements
 
                 if ($billing->client_code === 'G73A') {
                     $totalKeys = collect($totalKeys)
-                        ->filter(fn ($value, $key) => $value !== 'client_account_logistics_fee')
+                        ->filter(fn($value, $key) => $value !== 'client_account_logistics_fee')
                         ->all();
                 }
 
@@ -221,6 +249,43 @@ class OpexInvoiceExport implements
                 $event->sheet->SetCellValue("B49", '     c) Swift code: HSBCHKHHHKH');
                 $event->sheet->SetCellValue("B50", '     d) Account no.: 004-747-095693-838');
                 $event->sheet->SetCellValue("B51", '2) Payment Term: within 10 working days from the date of Invoice');
+            },
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet;
+
+                // E5
+                $sheet->getDelegate()->getStyle('E5')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 20,
+                    ]
+                ]);
+
+                // B16:F16
+                $sheet->getDelegate()->getStyle('B16:F16')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 11,
+                    ],
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM
+                        ]
+                    ]
+                ]);
+
+                // B35:F35
+                $sheet->getDelegate()->getStyle('B35:F35')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 11,
+                    ],
+                    'borders' => [
+                        'top' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM
+                        ]
+                    ]
+                ]);
             }
         ];
     }
