@@ -223,7 +223,7 @@ class FBAFirstMileShipmentFeesExport implements
                     }
                 }
 
-                $this->totalBarCol = $this->descNum + 1;
+                $this->totalBarCol = ($this->descNum) ?  $this->descNum + 1 : $this->firstMileCol + 1;
                 $event->sheet->SetCellValue("B{$this->totalBarCol}", 'Total');
                 $event->sheet->SetCellValue("F{$this->totalBarCol}", "HKD  " . number_format((float)$totalValue, 2));
 
