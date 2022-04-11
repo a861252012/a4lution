@@ -7,14 +7,20 @@ use App\Models\Invoice;
 use App\Models\ReturnHelperCharge;
 use App\Repositories\ContinStorageFeeRepository;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\WithDrawings;
+use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Events\BeforeSheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use Throwable;
 
 class FBAFirstMileShipmentFeesExport implements
     WithTitle,
-    WithEvents
+    WithEvents,
+    WithColumnWidths,
+    WithDrawings
 {
     use RegistersEventListeners;
 
@@ -24,12 +30,14 @@ class FBAFirstMileShipmentFeesExport implements
     private $user;
     private int $serialNumber = 1;
     private int $firstMileCol = 19;
+    private int $descNum;
+    private int $totalBarCol;
 
     public function __construct(
         string $reportDate,
         string $clientCode,
         int    $insertInvoiceID,
-        $user
+               $user
     ) {
         $this->reportDate = $reportDate;
         $this->clientCode = $clientCode;
@@ -47,6 +55,28 @@ class FBAFirstMileShipmentFeesExport implements
         \Log::channel('daily_queue_export')
             ->info('PaymentExport')
             ->info($exception);
+    }
+
+    public function drawings(): Drawing
+    {
+        $drawing = new Drawing();
+        $drawing->setName('Logo');
+        $drawing->setPath(public_path('pictures/A4lution_logo.jpg'));
+        $drawing->setCoordinates('A1');
+
+        return $drawing;
+    }
+
+    public function columnWidths(): array
+    {
+        $cols['A'] = 12;
+        $cols['B'] = 16;
+        $cols['C'] = 75;
+        $cols['D'] = 16;
+        $cols['E'] = 13;
+        $cols['F'] = 15;
+
+        return $cols;
     }
 
     public function registerEvents(): array
@@ -137,15 +167,15 @@ class FBAFirstMileShipmentFeesExport implements
                         );
 
                         $this->firstMileCol = 19 + $k * 3;//record start from B19
-                        $descNum = $this->firstMileCol + 1;
+                        $this->descNum = $this->firstMileCol + 1;
                         $event->sheet->SetCellValue("B{$this->firstMileCol}", $this->serialNumber);
                         $event->sheet->SetCellValue(
                             "C{$this->firstMileCol}",
                             'FBA shipment Fee from Continental HK warehouse to Amazon FBA warehouse:'
                         );
-                        $event->sheet->SetCellValue("C{$descNum}", $itemDesc);
-                        $event->sheet->SetCellValue("D{$descNum}", "$ " .  number_format((float)$item->unit_price, 2));
-                        $event->sheet->SetCellValue("E{$descNum}", "1");
+                        $event->sheet->SetCellValue("C{$this->descNum}", $itemDesc);
+                        $event->sheet->SetCellValue("D{$this->descNum}", "$ " .  number_format((float)$item->unit_price, 2));
+                        $event->sheet->SetCellValue("E{$this->descNum}", "1");
                         $event->sheet->SetCellValue(
                             "F{$this->firstMileCol}",
                             "HKD  " . number_format((float)$item->unit_price, 2)
@@ -176,25 +206,29 @@ class FBAFirstMileShipmentFeesExport implements
                             $col = $this->firstMileCol + $k * 3;
                         }
 
-                        $descNum = $col + 1;
+                        $this->descNum = $col + 1;
                         $this->serialNumber++;
 
                         $event->sheet->SetCellValue("B{$col}", $this->serialNumber);
                         $event->sheet->SetCellValue("C{$col}", 'Return Helper Charges');
-                        $event->sheet->SetCellValue("C{$descNum}", "{$item->notes}");
-                        $event->sheet->SetCellValue("D{$descNum}", "$ " . number_format((float)$item->amount_hkd, 2));
-                        $event->sheet->SetCellValue("E{$descNum}", "1");
+                        $event->sheet->SetCellValue("C{$this->descNum}", "{$item->notes}");
+                        $event->sheet->SetCellValue(
+                            "D{$this->descNum}",
+                            "$ " . number_format((float)$item->amount_hkd, 2)
+                        );
+                        $event->sheet->SetCellValue("E{$this->descNum}", "1");
                         $event->sheet->SetCellValue("F{$col}", "HKD  " . number_format((float)$item->amount_hkd, 2));
 
                         $totalValue += (float)$item->amount_hkd;
                     }
-
-                    $event->sheet->SetCellValue("B" . ($descNum + 4), 'Total');
-                    $event->sheet->SetCellValue("F" . ($descNum + 4), "HKD  " . number_format((float)$totalValue, 2));
                 }
 
+                $this->totalBarCol = $this->descNum + 1;
+                $event->sheet->SetCellValue("B{$this->totalBarCol}", 'Total');
+                $event->sheet->SetCellValue("F{$this->totalBarCol}", "HKD  " . number_format((float)$totalValue, 2));
+
                 //footer
-                $descNum = isset($descNum) ? ($descNum + 10) : 15;
+                $footerCol = $this->totalBarCol + 5;
 
                 $email = $this->user->email;
                 if (isset($this->user->payment_checker_email)) {
@@ -205,19 +239,56 @@ class FBAFirstMileShipmentFeesExport implements
                     );
                 }
 
-                $event->sheet->SetCellValue("B" . ($descNum + 10), 'Payment Method:');
+                $event->sheet->SetCellValue("B" . ($footerCol + 1), 'Payment Method:');
                 $event->sheet->SetCellValue(
-                    "B" . ($descNum + 11),
+                    "B" . ($footerCol + 2),
                     "By Transfer to the following HSBC account & send copy to  {$email}"
                 );
-                $event->sheet->SetCellValue("B" . ($descNum + 12), '  a) Beneficiary Name: A4LUTION LIMITED');
+                $event->sheet->SetCellValue("B" . ($footerCol + 3), '  a) Beneficiary Name: A4LUTION LIMITED');
                 $event->sheet->SetCellValue(
-                    "B" . ($descNum + 13),
+                    "B" . ($footerCol + 4),
                     '  b) Beneficiary Bank: THE HONGKONG AND SHANGHAI BANKING CORPORATION LTD'
                 );
-                $event->sheet->SetCellValue("B" . ($descNum + 14), '  c) Swift Code: HSBCHKHHHKH');
-                $event->sheet->SetCellValue("B" . ($descNum + 15), '  d) Account No.: 004-747-095693-838');
-                $event->sheet->SetCellValue("B" . ($descNum + 16), '  e) FPS registered email: info@a4lution.com');
+                $event->sheet->SetCellValue("B" . ($footerCol + 5), '  c) Swift Code: HSBCHKHHHKH');
+                $event->sheet->SetCellValue("B" . ($footerCol + 6), '  d) Account No.: 004-747-095693-838');
+                $event->sheet->SetCellValue("B" . ($footerCol + 7), '  e) FPS registered email: info@a4lution.com');
+            },
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet;
+
+                // E5
+                $sheet->getDelegate()->getStyle('E5')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 20,
+                    ]
+                ]);
+
+                // B15:F15
+                $sheet->getDelegate()->getStyle('B15:F15')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 11,
+                    ],
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM
+                        ]
+                    ]
+                ]);
+
+                //total
+                $sheet->getDelegate()->getStyle("B$this->totalBarCol:F$this->totalBarCol")->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 11,
+                    ],
+                    'borders' => [
+                        'top' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM
+                        ]
+                    ]
+                ]);
             }
         ];
     }

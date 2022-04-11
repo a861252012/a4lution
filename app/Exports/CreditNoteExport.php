@@ -5,14 +5,20 @@ namespace App\Exports;
 use App\Models\BillingStatement;
 use App\Models\Invoice;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithDrawings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Events\BeforeSheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use Throwable;
 
 class CreditNoteExport implements
     WithTitle,
-    WithEvents
+    WithEvents,
+    WithColumnWidths,
+    WithDrawings
 {
     use RegistersEventListeners;
 
@@ -43,6 +49,28 @@ class CreditNoteExport implements
         \Log::channel('daily_queue_export')
             ->info('StorageFeeExport')
             ->info($exception);
+    }
+
+    public function drawings(): Drawing
+    {
+        $drawing = new Drawing();
+        $drawing->setName('Logo');
+        $drawing->setPath(public_path('pictures/A4lution_logo.jpg'));
+        $drawing->setCoordinates('A1');
+
+        return $drawing;
+    }
+
+    public function columnWidths(): array
+    {
+        $cols['A'] = 12;
+        $cols['B'] = 16;
+        $cols['C'] = 54;
+        $cols['D'] = 16;
+        $cols['E'] = 13;
+        $cols['F'] = 15;
+
+        return $cols;
     }
 
     public function registerEvents(): array
@@ -105,6 +133,43 @@ class CreditNoteExport implements
                 $total = -$billing->a4_account_refund_and_resend + $billing->a4_account_sales_amount;
                 $event->sheet->SetCellValue("B20", 'Total');
                 $event->sheet->SetCellValue("F20", "HKD  {$total}");
+            },
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet;
+
+                // E5
+                $sheet->getDelegate()->getStyle('E5')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 20,
+                    ]
+                ]);
+
+                // B16:F16
+                $sheet->getDelegate()->getStyle('B16:F16')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 11,
+                    ],
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM
+                        ]
+                    ]
+                ]);
+
+                // B20:F20
+                $sheet->getDelegate()->getStyle('B20:F20')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 11,
+                    ],
+                    'borders' => [
+                        'top' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM
+                        ]
+                    ]
+                ]);
             }
         ];
     }
