@@ -31,7 +31,7 @@ class FBAFirstMileShipmentFeesExport implements
     private int $serialNumber = 1;
     private int $firstMileCol = 19;
     private int $descNum;
-    private int $totalBarCol;
+    private int $totalBarCol = 18;
 
     public function __construct(
         string $reportDate,
@@ -174,7 +174,10 @@ class FBAFirstMileShipmentFeesExport implements
                             'FBA shipment Fee from Continental HK warehouse to Amazon FBA warehouse:'
                         );
                         $event->sheet->SetCellValue("C{$this->descNum}", $itemDesc);
-                        $event->sheet->SetCellValue("D{$this->descNum}", "$ " .  number_format((float)$item->unit_price, 2));
+                        $event->sheet->SetCellValue(
+                            "D{$this->descNum}",
+                            "$ " .  number_format((float)$item->unit_price, 2)
+                        );
                         $event->sheet->SetCellValue("E{$this->descNum}", "1");
                         $event->sheet->SetCellValue(
                             "F{$this->firstMileCol}",
@@ -223,7 +226,7 @@ class FBAFirstMileShipmentFeesExport implements
                     }
                 }
 
-                $this->totalBarCol = ($this->descNum) ?  $this->descNum + 1 : $this->firstMileCol + 1;
+                $this->totalBarCol = ($this->descNum) ?  $this->descNum + 1 : 18;
                 $event->sheet->SetCellValue("B{$this->totalBarCol}", 'Total');
                 $event->sheet->SetCellValue("F{$this->totalBarCol}", "HKD  " . number_format((float)$totalValue, 2));
 
