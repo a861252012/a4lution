@@ -30,7 +30,7 @@ class FBAFirstMileShipmentFeesExport implements
     private $user;
     private int $serialNumber = 1;
     private int $firstMileCol = 19;
-    private int $descNum;
+    private int $descNum = 20;
     private int $totalBarCol = 18;
 
     public function __construct(
@@ -226,7 +226,7 @@ class FBAFirstMileShipmentFeesExport implements
                     }
                 }
 
-                $this->totalBarCol = ($this->descNum) ?  $this->descNum + 1 : 18;
+                $this->totalBarCol = ($this->descNum !== 20) ?  $this->descNum + 1 : 18;
                 $event->sheet->SetCellValue("B{$this->totalBarCol}", 'Total');
                 $event->sheet->SetCellValue("F{$this->totalBarCol}", "HKD  " . number_format((float)$totalValue, 2));
 
