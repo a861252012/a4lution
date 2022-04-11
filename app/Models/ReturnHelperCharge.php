@@ -9,8 +9,12 @@ class ReturnHelperCharge extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'report_date' => 'date',
+    ];
+
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('active', 1);
+        return $query->where('return_helper_charges.active', 1);
     }
 }

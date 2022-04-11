@@ -46,6 +46,8 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/export/{export_type}', 'FeeController@exportSampleFile');
         Route::post('/preValidation/{date}/{type}', 'FeeController@preValidation');
 
+        Route::get('/return-helper-charge', 'ReturnHelperChargeController@index')->name('fee.returnHelperCharge.index');
+
         Route::prefix('extraordinaryitem')->group(function () {
             Route::get('/', 'FeeController@extraordinaryItem')->name('fee.extraordinaryItem.view');
             Route::post('/', 'FeeController@createExtraordinaryItem');

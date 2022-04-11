@@ -1,6 +1,6 @@
 @extends('layouts.app', [
     'parentSection' => 'fee',
-    'elementName' => 'first-mile-shipment'
+    'elementName' => 'contin-storage'
 ])
 
 @section('content')
