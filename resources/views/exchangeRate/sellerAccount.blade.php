@@ -9,8 +9,12 @@
             @slot('title')
                 {{ __('FEE') }}
             @endslot
-            <li class="breadcrumb-item"><a href="{{ route('fee.wfsStorageFee.view') }}">{{ __('FEE') }}</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{ __('WFS STORAGE FEE') }}</li>
+            <li class="breadcrumb-item">
+                <a href="{{ route('management.sellerAccount.view') }}">
+                    {{ __('MANAGEMENT') }}
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">{{ __('SELLER ACCOUNT') }}</li>
         @endcomponent
     @endcomponent
 
