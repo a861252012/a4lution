@@ -22,7 +22,7 @@ class CustomerController extends Controller
         $customers = empty($request->all()) 
             ? []
             : Customer::query()
-                ->with('salesReps', 'accountServices', 'operationUsers', 'updater')
+                ->with('salesReps', 'accountServices', 'operationUsers', 'updater', 'commission:client_code,calculation_type')
                 ->when($request->client_code, fn($q) => $q->where('client_code', $request->client_code))
                 ->when(isset($request->active), fn($q) => $q->where('active', $request->active))
                 ->oldest('client_code')
