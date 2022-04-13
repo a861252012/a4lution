@@ -107,6 +107,10 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/exchangeRate/create', 'ExchangeRateController@ajaxCreate');
         Route::get('/exchangeRate/{date}', 'ExchangeRateController@ajaxShow');
         Route::get('/exchangeRate/{currency}/{startDate}/{endDate}', 'ExchangeRateController@ajaxGetExchangeRate');
+
+        //Seller Accounts
+        Route::get('/seller-account', 'ExchangeRateController@sellerAccountView')
+            ->name('management.sellerAccount.view');
     });
 
     Route::get('/customers', 'CustomerController@index')->name('customer.index');
