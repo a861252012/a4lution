@@ -32,4 +32,25 @@ class SellerAccountRepository extends BaseRepository
             ->pluck('account_name')
             ->toArray();
     }
+
+    public function searchSellerAccountView(
+        $platform,
+        $isA4Account
+    ) {
+        return $this->model
+            ->select(
+                'is_a4_account',
+                'platform',
+                'account_name',
+                'erp_nick_name',
+                'asinking_account_name'
+            )
+            ->active()
+            ->when($platform, fn ($q) => $q->where('platform', $platform))
+            ->when(isset($isA4Account), fn ($q) => $q->where('is_a4_account', (int)$isA4Account))
+            ->orderByDesc('is_a4_account')
+            ->orderBy('platform')
+            ->orderBy('account_name')
+            ->paginate();
+    }
 }

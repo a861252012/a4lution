@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ExchangeRate;
 use App\Repositories\ExchangeRateRepository;
+use App\Repositories\SellerAccountRepository;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,11 +14,15 @@ use Symfony\Component\HttpFoundation\Response;
 class ExchangeRateController extends Controller
 {
     private ExchangeRateRepository $exchangeRateRepository;
+    private SellerAccountRepository $sellerAccountRepo;
     private const QUOTE_CURRENCY = 'HKD';
 
-    public function __construct(ExchangeRateRepository $exchangeRateRepository)
-    {
+    public function __construct(
+        ExchangeRateRepository $exchangeRateRepository,
+        SellerAccountRepository $sellerAccountRepository
+    ) {
         $this->exchangeRateRepository = $exchangeRateRepository;
+        $this->sellerAccountRepo = $sellerAccountRepository;
     }
 
     public function index(Request $request)
@@ -95,6 +100,19 @@ class ExchangeRateController extends Controller
                 ),
                 'status' => Response::HTTP_OK,
                 'msg' => 'success'
+            ]
+        );
+    }
+
+    public function sellerAccountView(Request $request)
+    {
+        return view(
+            'exchangeRate.sellerAccount',
+            [
+                'lists' => $this->sellerAccountRepo->searchSellerAccountView(
+                    $request->platform,
+                    $request->is_a4_account
+                )
             ]
         );
     }
