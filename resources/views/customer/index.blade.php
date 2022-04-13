@@ -74,8 +74,8 @@
                     <thead class="thead-light">
                     <tr>
                         <th>Client Code</th>
-                        <th>Contract Period Start</th>
-                        <th>Contract Period End</th>
+                        <th>Commission Type</th>
+                        <th>Deduct refund/cxl</th>
                         <th>Status</th>
                         <th>Sales Rep</th>
                         <th>A/S</th>
@@ -90,8 +90,8 @@
                         @forelse ($customers as $customer)
                             <tr>
                                 <td>{{ $customer->client_code }}</td>
-                                <td>{{ optional($customer->contract_period_start)->format('Y/m/d') }}</td>
-                                <td>{{ optional($customer->contract_period_end)->format('Y/m/d') }}</td>
+                                <td>{{ $customer->commission->calculation_type_txt ?? '' }}</td>
+                                <td>{{ $customer->commission_deduct_refund_cxl_order ? 'Y' : 'N' }}</td>
                                 <td>{{ $customer->active ? 'Active' : 'Inactive' }}</td>
                                 <td>{{ $customer->salesReps->pluck('user_name')->implode(',') }}</td>
                                 <td>{{ $customer->accountServices->pluck('user_name')->implode(',') }}</td>

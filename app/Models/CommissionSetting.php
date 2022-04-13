@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Support\Facades\Auth;
+use App\Constants\CommissionConstant;
 use Illuminate\Database\Eloquent\Model;
 
 class CommissionSetting extends Model
@@ -22,6 +23,15 @@ class CommissionSetting extends Model
         static::updating(function ($commissionSetting) {
             $commissionSetting->updated_by = Auth::id();
         });
+    }
+
+    ###############
+    ## Accessors ##
+    ###############
+
+    public function getCalculationTypeTxtAttribute()
+    {
+        return CommissionConstant::map()[$this->calculation_type] ?? '';
     }
 
     ############
