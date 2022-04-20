@@ -2,9 +2,6 @@
 
 namespace App\Exports;
 
-use App\Models\LongTermStorageFee;
-use App\Models\MonthlyStorageFee;
-use App\Models\WfsStorageFee;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromQuery;
@@ -179,8 +176,8 @@ class StorageFeeExport implements
                 $join->on('w.report_date', '=', 'r.quoted_date')
                     ->where('r.base_currency', 'USD')
                     ->where('r.active', 1);
-            })->where('w.supplier', 'S53A')
-            ->where('w.report_date', '2022-02-01')
+            })->where('w.supplier', $this->clientCode)
+            ->where('w.report_date', $this->reportDate)
             ->where('w.active', 1);
 
         $subQuery = $firstQuery->unionAll($secQuery)
